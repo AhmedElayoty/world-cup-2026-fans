@@ -223,8 +223,8 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 .authtabs button.on{background:var(--rust);color:#fff;border-color:var(--rust2)}
 #authErr{color:var(--red);font-size:12px;min-height:17px;margin-bottom:8px}
 .authnote{font-size:10.5px;color:var(--dim);margin-top:10px;line-height:1.6}
-.authrem{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--mut);
- margin:2px 0 12px;cursor:pointer;justify-content:center}
+.authrem{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--mut);
+ margin:2px 0 12px;cursor:pointer;justify-content:center;white-space:nowrap}
 .authrem input{width:16px;height:16px;accent-color:var(--rust)}
 .heroChange{font-family:'Oswald';font-size:9.5px;letter-spacing:1px;color:#9fd8bb;
  border:1px solid #1f7a4c;border-radius:12px;padding:2px 8px;cursor:pointer;margin-left:8px}
@@ -301,7 +301,7 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
   <input id="auPass" type="password" maxlength="30" placeholder="Password" autocomplete="current-password">
   <select id="auNation"><option value="">Choose your nation…</option></select>
   <div id="authErr"></div>
-  <label class="authrem" id="authRemRow"><input type="checkbox" id="auRem" checked> Remember me on this device</label>
+  <label class="authrem" id="authRemRow"><span>Remember me on this device</span><input type="checkbox" id="auRem" checked></label>
   <button id="authBtn" onclick="authSubmit()">LET'S GO ⚽</button>
   <div class="authnote">Log in once per device — that's it. Forgot your password? Ask Ahmed to reset it.</div>
  </div>
