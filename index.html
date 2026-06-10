@@ -214,6 +214,22 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 .brk span{display:block;font-family:'Oswald';font-weight:700;font-size:16.5px;letter-spacing:1.2px;color:var(--gold);margin-top:3px}
 .brk.none{background:var(--card);border-color:var(--line);color:var(--mut)}
 .brknote{font-size:10.5px;color:#c9a44a;font-family:'Oswald';letter-spacing:1px;margin:-4px 0 8px}
+#nameModal select{width:100%;background:var(--navy2);border:1px solid var(--line);border-radius:12px;
+ color:var(--txt);font-size:15px;padding:12px 14px;outline:none;text-align:center;margin-bottom:12px;
+ -webkit-appearance:none;appearance:none}
+.authtabs{display:flex;gap:8px;margin-bottom:14px}
+.authtabs button{flex:1;background:var(--navy2);border:1px solid var(--line);color:var(--mut);
+ font-family:'Oswald';letter-spacing:1px;font-size:12px;padding:9px;border-radius:10px;cursor:pointer}
+.authtabs button.on{background:var(--rust);color:#fff;border-color:var(--rust2)}
+#authErr{color:var(--red);font-size:12px;min-height:17px;margin-bottom:8px}
+.authnote{font-size:10.5px;color:var(--dim);margin-top:10px;line-height:1.6}
+.heroChange{font-family:'Oswald';font-size:9.5px;letter-spacing:1px;color:#9fd8bb;
+ border:1px solid #1f7a4c;border-radius:12px;padding:2px 8px;cursor:pointer;margin-left:8px}
+.mypred{margin-top:8px;background:#26190f;border:1px solid #5a3a1a;border-radius:8px;padding:6px 10px;
+ font-family:'Oswald';font-size:11px;letter-spacing:1px;color:var(--gold)}
+.mypred.hint{background:var(--card2);border-color:var(--line);color:var(--dim);cursor:pointer}
+.lbchamp{background:#26190f;border:1px solid #5a3a1a;border-radius:8px;padding:7px 10px;
+ font-family:'Oswald';font-size:11px;letter-spacing:.8px;color:var(--gold);margin-bottom:8px}
 </style>
 </head>
 <body>
@@ -246,7 +262,7 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
  </section>
  <section id="paneP" class="hide">
   <div class="lb"><h3>&#127942; CAPRIOLE LEADERBOARD</h3>
-  <div class="brknote">&#127859; Daily top scorer wins breakfast on the team</div><div id="lbBody"><div class="empty">Loading…</div></div></div>
+  <div class="brknote">&#127859; Weekly top scorer wins breakfast on the team — all next week</div><div id="lbBody"><div class="empty">Loading…</div></div></div>
   <div class="secrow"><span class="sect">YOUR PREDICTIONS</span>
    <span style="margin-left:auto;font-size:10px;color:var(--dim);font-family:'Oswald';letter-spacing:1px">EXACT = 3 PTS · RESULT = 1 PT</span></div>
   <div id="predList"><div class="empty">Loading…</div></div>
@@ -272,10 +288,18 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 
 <div id="nameModal" class="hide">
  <div class="box">
-  <h2>JOIN THE CAPRIOLE ROOM</h2>
-  <p>Pick the name your teammates will see</p>
-  <input id="nameIn" maxlength="20" placeholder="e.g. Mohamed">
-  <button onclick="saveName()">LET'S GO ⚽</button>
+  <h2 id="authTitle">JOIN CAPRIOLE SPORTS</h2>
+  <p>One-time setup — username, password &amp; your nation</p>
+  <div class="authtabs">
+   <button id="atC" class="on" onclick="authMode('C')">CREATE ACCOUNT</button>
+   <button id="atL" onclick="authMode('L')">LOG IN</button>
+  </div>
+  <input id="auUser" maxlength="15" placeholder="Username" autocomplete="username">
+  <input id="auPass" type="password" maxlength="30" placeholder="Password" autocomplete="current-password">
+  <select id="auNation"><option value="">Choose your nation…</option></select>
+  <div id="authErr"></div>
+  <button id="authBtn" onclick="authSubmit()">LET'S GO ⚽</button>
+  <div class="authnote">Log in once per device — that's it. Forgot your password? Ask Ahmed to reset it.</div>
  </div>
 </div>
 
@@ -303,9 +327,20 @@ let lastFetch = 0, lastScores = {}, flashIds = new Set();
 let seasonCache = { t: 0, events: [] };
 let myPreds = JSON.parse(localStorage.getItem("cs_preds") || "{}");
 let groupsTimer = null, heroEvent = null;
-const MYTEAMS = () => JSON.parse(localStorage.getItem("cs_teams") || '["Egypt"]');
-const myId = localStorage.getItem("cs_id") || (localStorage.setItem("cs_id",
-  "u" + Math.random().toString(36).slice(2, 9)), localStorage.getItem("cs_id"));
+const MYTEAMS = () => [myNation()];
+let cs_user = null;
+try { cs_user = JSON.parse(localStorage.getItem("cs_user") || "null"); } catch (_) {}
+let myId = (cs_user && cs_user.uid) || localStorage.getItem("cs_id") ||
+  (localStorage.setItem("cs_id", "u" + Math.random().toString(36).slice(2, 9)),
+   localStorage.getItem("cs_id"));
+const ACCT_KEY = "capriole_wc26_accounts";
+const NATIONS_FALLBACK = ["Algeria","Argentina","Australia","Austria","Belgium","Bosnia and Herzegovina",
+ "Brazil","Canada","Cape Verde","Colombia","Croatia","Curacao","Czechia","DR Congo","Ecuador","Egypt",
+ "England","France","Germany","Ghana","Haiti","Iran","Iraq","Ivory Coast","Japan","Jordan","Mexico",
+ "Morocco","Netherlands","New Zealand","Norway","Panama","Paraguay","Portugal","Qatar","Saudi Arabia",
+ "Scotland","Senegal","South Africa","South Korea","Spain","Sweden","Switzerland","Tunisia",
+ "Türkiye","United States","Uruguay","Uzbekistan"];
+function myNation() { return (cs_user && cs_user.nation) || "Egypt"; }
 
 /* ================= HELPERS ================= */
 const $ = id => document.getElementById(id);
@@ -446,7 +481,7 @@ function renderMatches() {
     const c = e.competitions[0];
     const H = c.competitors.find(x => x.homeAway === "home"), A = c.competitors.find(x => x.homeAway === "away");
     const st = e.status, state = st.type.state;
-    const egy = [H, A].some(x => x.team.displayName === "Egypt");
+    const egy = [H, A].some(x => x.team.displayName === myNation());
     const note = (c.notes && c.notes[0] && c.notes[0].headline) || "";
     const ko = fmt(new Date(e.date), { hour: "2-digit", minute: "2-digit" });
     const dayw = fmt(new Date(e.date), { weekday: "short", day: "2-digit", month: "short" }).toUpperCase();
@@ -463,6 +498,18 @@ function renderMatches() {
       badge = `<span class="badge pre">${ko} UAE</span>`;
       mid = `<div class="score">${ko}<small>KICK-OFF UAE</small></div>`;
     }
+    const myp = myPreds[e.id];
+    let predStrip = "";
+    if (myp && myp.h !== undefined) {
+      let pb = "";
+      if (state === "post") {
+        const s = scorePred(myp, H.score, A.score);
+        pb = " · " + (s === 3 ? "EXACT! +3 PTS" : s === 1 ? "RESULT +1 PT" : "0 PTS");
+      }
+      predStrip = '<div class="mypred">YOUR PREDICTION: ' + myp.h + '\u2013' + myp.a + pb + '</div>';
+    } else if (state === "pre" && new Date(e.date) - Date.now() > 1800000) {
+      predStrip = '<div class="mypred hint" onclick="event.stopPropagation();showTab(&quot;P&quot;)">PREDICT THIS MATCH \u2192</div>';
+    }
     const goals = (c.details || []).filter(d => d.scoringPlay).map(d => {
       const who = d.athletesInvolved && d.athletesInvolved[0] ? d.athletesInvolved[0].displayName : "Goal";
       return `<b>${esc(d.clock?.displayValue || "")}</b> ⚽ ${esc(who)}${d.type && /penalty/i.test(d.type.text || "") ? " (pen)" : ""}${d.ownGoal ? " (OG)" : ""}`;
@@ -470,12 +517,13 @@ function renderMatches() {
     return `<div class="mcard${egy ? " egy" : ""}${flashIds.has(e.id) ? " goal" : ""}${openId === e.id ? " open" : ""}" onclick="toggleM('${e.id}')">
       <div class="mtop">${badge}<span>${esc(note)}</span><span style="margin-left:auto">${dayw}</span></div>
       <div class="mrow">
-        <div class="team">${logo(H)}<span class="tname${H.team.displayName === "Egypt" ? " egy" : ""}">${esc(H.team.displayName)}</span></div>
+        <div class="team">${logo(H)}<span class="tname${H.team.displayName === myNation() ? " egy" : ""}">${esc(H.team.displayName)}</span></div>
         ${mid}
-        <div class="team away">${logo(A)}<span class="tname${A.team.displayName === "Egypt" ? " egy" : ""}">${esc(A.team.displayName)}</span></div>
+        <div class="team away">${logo(A)}<span class="tname${A.team.displayName === myNation() ? " egy" : ""}">${esc(A.team.displayName)}</span></div>
       </div>
       ${goals ? `<div class="mven" style="margin-top:7px"><span>${goals}</span></div>` : ""}
       <div class="mven"><span>🏟️ ${esc(c.venue ? c.venue.fullName : "")}</span><b>${esc(c.venue && c.venue.address ? (c.venue.address.city || "") : "")}</b></div>
+      ${predStrip}
       <div class="mdetail" id="det${e.id}"><div class="dnote">Loading line-ups…</div></div>
     </div>`;
   }).join("");
@@ -514,12 +562,12 @@ async function loadStandings() {
     const groups = d.children || [];
     $("ggrid").innerHTML = groups.map(g => {
       const rows = (g.standings && g.standings.entries) || [];
-      const hasEgy = rows.some(r => r.team.displayName === "Egypt");
+      const hasEgy = rows.some(r => r.team.displayName === myNation());
       return `<div class="gcard${hasEgy ? " egy" : ""}"><h3>${esc(g.name || "")}</h3>
         <table class="gt"><tr><th>TEAM</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>PTS</th></tr>` +
         rows.map((r, i) => {
           const s = {}; (r.stats || []).forEach(x => s[x.name] = x.displayValue);
-          const egy = r.team.displayName === "Egypt";
+          const egy = r.team.displayName === myNation();
           return `<tr class="${i < 2 ? "q " : ""}${egy ? "egy" : ""}">
             <td><span class="tm"><img src="${r.team.logos && r.team.logos[0] ? r.team.logos[0].href : ""}" alt="">${esc(r.team.displayName)}</span></td>
             <td>${s.gamesPlayed || 0}</td><td>${s.wins || 0}</td><td>${s.ties || 0}</td><td>${s.losses || 0}</td>
@@ -551,16 +599,17 @@ function renderThirds(groups) {
     const ranked = rankRows(rows);
     const gl = (g.name || "").replace("Group ", "");
     if (ranked[2]) thirds.push({ g: gl, r: ranked[2], s: statmap(ranked[2]) });
-    const i = ranked.findIndex(r => r.team.displayName === "Egypt");
-    if (i === 0) egyLine = "EGYPT: 1ST IN GROUP " + gl + " — DIRECT R32 SPOT";
-    else if (i === 1) egyLine = "EGYPT: 2ND IN GROUP " + gl + " — DIRECT R32 SPOT";
-    else if (i === 3) egyLine = "EGYPT: 4TH IN GROUP " + gl + " — MUST CLIMB";
-    else if (i === 2) egyLine = "EGYPT3RD";
+    const NN = myNation().toUpperCase();
+    const i = ranked.findIndex(r => r.team.displayName === myNation());
+    if (i === 0) egyLine = NN + ": 1ST IN GROUP " + gl + " — DIRECT R32 SPOT";
+    else if (i === 1) egyLine = NN + ": 2ND IN GROUP " + gl + " — DIRECT R32 SPOT";
+    else if (i === 3) egyLine = NN + ": 4TH IN GROUP " + gl + " — MUST CLIMB";
+    else if (i === 2) egyLine = "NAT3RD";
   });
   thirds.sort((a, b) => (b.s.points - a.s.points) || (b.s.pointDifferential - a.s.pointDifferential) || (b.s.pointsFor - a.s.pointsFor));
-  if (egyLine === "EGYPT3RD") {
-    const ti = thirds.findIndex(t => t.r.team.displayName === "Egypt");
-    egyLine = "EGYPT: 3RD IN GROUP G — #" + (ti + 1) + " OF 12 THIRDS — CURRENTLY " +
+  if (egyLine === "NAT3RD") {
+    const ti = thirds.findIndex(t => t.r.team.displayName === myNation());
+    egyLine = myNation().toUpperCase() + ": 3RD IN GROUP — #" + (ti + 1) + " OF 12 THIRDS — CURRENTLY " +
       (ti > -1 && ti < 8 ? "INSIDE THE BEST 8 — THROUGH" : "OUTSIDE THE BEST 8 — OUT");
   }
   const played = thirds.some(t => t.s.gamesPlayed > 0);
@@ -588,16 +637,22 @@ async function renderHero() {
 }
 function drawHero() {
   const e = heroEvent;
-  if (!e) { $("heroBox").innerHTML = ""; return; }
+  if (!e) {
+    $("heroBox").innerHTML = '<div class="hero" style="cursor:default"><div class="hl">' +
+      '<span>★ ' + esc(myNation().toUpperCase()) + ' · NO UPCOMING MATCH</span>' +
+      '<span class="heroChange" onclick="openNation(event)">CHANGE ⚙</span></div></div>';
+    return;
+  }
   const c = e.competitions[0];
   const H = c.competitors.find(x => x.homeAway === "home"), A = c.competitors.find(x => x.homeAway === "away");
   const live = e.status.type.state === "in";
   const ko = new Date(e.date);
   const mid = live ? (H.score ?? 0) + " – " + (A.score ?? 0) : countdown(ko);
   $("heroBox").innerHTML = '<div class="hero" onclick="heroJump()">' +
-    '<div class="hl"><span>★ MY TEAM ' + (live ? "· LIVE NOW" : "· NEXT MATCH") + '</span>' +
+    '<div class="hl"><span>★ ' + esc(myNation().toUpperCase()) + (live ? " · LIVE NOW" : " · NEXT MATCH") + '</span>' +
     '<span>' + fmt(ko, { weekday: "short", day: "2-digit", month: "short" }).toUpperCase() +
-    ' · ' + fmt(ko, { hour: "2-digit", minute: "2-digit" }) + ' UAE</span></div>' +
+    ' · ' + fmt(ko, { hour: "2-digit", minute: "2-digit" }) + ' UAE' +
+    '<span class="heroChange" onclick="openNation(event)">CHANGE ⚙</span></span></div>' +
     '<div class="hm"><img src="' + (H.team.logo || "") + '" alt="">' +
     '<div class="ht1">' + esc(H.team.displayName) + ' <span style="color:var(--dim)">v</span> ' + esc(A.team.displayName) + '</div>' +
     '<img src="' + (A.team.logo || "") + '" alt="">' +
@@ -714,14 +769,14 @@ async function submitPred(btn, ev) {
     setTimeout(renderPredict, 1200); return;
   }
   if (h === "" || a === "" || isNaN(+h) || isNaN(+a)) { reset("ENTER BOTH SCORES FIRST", 1800); return; }
-  if (!localStorage.getItem("cs_name")) { ensureName(); reset("PICK YOUR NAME, THEN SUBMIT", 2400); return; }
+  if (!cs_user) { ensureName(); reset("CREATE YOUR ACCOUNT, THEN SUBMIT", 2400); return; }
   btn.disabled = true; btn.textContent = "SAVING…";
   let ok = false;
   for (let t = 0; t < 3 && !ok; t++) {
     try {
       const all = await readKey(PRED_KEY, {});
       const me = all[myId] || {};
-      me.name = localStorage.getItem("cs_name");
+      me.name = cs_user.username;
       me.preds = me.preds || {};
       if (!me.preds[id]) {
         me.preds[id] = { h: Math.max(0, Math.min(20, +h)), a: Math.max(0, Math.min(20, +a)) };
@@ -759,11 +814,20 @@ async function loadLeaderboard(evs) {
       });
       return { uid, name: u.name || "?", pts, exact, played };
     }).sort((a, b) => b.pts - a.pts || b.exact - a.exact);
-    $("lbBody").innerHTML = rows.length
+    let champ = "";
+    const w = lastCompletedWeek(evs);
+    if (w) {
+      const sc = weekScores(w.events, all);
+      champ = sc.length
+        ? '<div class="lbchamp">&#127859; LAST WEEK&rsquo;S CHAMPION: ' + esc(sc.filter(s => s.pts === sc[0].pts).map(s => s.name).join(" & ")) +
+          ' (' + sc[0].pts + ' pts) — eating free all this week</div>'
+        : '<div class="lbchamp">&#127859; LAST WEEK: no points scored — jackpot rolls over</div>';
+    }
+    $("lbBody").innerHTML = champ + (rows.length
       ? rows.map((r, i) => '<div class="lbrow' + (r.uid === myId ? " me" : "") + '"><div class="rk">' + (i + 1) + '</div>' +
           '<div class="nm">' + esc(r.name) + '</div><div class="ex">' + r.exact + ' exact · ' + r.played + ' played</div>' +
           '<div class="sc2">' + r.pts + '</div></div>').join("")
-      : '<div class="empty" style="padding:12px">No predictions yet — be the first! Points appear once matches finish.</div>';
+      : '<div class="empty" style="padding:12px">No predictions yet — be the first! Points appear once matches finish.</div>');
   } catch (_) {
     $("lbBody").innerHTML = '<div class="empty" style="padding:12px">Leaderboard unreachable.</div>';
   }
@@ -808,60 +872,160 @@ function dayLabel(key) {
   const d = new Date(Date.UTC(+key.slice(0, 4), +key.slice(4, 6) - 1, +key.slice(6, 8), 12));
   return fmt(d, { weekday: "long", day: "2-digit", month: "short" });
 }
+function weekScores(evsWeek, all) {
+  return Object.entries(all).map(([uid, u]) => {
+    let pts = 0, exact = 0;
+    evsWeek.forEach(e => {
+      const c = e.competitions[0];
+      const H = c.competitors.find(x => x.homeAway === "home"), A = c.competitors.find(x => x.homeAway === "away");
+      const p = (u.preds || {})[e.id];
+      if (!p || p.h === undefined) return;
+      const s = scorePred(p, H.score, A.score);
+      pts += s; if (s === 3) exact++;
+    });
+    return { uid, name: u.name || "?", pts, exact };
+  }).filter(x => x.pts > 0).sort((a, b) => b.pts - a.pts || b.exact - a.exact);
+}
+function lastCompletedWeek(evs) {
+  const nowWk = weekStartKey(new Date());
+  const byWeek = {};
+  evs.forEach(e => { const w = weekStartKey(new Date(e.date)); (byWeek[w] = byWeek[w] || []).push(e); });
+  const wk = Object.keys(byWeek)
+    .filter(w => w < nowWk && byWeek[w].every(e => e.status.type.state === "post"))
+    .sort().pop();
+  if (!wk) return null;
+  const ds = byWeek[wk];
+  const lab = (fmt(new Date(ds[0].date), { day: "2-digit", month: "short" }) + " – " +
+               fmt(new Date(ds[ds.length - 1].date), { day: "2-digit", month: "short" })).toUpperCase();
+  return { wk, events: ds, lab };
+}
 async function announceBreakfast() {
   try {
     const evs = await seasonEvents();
-    const today = uaeYMD(new Date());
-    const days = {};
-    evs.forEach(e => { const d = uaeYMD(new Date(e.date)); (days[d] = days[d] || []).push(e); });
-    const cand = Object.keys(days)
-      .filter(d => d < today && days[d].every(e => e.status.type.state === "post"))
-      .sort().pop();
-    if (!cand) { $("brkBox").innerHTML = ""; return; }
+    const w = lastCompletedWeek(evs);
+    if (!w) { $("brkBox").innerHTML = ""; return; }
     const all = await readKey(PRED_KEY, {});
-    const scores = Object.entries(all).map(([uid, u]) => {
-      let pts = 0, exact = 0;
-      days[cand].forEach(e => {
-        const c = e.competitions[0];
-        const H = c.competitors.find(x => x.homeAway === "home"), A = c.competitors.find(x => x.homeAway === "away");
-        const p = (u.preds || {})[e.id];
-        if (!p || p.h === undefined) return;
-        const s = scorePred(p, H.score, A.score);
-        pts += s; if (s === 3) exact++;
-      });
-      return { uid, name: u.name || "?", pts, exact };
-    }).filter(x => x.pts > 0).sort((a, b) => b.pts - a.pts || b.exact - a.exact);
-    const dlab = dayLabel(cand).toUpperCase();
+    const scores = weekScores(w.events, all);
     if (!scores.length) {
-      $("brkBox").innerHTML = '<div class="brk none">&#127859; BREAKFAST WATCH — nobody scored prediction points on ' +
-        dlab + '. The breakfast jackpot rolls over!</div>';
+      $("brkBox").innerHTML = '<div class="brk none">&#127859; BREAKFAST WATCH — nobody scored prediction points last week (' +
+        w.lab + '). The breakfast jackpot rolls over!</div>';
       return;
     }
     const top = scores[0].pts;
     const winners = scores.filter(s => s.pts === top);
-    const names = winners.map(w => w.name).join(" & ");
+    const names = winners.map(x => x.name).join(" & ");
     const plural = winners.length > 1;
     $("brkBox").innerHTML = '<div class="brk">&#127859; <b>BREAKFAST CHAMPION' + (plural ? "S" : "") + '</b> — ' +
-      esc(names) + ' topped ' + dlab + ' with ' + top + ' pts.' +
-      '<span>YOUR BREAKFAST IS ON THE TEAM TODAY!</span></div>';
-    postRoom([{ id: "brkfst-" + cand, uid: "brkbot", name: "\uD83C\uDF73 BREAKFAST BOT",
-      text: names + (plural ? " share" : " takes") + " the crown for " + dlab + " (" + top + " pts) — " +
-            (plural ? "your breakfasts are" : "your breakfast is") + " on the team today! \uD83C\uDFC6",
+      esc(names) + ' won last week (' + w.lab + ') with ' + top + ' pts.' +
+      '<span>BREAKFAST IS ON THE TEAM ALL THIS WEEK!</span></div>';
+    postRoom([{ id: "brkfst-w" + w.wk, uid: "brkbot", name: "\uD83C\uDF73 BREAKFAST BOT",
+      text: names + (plural ? " share" : " takes") + " last week's crown (" + w.lab + ", " + top + " pts) — " +
+            (plural ? "breakfasts are" : "breakfast is") + " on the team ALL THIS WEEK! \uD83C\uDFC6",
       ts: Date.now() }]).catch(() => {});
   } catch (_) {}
 }
 
 /* ================= CHAT ================= */
-function ensureName() {
-  if (!localStorage.getItem("cs_name")) $("nameModal").classList.remove("hide");
+function ensureName() { if (!cs_user) openAuth("C"); }
+function openAuth(m) { $("nameModal").classList.remove("hide"); authMode(m || "C"); fillNations(); }
+function authMode(m) {
+  window._am = m;
+  $("atC").classList.toggle("on", m === "C");
+  $("atL").classList.toggle("on", m === "L");
+  $("auUser").style.display = ""; $("auPass").style.display = "";
+  $("auNation").style.display = m === "C" ? "" : "none";
+  $("authTitle").textContent = m === "C" ? "JOIN CAPRIOLE SPORTS" : "WELCOME BACK";
+  $("authBtn").textContent = "LET'S GO ⚽";
+  $("authErr").textContent = "";
 }
-function saveName() {
-  const v = $("nameIn").value.trim();
-  if (!v) return;
-  localStorage.setItem("cs_name", v);
+async function fillNations() {
+  const sel = $("auNation");
+  if (sel.options.length > 5) return;
+  let names = NATIONS_FALLBACK;
+  try {
+    const evs = await seasonEvents();
+    const s = new Set();
+    evs.forEach(e => e.competitions[0].competitors.forEach(c => {
+      const n = c.team.displayName || "";
+      if (!/winner|runner|loser|3rd|tbd|play|qualif/i.test(n)) s.add(n);
+    }));
+    if (s.size >= 32 && s.size <= 60) names = [...s].sort();
+  } catch (_) {}
+  sel.innerHTML = '<option value="">Choose your nation…</option>' +
+    names.map(n => '<option>' + esc(n) + '</option>').join("");
+}
+async function sha256(s) {
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join("");
+}
+function authSubmit() { if (window._am === "N") saveNation(); else authGo(); }
+async function authGo() {
+  const u = ($("auUser").value || "").trim(), p = $("auPass").value || "";
+  const err = t => { $("authErr").textContent = t; };
+  if (!/^[A-Za-z0-9_]{3,15}$/.test(u)) return err("Username: 3–15 letters, numbers or _");
+  if (p.length < 4) return err("Password: at least 4 characters");
+  let accts = {};
+  try { accts = await readKey(ACCT_KEY, {}); } catch (_) { return err("Can't reach the club server — try again"); }
+  const k = u.toLowerCase();
+  if (window._am === "L") {
+    const a = accts[k];
+    if (!a) return err("No such username — create an account?");
+    if (await sha256(a.salt + p) !== a.hash) return err("Wrong password (ask Ahmed to reset)");
+    finishAuth(a);
+  } else {
+    if (accts[k]) return err("Username taken — try LOG IN instead");
+    const nation = $("auNation").value;
+    if (!nation) return err("Choose your nation");
+    const a = { uid: "u" + Math.random().toString(36).slice(2, 10), username: u, nation,
+                salt: Math.random().toString(36).slice(2, 10), hash: "" };
+    a.hash = await sha256(a.salt + p);
+    accts[k] = a;
+    try {
+      await writeKey(ACCT_KEY, accts);
+      const chk = await readKey(ACCT_KEY, {});
+      if (!chk[k]) return err("Save failed — try again");
+    } catch (_) { return err("Save failed — try again"); }
+    finishAuth(a);
+  }
+}
+function finishAuth(a) {
+  cs_user = { uid: a.uid, username: a.username, nation: a.nation };
+  localStorage.setItem("cs_user", JSON.stringify(cs_user));
+  localStorage.setItem("cs_name", a.username);
+  myId = a.uid;
   $("nameModal").classList.add("hide");
-  pollChat();
-  if (!$("paneP").classList.contains("hide")) renderPredict();
+  syncMyPreds().then(() => {
+    if (events.length) renderMatches();
+    if (!$("paneP").classList.contains("hide")) renderPredict();
+  });
+  renderHero(); loadStandings(); pollChat();
+}
+function openNation(ev) {
+  if (ev) ev.stopPropagation();
+  if (!cs_user) { openAuth("C"); return; }
+  $("nameModal").classList.remove("hide");
+  window._am = "N";
+  $("atC").classList.remove("on"); $("atL").classList.remove("on");
+  $("authTitle").textContent = "CHANGE MY NATION";
+  $("auUser").style.display = "none"; $("auPass").style.display = "none";
+  $("auNation").style.display = "";
+  $("authBtn").textContent = "SAVE NATION";
+  $("authErr").textContent = "";
+  fillNations();
+}
+async function saveNation() {
+  const nation = $("auNation").value;
+  if (!nation) { $("authErr").textContent = "Choose a nation"; return; }
+  try {
+    const accts = await readKey(ACCT_KEY, {});
+    const k = cs_user.username.toLowerCase();
+    if (accts[k]) { accts[k].nation = nation; await writeKey(ACCT_KEY, accts); }
+    cs_user.nation = nation;
+    localStorage.setItem("cs_user", JSON.stringify(cs_user));
+    $("nameModal").classList.add("hide");
+    renderHero(); loadStandings();
+    if (events.length) renderMatches();
+  } catch (_) { $("authErr").textContent = "Couldn't save — try again"; }
 }
 async function readKey(key, fallback) {
   const r = await fetch("https://textdb.online/" + key + "?t=" + Date.now(), { cache: "no-store" });
@@ -924,10 +1088,10 @@ function renderChat(msgs) {
 async function sendMsg() {
   const inp = $("chatIn"), text = inp.value.trim();
   if (!text) return;
-  if (!localStorage.getItem("cs_name")) { ensureName(); return; }
+  if (!cs_user) { ensureName(); return; }
   inp.value = "";
   const mine = { id: "m" + Date.now() + Math.random().toString(36).slice(2, 6),
-                 uid: myId, name: localStorage.getItem("cs_name"), text, ts: Date.now() };
+                 uid: myId, name: cs_user.username, text, ts: Date.now() };
   try {
     await postRoom([mine]);
     lastChatJson = ""; pollChat();
@@ -937,6 +1101,10 @@ async function sendMsg() {
 /* ================= BOOT ================= */
 setCon(null, "CONNECTING");
 buildStrip();
+if (cs_user) {
+  localStorage.setItem("cs_name", cs_user.username);
+  syncMyPreds().then(() => { if (events.length) renderMatches(); });
+}
 renderHero();
 setInterval(renderHero, 300000);
 announceBreakfast();
