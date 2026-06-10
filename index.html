@@ -203,6 +203,12 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 .sharebtn{margin-top:10px;width:100%;background:var(--card2);border:1px solid var(--line);color:var(--mut);
  font-family:'Oswald';letter-spacing:1.5px;font-size:11.5px;border-radius:10px;padding:9px;cursor:pointer}
 .chatflag{width:20px;height:14px;vertical-align:-2px;border-radius:2px}
+.brk{background:linear-gradient(150deg,#3a2a07,#2a1d05);border:1px solid var(--gold);border-radius:16px;
+ padding:12px 15px;margin-bottom:12px;font-size:13.5px;color:#ffe9b8;line-height:1.55}
+.brk b{font-family:'Oswald';letter-spacing:1.2px;color:var(--gold)}
+.brk span{display:block;font-family:'Oswald';font-weight:700;font-size:16.5px;letter-spacing:1.2px;color:var(--gold);margin-top:3px}
+.brk.none{background:var(--card);border-color:var(--line);color:var(--mut)}
+.brknote{font-size:10.5px;color:#c9a44a;font-family:'Oswald';letter-spacing:1px;margin:-4px 0 8px}
 </style>
 </head>
 <body>
@@ -228,12 +234,14 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 </nav>
 <main>
  <section id="paneM">
+  <div id="brkBox"></div>
   <div id="heroBox"></div>
   <div class="dstrip" id="dstrip"></div>
   <div id="mlist"><div class="empty"><div class="big">⚽</div>Loading matches…</div></div>
  </section>
  <section id="paneP" class="hide">
-  <div class="lb"><h3>&#127942; CAPRIOLE LEADERBOARD</h3><div id="lbBody"><div class="empty">Loading…</div></div></div>
+  <div class="lb"><h3>&#127942; CAPRIOLE LEADERBOARD</h3>
+  <div class="brknote">&#127859; Daily top scorer wins breakfast on the team</div><div id="lbBody"><div class="empty">Loading…</div></div></div>
   <div class="secrow"><span class="sect">YOUR PREDICTIONS</span>
    <span style="margin-left:auto;font-size:10px;color:var(--dim);font-family:'Oswald';letter-spacing:1px">EXACT = 3 PTS · RESULT = 1 PT</span></div>
   <div id="predList"><div class="empty">Loading…</div></div>
@@ -727,6 +735,54 @@ function shareMatch(ev) {
   else { if (navigator.clipboard) navigator.clipboard.writeText(txt); alert("Copied — paste it in WhatsApp!"); }
 }
 
+/* ================= BREAKFAST CHAMPION ================= */
+function dayLabel(key) {
+  const d = new Date(Date.UTC(+key.slice(0, 4), +key.slice(4, 6) - 1, +key.slice(6, 8), 12));
+  return fmt(d, { weekday: "long", day: "2-digit", month: "short" });
+}
+async function announceBreakfast() {
+  try {
+    const evs = await seasonEvents();
+    const today = uaeYMD(new Date());
+    const days = {};
+    evs.forEach(e => { const d = uaeYMD(new Date(e.date)); (days[d] = days[d] || []).push(e); });
+    const cand = Object.keys(days)
+      .filter(d => d < today && days[d].every(e => e.status.type.state === "post"))
+      .sort().pop();
+    if (!cand) { $("brkBox").innerHTML = ""; return; }
+    const all = await readKey(PRED_KEY, {});
+    const scores = Object.entries(all).map(([uid, u]) => {
+      let pts = 0, exact = 0;
+      days[cand].forEach(e => {
+        const c = e.competitions[0];
+        const H = c.competitors.find(x => x.homeAway === "home"), A = c.competitors.find(x => x.homeAway === "away");
+        const p = (u.preds || {})[e.id];
+        if (!p || p.h === undefined) return;
+        const s = scorePred(p, H.score, A.score);
+        pts += s; if (s === 3) exact++;
+      });
+      return { uid, name: u.name || "?", pts, exact };
+    }).filter(x => x.pts > 0).sort((a, b) => b.pts - a.pts || b.exact - a.exact);
+    const dlab = dayLabel(cand).toUpperCase();
+    if (!scores.length) {
+      $("brkBox").innerHTML = '<div class="brk none">&#127859; BREAKFAST WATCH — nobody scored prediction points on ' +
+        dlab + '. The breakfast jackpot rolls over!</div>';
+      return;
+    }
+    const top = scores[0].pts;
+    const winners = scores.filter(s => s.pts === top);
+    const names = winners.map(w => w.name).join(" & ");
+    const plural = winners.length > 1;
+    $("brkBox").innerHTML = '<div class="brk">&#127859; <b>BREAKFAST CHAMPION' + (plural ? "S" : "") + '</b> — ' +
+      esc(names) + ' topped ' + dlab + ' with ' + top + ' pts.' +
+      '<span>YOUR BREAKFAST IS ON THE TEAM TODAY!</span></div>';
+    postRoom([{ id: "brkfst-" + cand, uid: "brkbot", name: "\uD83C\uDF73 BREAKFAST BOT",
+      text: names + (plural ? " share" : " takes") + " the crown for " + dlab + " (" + top + " pts) — " +
+            (plural ? "your breakfasts are" : "your breakfast is") + " on the team today! \uD83C\uDFC6",
+      ts: Date.now() }]).catch(() => {});
+  } catch (_) {}
+}
+
 /* ================= CHAT ================= */
 function ensureName() {
   if (!localStorage.getItem("cs_name")) $("nameModal").classList.remove("hide");
@@ -755,6 +811,8 @@ const readRoom = () => readKey(CHAT_KEY, []);
 async function postRoom(newMsgs) {
   let msgs = [];
   try { msgs = await readRoom(); } catch (_) {}
+  const existing = new Set(msgs.map(m => m.id));
+  if (newMsgs.every(m => existing.has(m.id))) return msgs;
   msgs.push(...newMsgs);
   const dedup = [...new Map(msgs.map(m => [m.id, m])).values()]
     .sort((a, b) => (a.ts || 0) - (b.ts || 0)).slice(-80);
@@ -812,6 +870,8 @@ setCon(null, "CONNECTING");
 buildStrip();
 renderHero();
 setInterval(renderHero, 300000);
+announceBreakfast();
+setInterval(announceBreakfast, 600000);
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) { loadMatches(); if (chatTimer) pollChat(); }
 });
