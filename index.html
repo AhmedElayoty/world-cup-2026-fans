@@ -171,6 +171,11 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
  color:#fff;font-family:'Oswald';font-weight:700;font-size:19px;text-align:center;outline:none}
 .pin:focus{border-color:var(--rust)}
 .pin:disabled{opacity:.55}
+.subbtn{margin-top:9px;width:100%;background:var(--rust);border:none;color:#fff;font-family:'Oswald';
+ font-weight:600;letter-spacing:1.5px;font-size:12.5px;border-radius:10px;padding:10px;cursor:pointer}
+.subbtn:disabled{opacity:.7}
+.subok{margin-top:9px;text-align:center;font-family:'Oswald';font-weight:600;letter-spacing:1.2px;
+ font-size:12px;color:var(--green);background:#0a2e1d;border:1px solid var(--green);border-radius:10px;padding:9px}
 .pmeta{font-family:'Oswald';font-size:10px;letter-spacing:1.2px;color:var(--dim);display:flex;
  justify-content:space-between;margin-bottom:7px}
 .pmeta .res{color:var(--gold)}
@@ -610,13 +615,50 @@ function heroJump() {
 }
 
 /* ================= PREDICTIONS ================= */
+function uaeDateUTC(d) {
+  const k = uaeYMD(d);
+  return new Date(Date.UTC(+k.slice(0, 4), +k.slice(4, 6) - 1, +k.slice(6, 8)));
+}
+function weekStartKey(d) {
+  const t = uaeDateUTC(d);
+  t.setUTCDate(t.getUTCDate() - ((t.getUTCDay() + 6) % 7));
+  return t.toISOString().slice(0, 10).replace(/-/g, "");
+}
+async function syncMyPreds() {
+  try {
+    const all = await readKey(PRED_KEY, {});
+    const sv = (all[myId] && all[myId].preds) || {};
+    const clean = {};
+    Object.entries(sv).forEach(([k, v]) => { clean[k] = { h: v.h, a: v.a, locked: true }; });
+    myPreds = clean;
+    localStorage.setItem("cs_preds", JSON.stringify(myPreds));
+  } catch (_) {}
+}
 async function renderPredict() {
   try {
+    await syncMyPreds();
     const evs = await seasonEvents();
     const now = Date.now();
-    const upcoming = evs.filter(e => e.status.type.state === "pre" && new Date(e.date) > now).slice(0, 14);
+    const up = evs.filter(e => e.status.type.state === "pre" && new Date(e.date) > now);
+    const thisWk = weekStartKey(new Date());
+    let pool = up.filter(e => weekStartKey(new Date(e.date)) === thisWk);
+    let wkLabel = "THIS WEEK";
+    if (!pool.length && up.length) {
+      const nxt = weekStartKey(new Date(up[0].date));
+      pool = up.filter(e => weekStartKey(new Date(e.date)) === nxt);
+      wkLabel = "NEXT WEEK";
+    }
+    const rangeLab = pool.length
+      ? (fmt(new Date(pool[0].date), { day: "2-digit", month: "short" }) + " – " +
+         fmt(new Date(pool[pool.length - 1].date), { day: "2-digit", month: "short" })).toUpperCase()
+      : "";
     const recent = evs.filter(e => e.status.type.state !== "pre").slice(-6).reverse();
-    $("predList").innerHTML = upcoming.map(e => predCard(e, false)).join("") +
+    $("predList").innerHTML =
+      '<div class="secrow" style="margin-top:2px"><span class="sect" style="color:var(--gold)">' +
+      wkLabel + (rangeLab ? " · " + rangeLab : "") + '</span>' +
+      '<span style="margin-left:auto;font-size:10px;color:var(--dim);font-family:Oswald;letter-spacing:1px">ONE SUBMISSION · CLOSES 30 MIN BEFORE KICK-OFF</span></div>' +
+      (pool.length ? pool.map(e => predCard(e, new Date(e.date) - Date.now() < 1800000)).join("")
+                   : '<div class="empty">No more matches to predict this week — new week opens Monday.</div>') +
       (recent.length ? '<div class="secrow" style="margin-top:12px"><span class="sect">LOCKED / FINISHED</span></div>' +
         recent.map(e => predCard(e, true)).join("") : "");
     loadLeaderboard(evs);
@@ -624,10 +666,11 @@ async function renderPredict() {
     $("predList").innerHTML = '<div class="empty">Could not load fixtures — check connection.</div>';
   }
 }
-function predCard(e, locked) {
+function predCard(e, started) {
   const c = e.competitions[0];
   const H = c.competitors.find(x => x.homeAway === "home"), A = c.competitors.find(x => x.homeAway === "away");
   const p = myPreds[e.id] || {};
+  const done = p.locked === true;
   const ko = new Date(e.date);
   let meta;
   if (e.status.type.state === "post") {
@@ -637,16 +680,19 @@ function predCard(e, locked) {
   } else {
     meta = '<span>' + fmt(ko, { weekday: "short", day: "2-digit", month: "short" }).toUpperCase() +
       ' · ' + fmt(ko, { hour: "2-digit", minute: "2-digit" }) + ' UAE</span>' +
-      '<span>' + (locked ? "LOCKED" : "OPEN") + '</span>';
+      '<span style="' + (done ? "color:var(--green)" : "") + '">' +
+      (started ? "CLOSED" : done ? "SUBMITTED" : "OPEN") + '</span>';
   }
-  const dis = locked ? "disabled" : "";
-  return '<div class="pcard' + (locked ? " lock" : "") + '"><div class="pmeta">' + meta + '</div><div class="prow">' +
+  const dis = (started || done) ? "disabled" : "";
+  const action = started ? "" : done
+    ? '<div class="subok">YOUR FINAL ANSWER — LOCKED IN</div>'
+    : '<button class="subbtn" data-id="' + e.id + '" onclick="submitPred(this,event)">SUBMIT — ONE TIME ONLY</button>';
+  return '<div class="pcard' + ((started || done) ? " lock" : "") + '"><div class="pmeta">' + meta + '</div><div class="prow">' +
     '<div class="pt"><img src="' + (H.team.logo || "") + '" alt=""><span>' + esc(H.team.displayName) + '</span></div>' +
-    '<input class="pin" type="number" min="0" max="20" inputmode="numeric" value="' + (p.h ?? "") + '" ' + dis +
-    ' onchange="setPred(&quot;' + e.id + '&quot;,this.value,null)">' +
-    '<input class="pin" type="number" min="0" max="20" inputmode="numeric" value="' + (p.a ?? "") + '" ' + dis +
-    ' onchange="setPred(&quot;' + e.id + '&quot;,null,this.value)">' +
-    '<div class="pt r"><img src="' + (A.team.logo || "") + '" alt=""><span>' + esc(A.team.displayName) + '</span></div></div></div>';
+    '<input class="pin" id="ph-' + e.id + '" type="number" min="0" max="20" inputmode="numeric" value="' + (p.h ?? "") + '" ' + dis + '>' +
+    '<input class="pin" id="pa-' + e.id + '" type="number" min="0" max="20" inputmode="numeric" value="' + (p.a ?? "") + '" ' + dis + '>' +
+    '<div class="pt r"><img src="' + (A.team.logo || "") + '" alt=""><span>' + esc(A.team.displayName) + '</span></div></div>' +
+    action + '</div>';
 }
 function scorePred(p, h, a) {
   if (p.h === undefined || p.h === null || p.h === "" || h == null || a == null) return 0;
@@ -655,23 +701,45 @@ function scorePred(p, h, a) {
   if (Math.sign(ph - pa) === Math.sign((+h) - (+a))) return 1;
   return 0;
 }
-let predPush = null;
-function setPred(id, h, a) {
-  const p = myPreds[id] || {};
-  if (h !== null && h !== "") p.h = +h;
-  if (a !== null && a !== "") p.a = +a;
-  myPreds[id] = p;
-  localStorage.setItem("cs_preds", JSON.stringify(myPreds));
-  clearTimeout(predPush);
-  predPush = setTimeout(pushPreds, 900);
-}
-async function pushPreds() {
-  if (!localStorage.getItem("cs_name")) { ensureName(); return; }
-  try {
-    const all = await readKey(PRED_KEY, {});
-    all[myId] = { name: localStorage.getItem("cs_name"), preds: myPreds };
-    await writeKey(PRED_KEY, all);
-  } catch (_) {}
+async function submitPred(btn, ev) {
+  ev.stopPropagation();
+  const id = btn.dataset.id;
+  const hEl = document.getElementById("ph-" + id), aEl = document.getElementById("pa-" + id);
+  const h = (hEl.value || "").trim(), a = (aEl.value || "").trim();
+  const reset = (msg, ms) => { btn.textContent = msg; setTimeout(() => {
+    btn.textContent = "SUBMIT — ONE TIME ONLY"; btn.disabled = false; }, ms); };
+  const evObj = (seasonCache.events || []).find(x => x.id === id) || events.find(x => x.id === id);
+  if (evObj && new Date(evObj.date) - Date.now() < 1800000) {
+    btn.disabled = true; btn.textContent = "CLOSED — 30 MIN BEFORE KICK-OFF";
+    setTimeout(renderPredict, 1200); return;
+  }
+  if (h === "" || a === "" || isNaN(+h) || isNaN(+a)) { reset("ENTER BOTH SCORES FIRST", 1800); return; }
+  if (!localStorage.getItem("cs_name")) { ensureName(); reset("PICK YOUR NAME, THEN SUBMIT", 2400); return; }
+  btn.disabled = true; btn.textContent = "SAVING…";
+  let ok = false;
+  for (let t = 0; t < 3 && !ok; t++) {
+    try {
+      const all = await readKey(PRED_KEY, {});
+      const me = all[myId] || {};
+      me.name = localStorage.getItem("cs_name");
+      me.preds = me.preds || {};
+      if (!me.preds[id]) {
+        me.preds[id] = { h: Math.max(0, Math.min(20, +h)), a: Math.max(0, Math.min(20, +a)) };
+        all[myId] = me;
+        await writeKey(PRED_KEY, all);
+      }
+      await new Promise(r => setTimeout(r, 350 + Math.random() * 400));
+      const chk = await readKey(PRED_KEY, {});
+      const sv = chk[myId] && chk[myId].preds && chk[myId].preds[id];
+      if (sv) {
+        myPreds[id] = { h: sv.h, a: sv.a, locked: true };
+        localStorage.setItem("cs_preds", JSON.stringify(myPreds));
+        ok = true;
+      }
+    } catch (_) {}
+  }
+  if (ok) renderPredict();
+  else { btn.disabled = false; btn.textContent = "FAILED — TAP TO RETRY"; }
 }
 async function loadLeaderboard(evs) {
   try {
@@ -793,6 +861,7 @@ function saveName() {
   localStorage.setItem("cs_name", v);
   $("nameModal").classList.add("hide");
   pollChat();
+  if (!$("paneP").classList.contains("hide")) renderPredict();
 }
 async function readKey(key, fallback) {
   const r = await fetch("https://textdb.online/" + key + "?t=" + Date.now(), { cache: "no-store" });
