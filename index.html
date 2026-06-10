@@ -73,6 +73,8 @@ main{flex:1;padding:14px 14px calc(20px + env(safe-area-inset-bottom));overflow-
 .badge.pre{background:#26345f;color:var(--cyan)}
 .badge.ht{background:var(--gold);color:#231500}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+@keyframes goalflash{0%{background:#7a5208}30%{background:#a8741a}100%{background:var(--card)}}
+.mcard.goal{animation:goalflash 2.5s ease-out}
 .mrow{display:flex;align-items:center;gap:10px}
 .team{flex:1;display:flex;align-items:center;gap:9px;min-width:0}
 .team.away{flex-direction:row-reverse;text-align:right}
@@ -222,6 +224,7 @@ let events = [];             // merged events for selected UAE day
 let openId = null;           // expanded match id
 let lineups = {};            // eventId -> summary data
 let chatTimer = null, matchTimer = null, lastChatJson = "";
+let lastFetch = 0, lastScores = {}, flashIds = new Set();
 const myId = localStorage.getItem("cs_id") || (localStorage.setItem("cs_id",
   "u" + Math.random().toString(36).slice(2, 9)), localStorage.getItem("cs_id"));
 
@@ -245,7 +248,13 @@ async function getJSON(url) {
 }
 
 /* ================= CLOCK ================= */
-setInterval(() => { $("clock").textContent = fmt(new Date(), { hour: "2-digit", minute: "2-digit" }); }, 1000);
+setInterval(() => {
+  $("clock").textContent = fmt(new Date(), { hour: "2-digit", minute: "2-digit" });
+  if (lastFetch) {
+    const s = Math.max(0, Math.round((Date.now() - lastFetch) / 1000));
+    $("contxt").textContent = "LIVE FEED · UPDATED " + (s < 60 ? s + "S" : Math.round(s/60) + "M") + " AGO";
+  }
+}, 1000);
 
 /* ================= TABS ================= */
 function showTab(t) {
@@ -299,11 +308,25 @@ async function loadMatches() {
       .filter(e => !seen.has(e.id) && seen.add(e.id))
       .filter(e => uaeYMD(new Date(e.date)) === day)
       .sort((x, y) => new Date(x.date) - new Date(y.date));
+    flashIds.clear();
+    let buzz = false;
+    events.forEach(e => {
+      const c = e.competitions[0];
+      const sc = c.competitors.map(x => x.score ?? "").join("-");
+      if (lastScores[e.id] !== undefined && lastScores[e.id] !== sc &&
+          e.status.type.state === "in") { flashIds.add(e.id); buzz = true; }
+      lastScores[e.id] = sc;
+    });
+    if (buzz && navigator.vibrate) navigator.vibrate([180, 90, 180]);
     renderMatches();
-    setCon(true, "LIVE FEED OK · " + fmt(new Date(), { hour: "2-digit", minute: "2-digit" }));
+    lastFetch = Date.now();
+    setCon(true, "LIVE FEED · UPDATED 0S AGO");
+    const now = Date.now();
     const anyLive = events.some(e => e.status.type.state === "in");
+    const soon = events.some(e => e.status.type.state === "pre" &&
+      new Date(e.date) - now < 1800000 && new Date(e.date) - now > -300000);
     clearTimeout(matchTimer);
-    matchTimer = setTimeout(loadMatches, anyLive ? 30000 : 300000);
+    matchTimer = setTimeout(loadMatches, anyLive ? 15000 : soon ? 60000 : 300000);
   } catch (err) {
     setCon(false, "OFFLINE · RETRYING");
     $("mlist").innerHTML = `<div class="empty"><div class="big">📡</div>Can't reach the live feed.<br>
@@ -347,7 +370,7 @@ function renderMatches() {
       const who = d.athletesInvolved && d.athletesInvolved[0] ? d.athletesInvolved[0].displayName : "Goal";
       return `<b>${esc(d.clock?.displayValue || "")}</b> ⚽ ${esc(who)}${d.type && /penalty/i.test(d.type.text || "") ? " (pen)" : ""}${d.ownGoal ? " (OG)" : ""}`;
     }).join(" &nbsp;·&nbsp; ");
-    return `<div class="mcard${egy ? " egy" : ""}${openId === e.id ? " open" : ""}" onclick="toggleM('${e.id}')">
+    return `<div class="mcard${egy ? " egy" : ""}${flashIds.has(e.id) ? " goal" : ""}${openId === e.id ? " open" : ""}" onclick="toggleM('${e.id}')">
       <div class="mtop">${badge}<span>${esc(note)}</span><span style="margin-left:auto">${dayw}</span></div>
       <div class="mrow">
         <div class="team">${logo(H)}<span class="tname${H.team.displayName === "Egypt" ? " egy" : ""}">${esc(H.team.displayName)}</span></div>
