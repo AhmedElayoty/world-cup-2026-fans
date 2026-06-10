@@ -223,6 +223,9 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 .authtabs button.on{background:var(--rust);color:#fff;border-color:var(--rust2)}
 #authErr{color:var(--red);font-size:12px;min-height:17px;margin-bottom:8px}
 .authnote{font-size:10.5px;color:var(--dim);margin-top:10px;line-height:1.6}
+.authrem{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--mut);
+ margin:2px 0 12px;cursor:pointer;justify-content:center}
+.authrem input{width:16px;height:16px;accent-color:var(--rust)}
 .heroChange{font-family:'Oswald';font-size:9.5px;letter-spacing:1px;color:#9fd8bb;
  border:1px solid #1f7a4c;border-radius:12px;padding:2px 8px;cursor:pointer;margin-left:8px}
 .mypred{margin-top:8px;background:#26190f;border:1px solid #5a3a1a;border-radius:8px;padding:6px 10px;
@@ -298,6 +301,7 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
   <input id="auPass" type="password" maxlength="30" placeholder="Password" autocomplete="current-password">
   <select id="auNation"><option value="">Choose your nation…</option></select>
   <div id="authErr"></div>
+  <label class="authrem" id="authRemRow"><input type="checkbox" id="auRem" checked> Remember me on this device</label>
   <button id="authBtn" onclick="authSubmit()">LET'S GO ⚽</button>
   <div class="authnote">Log in once per device — that's it. Forgot your password? Ask Ahmed to reset it.</div>
  </div>
@@ -329,7 +333,14 @@ let myPreds = JSON.parse(localStorage.getItem("cs_preds") || "{}");
 let groupsTimer = null, heroEvent = null;
 const MYTEAMS = () => [myNation()];
 let cs_user = null;
-try { cs_user = JSON.parse(localStorage.getItem("cs_user") || "null"); } catch (_) {}
+try {
+  cs_user = JSON.parse(localStorage.getItem("cs_user") || sessionStorage.getItem("cs_user") || "null");
+} catch (_) {}
+function persistUser() {
+  const j = JSON.stringify(cs_user);
+  if (cs_user.rem) { localStorage.setItem("cs_user", j); sessionStorage.removeItem("cs_user"); }
+  else { sessionStorage.setItem("cs_user", j); localStorage.removeItem("cs_user"); }
+}
 let myId = (cs_user && cs_user.uid) || localStorage.getItem("cs_id") ||
   (localStorage.setItem("cs_id", "u" + Math.random().toString(36).slice(2, 9)),
    localStorage.getItem("cs_id"));
@@ -933,6 +944,7 @@ function authMode(m) {
   $("atC").classList.toggle("on", m === "C");
   $("atL").classList.toggle("on", m === "L");
   $("auUser").style.display = ""; $("auPass").style.display = "";
+  $("authRemRow").style.display = "";
   $("auNation").style.display = m === "C" ? "" : "none";
   $("authTitle").textContent = m === "C" ? "JOIN CAPRIOLE SPORTS" : "WELCOME BACK";
   $("authBtn").textContent = "LET'S GO ⚽";
@@ -989,8 +1001,9 @@ async function authGo() {
   }
 }
 function finishAuth(a) {
-  cs_user = { uid: a.uid, username: a.username, nation: a.nation };
-  localStorage.setItem("cs_user", JSON.stringify(cs_user));
+  cs_user = { uid: a.uid, username: a.username, nation: a.nation,
+              rem: !!($("auRem") && $("auRem").checked) };
+  persistUser();
   localStorage.setItem("cs_name", a.username);
   myId = a.uid;
   $("nameModal").classList.add("hide");
@@ -1008,6 +1021,7 @@ function openNation(ev) {
   $("atC").classList.remove("on"); $("atL").classList.remove("on");
   $("authTitle").textContent = "CHANGE MY NATION";
   $("auUser").style.display = "none"; $("auPass").style.display = "none";
+  $("authRemRow").style.display = "none";
   $("auNation").style.display = "";
   $("authBtn").textContent = "SAVE NATION";
   $("authErr").textContent = "";
@@ -1021,7 +1035,7 @@ async function saveNation() {
     const k = cs_user.username.toLowerCase();
     if (accts[k]) { accts[k].nation = nation; await writeKey(ACCT_KEY, accts); }
     cs_user.nation = nation;
-    localStorage.setItem("cs_user", JSON.stringify(cs_user));
+    persistUser();
     $("nameModal").classList.add("hide");
     renderHero(); loadStandings();
     if (events.length) renderMatches();
@@ -1101,6 +1115,7 @@ async function sendMsg() {
 /* ================= BOOT ================= */
 setCon(null, "CONNECTING");
 buildStrip();
+if (!cs_user) setTimeout(() => openAuth("C"), 700);
 if (cs_user) {
   localStorage.setItem("cs_name", cs_user.username);
   syncMyPreds().then(() => { if (events.length) renderMatches(); });
