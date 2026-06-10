@@ -498,13 +498,18 @@ function renderMatches() {
     const dayw = fmt(new Date(e.date), { weekday: "short", day: "2-digit", month: "short" }).toUpperCase();
     let badge, mid;
     if (state === "in") {
-      const half = (st.type.description || "").includes("Half") && st.type.description.includes("time");
-      badge = half ? `<span class="badge ht">HALF-TIME</span>`
+      const desc = st.type.description || "";
+      const half = /half/i.test(desc) && /time/i.test(desc);
+      const pens = /penalt|shootout/i.test(desc);
+      badge = pens ? `<span class="badge live">● PENALTY SHOOTOUT</span>`
+            : half ? `<span class="badge ht">HALF-TIME</span>`
                    : `<span class="badge live">● LIVE ${esc(st.displayClock || "")}</span>`;
       mid = `<div class="score">${H.score ?? 0} – ${A.score ?? 0}<small>${esc(st.displayClock || "")}</small></div>`;
     } else if (state === "post") {
-      badge = `<span class="badge ft">FULL-TIME</span>`;
-      mid = `<div class="score">${H.score ?? "-"} – ${A.score ?? "-"}<small>FT</small></div>`;
+      const so = H.shootoutScore != null && A.shootoutScore != null && (H.shootoutScore !== 0 || A.shootoutScore !== 0);
+      const aet = /extra|penalt/i.test(st.type.description || "") || /extra|penalt/i.test(st.type.detail || "");
+      badge = `<span class="badge ft">FULL-TIME${so ? " · PENS" : aet ? " · AET" : ""}</span>`;
+      mid = `<div class="score">${H.score ?? "-"} – ${A.score ?? "-"}<small>${so ? esc(H.shootoutScore + "–" + A.shootoutScore + " ON PENS") : aet ? "AET" : "FT"}</small></div>`;
     } else {
       badge = `<span class="badge pre">${ko} UAE</span>`;
       mid = `<div class="score">${ko}<small>KICK-OFF UAE</small></div>`;
@@ -521,10 +526,17 @@ function renderMatches() {
     } else if (state === "pre" && new Date(e.date) - Date.now() > 1800000) {
       predStrip = '<div class="mypred hint" onclick="event.stopPropagation();showTab(&quot;P&quot;)">PREDICT THIS MATCH \u2192</div>';
     }
-    const goals = (c.details || []).filter(d => d.scoringPlay).map(d => {
-      const who = d.athletesInvolved && d.athletesInvolved[0] ? d.athletesInvolved[0].displayName : "Goal";
-      return `<b>${esc(d.clock?.displayValue || "")}</b> ⚽ ${esc(who)}${d.type && /penalty/i.test(d.type.text || "") ? " (pen)" : ""}${d.ownGoal ? " (OG)" : ""}`;
-    }).join(" &nbsp;·&nbsp; ");
+    const goals = (c.details || [])
+      .filter(d => d.scoringPlay || /card/i.test((d.type && d.type.text) || ""))
+      .map(d => {
+        const who = d.athletesInvolved && d.athletesInvolved[0] ? d.athletesInvolved[0].displayName : "";
+        const t = esc((d.clock && d.clock.displayValue) || "");
+        if (d.scoringPlay) {
+          return `<b>${t}</b> ⚽ ${esc(who || "Goal")}` +
+            (d.type && /penalty/i.test(d.type.text || "") ? " (PEN)" : "") + (d.ownGoal ? " (OG)" : "");
+        }
+        return `<b>${t}</b> ${/red/i.test(d.type.text) ? "🟥" : "🟨"} ${esc(who)}`;
+      }).join(" &nbsp;·&nbsp; ");
     return `<div class="mcard${egy ? " egy" : ""}${flashIds.has(e.id) ? " goal" : ""}${openId === e.id ? " open" : ""}" onclick="toggleM('${e.id}')">
       <div class="mtop">${badge}<span>${esc(note)}</span><span style="margin-left:auto">${dayw}</span></div>
       <div class="mrow">
