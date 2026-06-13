@@ -584,7 +584,7 @@ async function loadStandings() {
     const d = await getJSON(STAND);
     const groups = d.children || [];
     $("ggrid").innerHTML = groups.map(g => {
-      const rows = (g.standings && g.standings.entries) || [];
+      const rows = rankRows((g.standings && g.standings.entries) || []);
       const hasEgy = rows.some(r => r.team.displayName === myNation());
       return `<div class="gcard${hasEgy ? " egy" : ""}"><h3>${esc(g.name || "")}</h3>
         <table class="gt"><tr><th>TEAM</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>PTS</th></tr>` +
@@ -610,6 +610,7 @@ function statmap(r) {
 function rankRows(rows) {
   return [...rows].sort((a, b) => {
     const A = statmap(a), B = statmap(b);
+    if (A.rank && B.rank && A.rank !== B.rank) return A.rank - B.rank;
     return (B.points - A.points) || (B.pointDifferential - A.pointDifferential) || (B.pointsFor - A.pointsFor);
   });
 }
