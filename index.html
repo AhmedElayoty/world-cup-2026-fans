@@ -355,6 +355,30 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 .chatbar .chatlock{display:flex;align-items:center;gap:10px;width:100%;background:var(--card);border:1px solid var(--line);border-radius:24px;padding:9px 9px 9px 16px}
 .chatbar .chatlock span{flex:1;color:var(--mut);font-size:12.5px}
 .chatbar .chatlock button{width:auto;background:var(--rust);color:#fff;border:none;border-radius:20px;padding:8px 16px;font-family:'Oswald';font-weight:600;font-size:12px;letter-spacing:.8px;cursor:pointer}
+/* knockout bracket */
+.brhint{text-align:center;font-family:'Oswald';font-size:10px;letter-spacing:.8px;color:var(--dim);margin:0 0 12px}
+.rchips{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;margin:0 0 11px;padding-bottom:2px}
+.rchips::-webkit-scrollbar{display:none}
+.rchip{flex:0 0 auto;background:var(--card2);border:1px solid var(--line);color:var(--mut);font-family:'Oswald';font-weight:600;letter-spacing:1px;font-size:12px;padding:8px 15px;border-radius:20px;cursor:pointer}
+.rchip.on{background:var(--cyan);border-color:var(--cyan);color:#04122b}
+.brlegend{display:flex;justify-content:space-between;align-items:center;gap:10px;font-family:'Oswald';font-size:9.5px;letter-spacing:.6px;color:var(--dim);margin-bottom:13px;flex-wrap:wrap}
+.brlegend .egl{color:var(--green);font-weight:600}
+.brhalf{font-family:'Oswald';font-weight:600;font-size:10.5px;letter-spacing:1.4px;color:var(--mut);margin:14px 2px 9px;text-transform:uppercase}
+.brbody>.brhalf:first-child{margin-top:0}
+.brcell{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 12px 8px;margin-bottom:10px;position:relative;overflow:hidden}
+.brcell.egy{background:#0a2e1d;border-color:var(--green)}
+.brh{display:flex;justify-content:space-between;align-items:center;font-family:'Oswald';font-size:9.5px;letter-spacing:1.1px;color:var(--dim);margin-bottom:6px}
+.brh .brko{color:var(--mut)}
+.brteam{display:grid;grid-template-columns:22px 1fr auto;gap:9px;align-items:center;height:27px}
+.brteam img{width:20px;height:20px;object-fit:contain;justify-self:center}
+.brteam .phc{width:18px;height:18px;border-radius:50%;border:1px dashed var(--line);justify-self:center}
+.brteam .bn{font-family:'Inter';font-weight:600;font-size:14px;color:#f4f6fb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px;min-width:0}
+.brteam.ph .bn{font-weight:500;color:rgba(244,246,251,.6)}
+.brteam .bn .bsub{font-style:normal;font-size:10px;color:var(--dim);letter-spacing:.3px;flex:none}
+.brteam .bn .ontrack{font-size:9px;color:var(--green);font-family:'Oswald';font-weight:700;letter-spacing:.5px;flex:none}
+.brteam.egy .bn{color:#6dffb5}
+.brteam .bsc{font-family:'Oswald';font-weight:700;font-size:16px;color:#f4f6fb;font-variant-numeric:tabular-nums}
+.brv{font-size:9.5px;color:var(--dim);margin-top:6px;letter-spacing:.3px}
 </style>
 </head>
 <body>
@@ -404,10 +428,15 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
   <div id="predList"><div class="empty">Loading…</div></div>
  </section>
  <section id="paneG" class="hide">
-  <div class="secrow"><span class="sect">GROUP STANDINGS</span>
-   <span style="margin-left:auto;font-size:10px;color:var(--dim);font-family:'Oswald';letter-spacing:1px">&#9679; LIVE &#183; UPDATES EVERY 20s</span></div>
-  <div class="ggrid" id="ggrid"><div class="empty">Loading standings…</div></div>
-  <div id="thirdsBox"></div>
+  <div class="sttoggle"><button id="gvT" class="on" onclick="setGroupsView('T')">GROUPS</button><button id="gvB" onclick="setGroupsView('B')">BRACKET</button></div>
+  <div id="gPaneTables">
+   <div class="brhint">Knockout bracket inside &#8593; &#8212; fills in as groups finish</div>
+   <div class="secrow"><span class="sect">GROUP STANDINGS</span>
+    <span style="margin-left:auto;font-size:10px;color:var(--dim);font-family:'Oswald';letter-spacing:1px">&#9679; LIVE &#183; UPDATES EVERY 20s</span></div>
+   <div class="ggrid" id="ggrid"><div class="empty">Loading standings…</div></div>
+   <div id="thirdsBox"></div>
+  </div>
+  <div id="gPaneBracket" class="hide"></div>
  </section>
  <section id="paneC" class="hide">
   <div class="chatnote">Shared Capriole team room · be nice, it's football 🏆</div>
@@ -734,6 +763,8 @@ async function loadStandings() {
         }).join("") + `</table></div>`;
     }).join("") + '<div class="qlegend" style="grid-column:1/-1"><span><i style="background:var(--cyan)"></i>TOP 2 — DIRECT R32</span><span><i style="background:var(--gold)"></i>3RD — BEST-THIRD RACE</span><span><i style="background:#46557f"></i>4TH — OUT</span></div>';
     renderThirds(groups);
+    _slots = resolveSlots(groups);
+    if (groupsView === "B" && !$("paneG").classList.contains("hide")) renderBracket();
   } catch (e) {
     $("ggrid").innerHTML = `<div class="empty">Couldn't load standings — retrying automatically.</div>`;
   }
@@ -783,6 +814,99 @@ function renderThirds(groups) {
       '<div class="st">' + (t.s.points || 0) + ' PTS · GD ' + (t.s.pointDifferential > 0 ? "+" : "") + (t.s.pointDifferential || 0) + '</div>' +
       '<div class="ok">' + (i < 8 ? "IN" : "OUT") + '</div></div>').join("") +
     (egyLine ? '<div class="egystat">' + egyLine + '</div>' : "") + '</div>';
+}
+
+/* ================= KNOCKOUT BRACKET ================= */
+const BRACKET = [{"n":73,"r":"R32","uae":"Sun 28 Jun 23:00","city":"Los Angeles","st":"SoFi Stadium","h":{"t":"R","g":"A"},"a":{"t":"R","g":"B"}},{"n":74,"r":"R32","uae":"Tue 30 Jun 00:30","city":"Boston","st":"Gillette Stadium","h":{"t":"W","g":"E"},"a":{"t":"3","set":"ABCDF"}},{"n":75,"r":"R32","uae":"Tue 30 Jun 05:00","city":"Monterrey","st":"Estadio BBVA","h":{"t":"W","g":"F"},"a":{"t":"R","g":"C"}},{"n":76,"r":"R32","uae":"Mon 29 Jun 21:00","city":"Houston","st":"NRG Stadium","h":{"t":"W","g":"C"},"a":{"t":"R","g":"F"}},{"n":77,"r":"R32","uae":"Wed 01 Jul 01:00","city":"New York / New Jersey","st":"MetLife Stadium","h":{"t":"W","g":"I"},"a":{"t":"3","set":"CDFGH"}},{"n":78,"r":"R32","uae":"Tue 30 Jun 21:00","city":"Dallas","st":"AT&T Stadium","h":{"t":"R","g":"E"},"a":{"t":"R","g":"I"}},{"n":79,"r":"R32","uae":"Wed 01 Jul 05:00","city":"Mexico City","st":"Estadio Azteca","h":{"t":"W","g":"A"},"a":{"t":"3","set":"CEFHI"}},{"n":80,"r":"R32","uae":"Wed 01 Jul 20:00","city":"Atlanta","st":"Mercedes-Benz Stadium","h":{"t":"W","g":"L"},"a":{"t":"3","set":"EHIJK"}},{"n":81,"r":"R32","uae":"Thu 02 Jul 04:00","city":"San Francisco Bay Area","st":"Levi's Stadium","h":{"t":"W","g":"D"},"a":{"t":"3","set":"BEFIJ"}},{"n":82,"r":"R32","uae":"Thu 02 Jul 00:00","city":"Seattle","st":"Lumen Field","h":{"t":"W","g":"G"},"a":{"t":"3","set":"AEHIJ"}},{"n":83,"r":"R32","uae":"Fri 03 Jul 03:00","city":"Toronto","st":"BMO Field","h":{"t":"R","g":"K"},"a":{"t":"R","g":"L"}},{"n":84,"r":"R32","uae":"Thu 02 Jul 23:00","city":"Los Angeles","st":"SoFi Stadium","h":{"t":"W","g":"H"},"a":{"t":"R","g":"J"}},{"n":85,"r":"R32","uae":"Fri 03 Jul 07:00","city":"Vancouver","st":"BC Place","h":{"t":"W","g":"B"},"a":{"t":"3","set":"EFGIJ"}},{"n":86,"r":"R32","uae":"Sat 04 Jul 02:00","city":"Miami","st":"Hard Rock Stadium","h":{"t":"W","g":"J"},"a":{"t":"R","g":"H"}},{"n":87,"r":"R32","uae":"Sat 04 Jul 05:30","city":"Kansas City","st":"Arrowhead Stadium","h":{"t":"W","g":"K"},"a":{"t":"3","set":"DEIJL"}},{"n":88,"r":"R32","uae":"Fri 03 Jul 22:00","city":"Dallas","st":"AT&T Stadium","h":{"t":"R","g":"D"},"a":{"t":"R","g":"G"}},{"n":89,"r":"R16","uae":"Sun 05 Jul 01:00","city":"Philadelphia","st":"Lincoln Financial Field","h":{"t":"WM","m":74},"a":{"t":"WM","m":77}},{"n":90,"r":"R16","uae":"Sat 04 Jul 21:00","city":"Houston","st":"NRG Stadium","h":{"t":"WM","m":73},"a":{"t":"WM","m":75}},{"n":91,"r":"R16","uae":"Mon 06 Jul 00:00","city":"New York / New Jersey","st":"MetLife Stadium","h":{"t":"WM","m":76},"a":{"t":"WM","m":78}},{"n":92,"r":"R16","uae":"Mon 06 Jul 04:00","city":"Mexico City","st":"Estadio Azteca","h":{"t":"WM","m":79},"a":{"t":"WM","m":80}},{"n":93,"r":"R16","uae":"Mon 06 Jul 23:00","city":"Dallas","st":"AT&T Stadium","h":{"t":"WM","m":83},"a":{"t":"WM","m":84}},{"n":94,"r":"R16","uae":"Tue 07 Jul 04:00","city":"Seattle","st":"Lumen Field","h":{"t":"WM","m":81},"a":{"t":"WM","m":82}},{"n":95,"r":"R16","uae":"Tue 07 Jul 20:00","city":"Atlanta","st":"Mercedes-Benz Stadium","h":{"t":"WM","m":86},"a":{"t":"WM","m":88}},{"n":96,"r":"R16","uae":"Wed 08 Jul 00:00","city":"Vancouver","st":"BC Place","h":{"t":"WM","m":85},"a":{"t":"WM","m":87}},{"n":97,"r":"QF","uae":"Fri 10 Jul 00:00","city":"Boston","st":"Gillette Stadium","h":{"t":"WM","m":89},"a":{"t":"WM","m":90}},{"n":98,"r":"QF","uae":"Fri 10 Jul 23:00","city":"Los Angeles","st":"SoFi Stadium","h":{"t":"WM","m":93},"a":{"t":"WM","m":94}},{"n":99,"r":"QF","uae":"Sun 12 Jul 01:00","city":"Miami","st":"Hard Rock Stadium","h":{"t":"WM","m":91},"a":{"t":"WM","m":92}},{"n":100,"r":"QF","uae":"Sun 12 Jul 05:00","city":"Kansas City","st":"Arrowhead Stadium","h":{"t":"WM","m":95},"a":{"t":"WM","m":96}},{"n":101,"r":"SF","uae":"Tue 14 Jul 23:00","city":"Dallas","st":"AT&T Stadium","h":{"t":"WM","m":97},"a":{"t":"WM","m":98}},{"n":102,"r":"SF","uae":"Wed 15 Jul 23:00","city":"Atlanta","st":"Mercedes-Benz Stadium","h":{"t":"WM","m":99},"a":{"t":"WM","m":100}},{"n":103,"r":"BRONZE","uae":"Sun 19 Jul 01:00","city":"Miami","st":"Hard Rock Stadium","h":{"t":"LM","m":101},"a":{"t":"LM","m":102}},{"n":104,"r":"FINAL","uae":"Sun 19 Jul 23:00","city":"New York / New Jersey","st":"MetLife Stadium","h":{"t":"WM","m":101},"a":{"t":"WM","m":102}}];
+const BR_ROUNDS = [["R32","ROUND OF 32"],["R16","ROUND OF 16"],["QF","QUARTER-FINALS"],["SF","SEMI-FINALS"],["FINAL","FINAL"]];
+const R32_TOP = [73,74,75,77,76,78,79,80], R32_BOT = [81,82,83,84,85,86,87,88];
+let groupsView = "T", bracketRound = "R32", _slots = null, _egyTrack = null;
+function setGroupsView(v) {
+  groupsView = v;
+  $("gvT").classList.toggle("on", v === "T");
+  $("gvB").classList.toggle("on", v === "B");
+  $("gPaneTables").classList.toggle("hide", v !== "T");
+  $("gPaneBracket").classList.toggle("hide", v !== "B");
+  if (v === "B") renderBracket();
+}
+function setBracketRound(r) { bracketRound = r; renderBracket(); }
+function resolveSlots(groups) {
+  const W = {}, R = {}, done = {}, thirds = []; let allDone = groups.length >= 12, egy = null;
+  groups.forEach(g => {
+    const rows = rankRows((g.standings && g.standings.entries) || []);
+    const gl = (g.name || "").replace("Group ", "").trim();
+    if (!rows.length) { allDone = false; return; }
+    const complete = rows.length >= 4 && rows.every(r => statmap(r).gamesPlayed >= 3);
+    done[gl] = complete; if (!complete) allDone = false;
+    const tm = r => ({ name: r.team.displayName, logo: (r.team.logos && r.team.logos[0]) ? r.team.logos[0].href : "" });
+    if (complete) { if (rows[0]) W[gl] = tm(rows[0]); if (rows[1]) R[gl] = tm(rows[1]); }
+    if (rows[2]) thirds.push({ g: gl, s: statmap(rows[2]), team: tm(rows[2]) });
+    const ei = rows.findIndex(r => r.team.displayName === myNation());
+    if (ei > -1) egy = { g: gl, rank: ei };
+  });
+  thirds.sort((a, b) => (b.s.points - a.s.points) || (b.s.pointDifferential - a.s.pointDifferential) || (b.s.pointsFor - a.s.pointsFor));
+  _egyTrack = egy;
+  return { W, R, done, allDone, thirds };
+}
+function slotTeam(slot) {
+  if (!_slots) return null;
+  if (slot.t === "W") return _slots.W[slot.g] || null;
+  if (slot.t === "R") return _slots.R[slot.g] || null;
+  return null;   // 3rd-place + match-winner slots resolve from ESPN fixtures at R32 (phase 2)
+}
+function slotLabel(slot) {
+  if (slot.t === "W") return { main: "Winner Group " + slot.g, sub: slot.g + "1" };
+  if (slot.t === "R") return { main: "Runner-up Group " + slot.g, sub: slot.g + "2" };
+  if (slot.t === "3") return { main: "3rd place", sub: "from " + slot.set.split("").join("/") };
+  if (slot.t === "WM") return { main: "Winner Match " + slot.m, sub: "M" + slot.m };
+  if (slot.t === "LM") return { main: "Loser Match " + slot.m, sub: "M" + slot.m };
+  return { main: "TBD", sub: "" };
+}
+function egyProvisional(slot) {
+  if (!_egyTrack) return false;
+  if (slot.t === "W" && slot.g === _egyTrack.g && _egyTrack.rank === 0) return true;
+  if (slot.t === "R" && slot.g === _egyTrack.g && _egyTrack.rank === 1) return true;
+  return false;
+}
+function brTeamRow(slot) {
+  const t = slotTeam(slot);
+  if (t) {
+    const egy = t.name === myNation();
+    return '<div class="brteam' + (egy ? " egy" : "") + '"><img src="' + (t.logo || "") + '" alt="" onerror="this.style.visibility=&#39;hidden&#39;"><span class="bn">' + esc(t.name) + '</span><span class="bsc"></span></div>';
+  }
+  const L = slotLabel(slot), prov = egyProvisional(slot);
+  return '<div class="brteam ph' + (prov ? " egy" : "") + '"><span class="phc"></span><span class="bn">' + esc(L.main) +
+    (prov ? ' <b class="ontrack">★ EGYPT</b>' : "") +
+    (L.sub ? ' <i class="bsub">' + esc(L.sub) + '</i>' : "") + '</span><span class="bsc"></span></div>';
+}
+function bracketCell(n) {
+  const ht = slotTeam(n.h), at = slotTeam(n.a);
+  const egyCell = (ht && ht.name === myNation()) || (at && at.name === myNation()) || egyProvisional(n.h) || egyProvisional(n.a);
+  const parts = n.uae.split(" "), time = parts.pop(), ko = parts.join(" ") + " · " + time;
+  return '<div class="brcell' + (egyCell ? " egy" : "") + '">' +
+    '<div class="brh"><span>' + n.r + ' · MATCH ' + n.n + '</span><span class="brko">' + esc(ko) + '</span></div>' +
+    brTeamRow(n.h) + brTeamRow(n.a) +
+    '<div class="brv">🏟️ ' + esc(n.city) + '</div></div>';
+}
+function renderBracket() {
+  const host = $("gPaneBracket"); if (!host) return;
+  const chips = BR_ROUNDS.map(([r]) => '<button class="rchip' + (r === bracketRound ? " on" : "") + '" onclick="setBracketRound(\'' + r + '\')">' + r + '</button>').join("");
+  let body = "";
+  if (bracketRound === "R32") {
+    const cells = nums => nums.map(num => bracketCell(BRACKET.find(n => n.n === num))).join("");
+    body = '<div class="brhalf">TOP HALF → Semi-final 1</div>' + cells(R32_TOP) +
+           '<div class="brhalf">BOTTOM HALF → Semi-final 2</div>' + cells(R32_BOT);
+  } else {
+    body = BRACKET.filter(n => n.r === bracketRound).sort((a, b) => a.n - b.n).map(bracketCell).join("");
+    if (bracketRound === "FINAL") {
+      const bz = BRACKET.find(n => n.r === "BRONZE");
+      if (bz) body += '<div class="brhalf">THIRD-PLACE PLAY-OFF</div>' + bracketCell(bz);
+    }
+  }
+  host.innerHTML = '<div class="rchips">' + chips + '</div>' +
+    '<div class="brlegend">' + (_egyTrack ? '<span class="egl">★ Your nation — ' + esc(myNation().toUpperCase()) + '</span>' : '<span></span>') +
+    '<span>Teams drop in as groups finish · times UAE</span></div>' +
+    '<div class="brbody">' + body + '</div>';
 }
 
 /* ================= HERO (my team) ================= */
