@@ -245,12 +245,18 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 .starman .tag{margin-left:auto;font-family:'Oswald';font-size:8.5px;letter-spacing:1.2px;color:#c9a44a;text-align:right;line-height:1.2}
 .sech{font-family:'Oswald';font-weight:600;font-size:10.5px;letter-spacing:1.6px;color:var(--mut);margin:12px 0 8px;display:flex;align-items:center;gap:8px}
 .sech::before,.sech::after{content:'';flex:1;height:1px;background:var(--line)}
-.tl{margin:2px 0}
-.tlrow{display:flex;align-items:center;gap:8px;padding:3px 0}
+.tl{position:relative;margin:2px 0;padding:2px 0}
+.tl::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:2px;transform:translateX(-50%);background:linear-gradient(180deg,var(--line),#2b3a6e 12%,#2b3a6e 88%,var(--line));z-index:0}
+.tlrow{position:relative;z-index:1;display:flex;align-items:center;gap:8px;padding:4px 0}
+.tlrow.goal.l{background:linear-gradient(90deg,rgba(224,90,43,.16),transparent 62%);border-radius:8px}
+.tlrow.goal.r{background:linear-gradient(270deg,rgba(25,200,255,.14),transparent 62%);border-radius:8px}
 .tlside{flex:1;display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--txt);min-width:0}
 .tlside.l{justify-content:flex-end;text-align:right}
-.tlside .ev{font-size:14px}
-.tlmin{flex:0 0 40px;text-align:center;font-family:'Oswald';font-weight:600;font-size:11px;color:#9fb3e6;background:#1a2548;border-radius:10px;padding:2px 0}
+.tlside.r{justify-content:flex-start;text-align:left}
+.tlside .ev{font-size:15px}
+.tlside b{color:#fff;font-weight:600}
+.tlmin{flex:0 0 44px;text-align:center;font-family:'Oswald';font-weight:600;font-size:11px;color:#9fb3e6;background:#1a2548;border:1px solid var(--line);border-radius:10px;padding:2px 0;position:relative;z-index:1;line-height:1.15}
+.tlmin small{display:block;font-size:10px;color:#fff;font-weight:700}
 .flabel{display:flex;align-items:center;justify-content:space-between;font-family:'Oswald';font-size:11px;letter-spacing:1px;color:var(--mut);margin:8px 2px 5px}
 .flabel b{color:#fff;font-weight:600}
 .flabel img{width:16px;height:16px;object-fit:contain;vertical-align:-3px;margin-right:3px}
@@ -266,6 +272,15 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 .sbar .track i{height:100%}
 .sbar .track .h{background:var(--rust2)}
 .sbar .track .a{background:var(--cyan)}
+.statshead{display:flex;align-items:center;gap:8px;margin:0 0 12px}
+.statshead .shside{flex:1;display:flex;align-items:center;gap:7px;min-width:0;padding-bottom:5px}
+.statshead .shside img{width:22px;height:22px;object-fit:contain;flex:0 0 auto}
+.statshead .shside span{font-family:'Oswald';font-weight:600;font-size:13px;letter-spacing:.3px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.statshead .shside.h{justify-content:flex-start;border-bottom:2px solid var(--rust2)}
+.statshead .shside.a{justify-content:flex-end;text-align:right;border-bottom:2px solid var(--cyan)}
+.statshead .vs{flex:0 0 auto;font-family:'Oswald';font-size:10px;letter-spacing:1.5px;color:var(--dim);align-self:flex-end;padding-bottom:5px}
+.tlmark{position:relative;z-index:1;text-align:center;font-family:'Oswald';font-weight:600;font-size:9.5px;letter-spacing:1.6px;color:var(--mut);margin:5px auto;padding:3px 12px;background:var(--card2);border:1px solid var(--line);border-radius:11px;width:fit-content}
+.tlmark.top{color:#fff;border-color:#2b3a6e}
 </style>
 </head>
 <body>
@@ -950,22 +965,35 @@ function starMan(data, ev) {
 function evTimeline(ev) {
   const c = ev.competitions[0];
   const H = c.competitors.find(x => x.homeAway === "home");
+  const A = c.competitors.find(x => x.homeAway === "away");
   const evs = (c.details || []).filter(d => (d.scoringPlay || /card/i.test((d.type && d.type.text) || "")) && !d.shootout);
   if (!evs.length) return "";
   const minNum = d => parseInt((((d.clock || {}).displayValue) || "0").replace(/[^0-9].*/, "")) || 0;
-  evs.sort((a, b) => minNum(a) - minNum(b));
+  const isHome = d => d.team && H.team && String(d.team.id) === String(H.team.id);
+  let hh = 0, aa = 0;
+  evs.slice().sort((a, b) => minNum(a) - minNum(b)).forEach(d => {
+    if (d.scoringPlay) { if (isHome(d)) hh++; else aa++; d._rs = hh + "&#8211;" + aa; }
+  });
+  evs.sort((a, b) => minNum(b) - minNum(a));
   const rows = evs.map(d => {
     const who = (d.athletesInvolved && d.athletesInvolved[0]) ? d.athletesInvolved[0].displayName : "";
     const t = esc(((d.clock || {}).displayValue) || "");
-    let ic, txt;
-    if (d.scoringPlay) { ic = "\u26BD"; txt = esc(who || "Goal") + (d.penaltyKick ? " (P)" : "") + (d.ownGoal ? " (OG)" : ""); }
-    else { ic = d.redCard ? "\uD83D\uDFE5" : "\uD83D\uDFE8"; txt = esc(who); }
-    const home = d.team && H.team && String(d.team.id) === String(H.team.id);
+    const home = isHome(d);
+    let ic, txt, goalCls = "";
+    if (d.scoringPlay) {
+      ic = "\u26BD"; goalCls = " goal " + (home ? "l" : "r");
+      txt = "<b>" + esc(who || "Goal") + "</b>" + (d.penaltyKick ? " (P)" : "") + (d.ownGoal ? " (OG)" : "");
+    } else { ic = d.redCard ? "\uD83D\uDFE5" : "\uD83D\uDFE8"; txt = esc(who); }
     const cell = '<span class="ev">' + ic + '</span> ' + txt;
-    return '<div class="tlrow"><div class="tlside l">' + (home ? cell : "") + '</div>' +
-      '<div class="tlmin">' + t + '</div><div class="tlside r">' + (home ? "" : cell) + '</div></div>';
+    const minCell = '<div class="tlmin">' + t + (d._rs ? '<small>' + d._rs + '</small>' : "") + '</div>';
+    return '<div class="tlrow' + goalCls + '"><div class="tlside l">' + (home ? cell : "") + '</div>' +
+      minCell + '<div class="tlside r">' + (home ? "" : cell) + '</div></div>';
   }).join("");
-  return '<div class="sech">GOALS &amp; CARDS</div><div class="tl">' + rows + '</div>';
+  const _st = ev.status.type, fs = (H.score != null ? H.score : 0) + "&#8211;" + (A.score != null ? A.score : 0);
+  const _top = _st.state === "post" ? ("FULL TIME &#183; " + fs + (/penalt/i.test(_st.description || "") ? " (PENS)" : /extra/i.test(_st.description || "") ? " (AET)" : ""))
+    : _st.state === "in" ? (esc(ev.status.displayClock || "LIVE") + " &#183; " + fs) : fs;
+  return '<div class="sech">GOALS &amp; CARDS</div><div class="tl">' +
+    '<div class="tlmark top">' + _top + '</div>' + rows + '<div class="tlmark bot">KICK-OFF</div></div>';
 }
 function posGroup(ab) {
   ab = (ab || "").toUpperCase();
@@ -1042,20 +1070,26 @@ function pitchBlock(ros, ev) {
 function statsShare(data) {
   let html = "";
   const t = (data.boxscore && data.boxscore.teams) || [];
-  if (t.length === 2 && (t[0].statistics || []).length) {
+  if (t.length === 2 && ((t[0].statistics || []).length || (t[1].statistics || []).length)) {
+    const th = t.find(x => x.homeAway === "home") || t[0];
+    const ta = t.find(x => x.homeAway === "away") || t[1];
+    const stat = (tm, k) => { const s = (tm.statistics || []).find(x => x.name === k); return s ? s.displayValue : undefined; };
     const want = [["possessionPct", "POSSESSION %"], ["totalShots", "SHOTS"], ["shotsOnTarget", "ON TARGET"],
                   ["wonCorners", "CORNERS"], ["foulsCommitted", "FOULS"], ["totalYellowCards", "YELLOW"], ["totalRedCards", "RED"]];
-    const m0 = {}, m1 = {};
-    (t[0].statistics || []).forEach(s => m0[s.name] = s.displayValue);
-    (t[1].statistics || []).forEach(s => m1[s.name] = s.displayValue);
     const num = v => parseFloat(String(v).replace("%", "")) || 0;
-    const bars = want.filter(([k]) => m0[k] !== undefined || m1[k] !== undefined).map(([k, lab]) => {
-      const a = num(m0[k]), b = num(m1[k]), tot = (a + b) || 1, ha = Math.round(a / tot * 100);
-      return '<div class="sbar"><div class="top"><span>' + esc(String(m0[k] ?? "0")) + '</span>' +
-        '<span class="lab">' + lab + '</span><span>' + esc(String(m1[k] ?? "0")) + '</span></div>' +
+    const bars = want.filter(([k]) => stat(th, k) !== undefined || stat(ta, k) !== undefined).map(([k, lab]) => {
+      const hv = stat(th, k), av = stat(ta, k), a = num(hv), b = num(av), ha = (a + b === 0) ? 50 : Math.round(a / (a + b) * 100);
+      return '<div class="sbar"><div class="top"><span>' + esc(String(hv != null ? hv : "0")) + '</span>' +
+        '<span class="lab">' + lab + '</span><span>' + esc(String(av != null ? av : "0")) + '</span></div>' +
         '<div class="track"><i class="h" style="width:' + ha + '%"></i><i class="a" style="width:' + (100 - ha) + '%"></i></div></div>';
     }).join("");
-    if (bars) html += '<div class="sech">MATCH STATS</div>' + bars;
+    if (bars) {
+      const nameOf = tm => (tm.team && tm.team.displayName) || "";
+      const logoOf = tm => (tm.team && (tm.team.logo || ((tm.team.logos || [])[0] || {}).href)) || "";
+      const shside = (tm, cls) => '<div class="shside ' + cls + '"><img src="' + logoOf(tm) + '" alt="" onerror="this.style.visibility=&#39;hidden&#39;"><span>' + esc(nameOf(tm)) + '</span></div>';
+      const hd = '<div class="statshead">' + shside(th, "h") + '<span class="vs">VS</span>' + shside(ta, "a") + '</div>';
+      html += '<div class="sech">MATCH STATS</div>' + hd + bars;
+    }
   }
   return html + '<button class="sharebtn" onclick="shareMatch(event)">SHARE THIS MATCH TO THE TEAM</button>';
 }
