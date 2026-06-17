@@ -970,7 +970,7 @@ function applyLiveStats(groups, evs) {
       const gi = tg[H.team.id]; if (gi == null || tg[A.team.id] !== gi) return;   // same-group match only
       const stt = e.status && e.status.type && e.status.type.state;
       if (stt === "in") live[gi] = true;                                          // a group match is in progress
-      if (stt !== "post") return;                                                 // count finished only
+      if (stt !== "post" && stt !== "in") return;                                 // count finished AND live (live = provisional, shown under the LIVE badge until ESPN confirms post-FT)
       const hs = parseInt(H.score, 10), as = parseInt(A.score, 10); if (isNaN(hs) || isNaN(as)) return;
       const sh = get(H.team.id), sa = get(A.team.id);
       sh.gp++; sa.gp++; sh.gf += hs; sh.ga += as; sa.gf += as; sa.ga += hs;
