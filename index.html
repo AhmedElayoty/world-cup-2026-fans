@@ -453,6 +453,16 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 .rtn{flex:1;min-width:0;font-family:'Oswald';font-weight:600;font-size:13px;color:var(--txt);line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rtn i{display:block;font-family:'Inter';font-weight:400;font-style:normal;font-size:9.5px;color:var(--dim);letter-spacing:.3px;margin-top:1px}
 .rth{flex:none;font-family:'Oswald';font-weight:600;font-size:11px;color:var(--mut);text-align:right;white-space:nowrap}
+.rthint{font-size:10px;color:var(--dim);text-align:center;margin:2px 0 9px;letter-spacing:.3px}
+.rt2col{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:start}
+.rtcol{display:flex;flex-direction:column;gap:4px;min-width:0}
+.rthd{display:flex;align-items:center;gap:5px;font-family:'Oswald';font-weight:600;font-size:11px;letter-spacing:.6px;color:var(--mut);padding:1px 2px 5px;border-bottom:1px solid var(--line);margin-bottom:2px}
+.rthd img{width:16px;height:16px;object-fit:contain;flex:none}
+.rtrow2{display:flex;align-items:center;gap:6px;padding:5px 6px;background:var(--card2);border:1px solid var(--line);border-radius:8px;cursor:pointer;min-width:0}
+.rtrow2.motmrow{border-color:var(--gold);background:linear-gradient(90deg,rgba(255,200,70,.13),var(--card2) 68%)}
+.rtn2{flex:1;min-width:0;font-family:'Oswald';font-weight:600;font-size:11.5px;color:var(--txt);line-height:1.12;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rtn2 i{display:block;font-family:'Inter';font-weight:400;font-style:normal;font-size:8.5px;color:var(--dim);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rtn2 .ast{font-style:normal;color:#9fd957}
 .sbar{margin:8px 0}
 .sbar .top{display:flex;justify-content:space-between;font-family:'Oswald';font-size:12px;color:#fff;margin-bottom:3px}
 .sbar .top .lab{color:var(--dim);letter-spacing:1px;font-size:9.5px;align-self:center}
@@ -1865,39 +1875,56 @@ function motmRate(m, c) {
   r = 5.9 + (r - 6.0) * 0.8;   // gentle calibration toward a FotMob-like scale (monotonic; order unchanged)
   return Math.round(Math.min(9.7, Math.max(4.5, r)) * 10) / 10;
 }
+// keep only the fields the rating + stat-popup need, so the saved/shared copy stays small
+const RT_KEEP = ["minutes","totalGoals","goalAssists","totalShots","shotsOnTarget","expectedGoals","expectedAssists","bigChanceCreated","touches","totalPasses","passPct","successfulFinalThirdPasses","duelsWon","duels","effectiveTackles","interceptions","effectiveClearance","saves","savePct","goalsPrevented","goalsConceded","cleanSheet","penaltyKicksSaved","foulsCommitted","yellowCards","redCards"];
+function rtTrimM(m) { const o = {}; for (const k of RT_KEEP) if (m && m[k] != null) o[k] = m[k]; return o; }
+function rtPayload(byId, motm) {
+  const b = {}; for (const pid in byId) { const p = byId[pid]; b[pid] = { rating: p.rating, c: p.c, name: p.name, pos: p.pos, team: p.team, m: rtTrimM(p.m) }; }
+  return { byId: b, motm: motm ? { pid: motm.pid, name: motm.name, team: motm.team, rating: motm.rating, c: motm.c, m: rtTrimM(motm.m) } : null };
+}
+function rtPersist(id, payload, alsoShared) {
+  try { localStorage.setItem("cs_rtv1_" + id, JSON.stringify(payload)); }
+  catch (_) { try { Object.keys(localStorage).filter(k => k.indexOf("cs_rtv1_") === 0).forEach(k => localStorage.removeItem(k)); localStorage.setItem("cs_rtv1_" + id, JSON.stringify(payload)); } catch (__) {} }
+  if (alsoShared) { try { writeKey("capriole_wc26_rt_" + id, payload); } catch (_) {} }   // share globally → others read it instead of recomputing
+}
 async function loadRatings(ev) {
   const id = ev.id;
   if (_ratings[id] && (_ratings[id].ready || _ratings[id].loading)) return _ratings[id];
+  try { const _c = localStorage.getItem("cs_rtv1_" + id); if (_c) { const _d = JSON.parse(_c); if (_d && _d.byId) return (_ratings[id] = { ready: true, byId: _d.byId, motm: _d.motm }); } } catch (_) {}   // a finished match's ratings never change → reuse the saved copy (no recompute)
   if (!ev.status || ev.status.type.state !== "post") return null;   // full-time only
   _ratings[id] = { loading: true, byId: {} };
   const gj = u => fetch(String(u).replace(/^http:/, "https:")).then(r => r.json());
+  let byId = {}, motm = null, fromShared = false;
   try {
-    const cev = await gj(RATE_CORE + "/events/" + id);
-    const comp = await gj(cev.competitions[0].$ref);
-    const refs = [];
-    for (const c of (comp.competitors || [])) {
-      const tn = (c.team && c.team.displayName) || "";
-      try { const ros = await gj(c.roster.$ref);
-        (ros.entries || []).forEach(e => { if (e.statistics && e.statistics.$ref) refs.push({ pid: String(e.playerId), team: tn, pos: (e.position && (e.position.abbreviation || e.position.name)) || "", ref: e.statistics.$ref }); });
-      } catch (_) {}
+    // 1) shared global cache — if anyone already computed this match, reuse it (no recompute for everyone else)
+    try { const sh = await readKey("capriole_wc26_rt_" + id, null); if (sh && sh.byId && Object.keys(sh.byId).length) { byId = sh.byId; motm = sh.motm; fromShared = true; } } catch (_) {}
+    if (!fromShared) {                                    // 2) nobody has → compute it from the core feed
+      const cev = await gj(RATE_CORE + "/events/" + id);
+      const comp = await gj(cev.competitions[0].$ref);
+      const refs = [];
+      for (const c of (comp.competitors || [])) {
+        const tn = (c.team && c.team.displayName) || "";
+        try { const ros = await gj(c.roster.$ref);
+          (ros.entries || []).forEach(e => { if (e.statistics && e.statistics.$ref) refs.push({ pid: String(e.playerId), team: tn, pos: (e.position && (e.position.abbreviation || e.position.name)) || "", ref: e.statistics.$ref }); });
+        } catch (_) {}
+      }
+      await Promise.all(refs.map(async rf => {
+        try { const st = await gj(rf.ref); const cats = (st.splits && st.splits.categories) || []; const m = {};
+          cats.forEach(c => (c.stats || []).forEach(s => m[s.name] = s.value));
+          if ((m.minutes || 0) <= 0) return;
+          const gk = /^g|keeper/i.test(rf.pos) || (m.saves > 0 || m.savePct > 0 || m.crossesCaught > 0 || m.punches > 0);
+          const cl = motmCls(rf.pos, gk), rt = motmRate(m, cl);
+          if (rt == null) return;
+          byId[rf.pid] = { rating: rt, c: cl, m, team: rf.team, pos: rf.pos, mins: m.minutes || 0 };
+        } catch (_) {}
+      }));
+      const sum = lineups[id];
+      if (sum) (sum.rosters || []).forEach(r => { const tn = (r.team && r.team.displayName) || ""; (r.roster || []).forEach(p => { const a = p.athlete || {}; const b = byId[String(a.id)]; if (b) { b.name = a.displayName || a.shortName || ""; if (tn) b.team = tn; } }); });
+      Object.keys(byId).forEach(pid => { const x = byId[pid]; if (x.name && (!motm || x.rating > motm.rating)) motm = { pid, name: x.name, team: x.team, rating: x.rating, m: x.m, c: x.c }; });
     }
-    const byId = {};
-    await Promise.all(refs.map(async rf => {
-      try { const st = await gj(rf.ref); const cats = (st.splits && st.splits.categories) || []; const m = {};
-        cats.forEach(c => (c.stats || []).forEach(s => m[s.name] = s.value));
-        if ((m.minutes || 0) <= 0) return;
-        const gk = /^g|keeper/i.test(rf.pos) || (m.saves > 0 || m.savePct > 0 || m.crossesCaught > 0 || m.punches > 0);
-        const cl = motmCls(rf.pos, gk), rt = motmRate(m, cl);
-        if (rt == null) return;
-        byId[rf.pid] = { rating: rt, c: cl, m, team: rf.team, pos: rf.pos, mins: m.minutes || 0 };
-      } catch (_) {}
-    }));
-    const sum = lineups[id];
-    if (sum) (sum.rosters || []).forEach(r => { const tn = (r.team && r.team.displayName) || ""; (r.roster || []).forEach(p => { const a = p.athlete || {}; const b = byId[String(a.id)]; if (b) { b.name = a.displayName || a.shortName || ""; if (tn) b.team = tn; } }); });
-    let motm = null;
-    Object.keys(byId).forEach(pid => { const x = byId[pid]; if (x.name && (!motm || x.rating > motm.rating)) motm = { pid, name: x.name, team: x.team, rating: x.rating, m: x.m, c: x.c }; });
-    _ratings[id] = { ready: true, byId, motm };
-  } catch (e) { _ratings[id] = { ready: true, byId: {}, motm: null }; }
+  } catch (e) {}
+  _ratings[id] = { ready: true, byId, motm };
+  if (Object.keys(byId).length) rtPersist(id, fromShared ? { byId, motm } : rtPayload(byId, motm), !fromShared);   // save locally always; publish to the shared store only when we computed it
   if (openId === id && $("det" + id)) { const oe = events.find(x => x.id === id); if (oe && lineups[id]) $("det" + id).innerHTML = matchDetail(lineups[id], oe); }
   return _ratings[id];
 }
@@ -1951,19 +1978,25 @@ function ldTab(btn, which) {
 function ratingsTable(ev) {
   const R = _ratings[ev.id];
   if (!R || !R.ready) { if (!R) loadRatings(ev); return '<div class="dnote">Analyzing player ratings…</div>'; }
-  const arr = Object.keys(R.byId).map(pid => Object.assign({ pid }, R.byId[pid])).filter(x => x.name).sort((a, b) => b.rating - a.rating);
-  if (!arr.length) return '<div class="dnote">Player ratings unavailable for this match.</div>';
-  const c = ev.competitions[0], abbr = {};
-  c.competitors.forEach(z => abbr[z.team.displayName] = z.team.abbreviation);
-  return '<div class="rtbl">' + arr.map((p, i) => {
-    const s = p.m;
-    const head = p.c === "GK" ? ((s.saves || 0) + " sv" + (s.cleanSheet ? " · CS" : ""))
-      : ([(s.totalGoals ? s.totalGoals + "G" : ""), (s.goalAssists ? s.goalAssists + "A" : "")].filter(Boolean).join(" ") || (Math.round((s.passPct || 0) * 100) + "% pass"));
-    return '<div class="rtrow' + (i === 0 ? " motmrow" : "") + '" onclick="event.stopPropagation();playerStatPop(\'' + ev.id + '\',\'' + p.pid + '\')">' +
-      '<span class="rtr ' + rateCls(p.rating) + '">' + p.rating.toFixed(1) + '</span>' +
-      '<span class="rtn">' + esc(p.name) + '<i>' + esc(abbr[p.team] || "") + ' · ' + esc(p.pos || p.c) + (i === 0 ? ' · ⭐ MOTM' : '') + '</i></span>' +
-      '<span class="rth">' + esc(head) + '</span></div>';
-  }).join("") + '</div>';
+  const all = Object.keys(R.byId).map(pid => Object.assign({ pid }, R.byId[pid])).filter(x => x.name);
+  if (!all.length) return '<div class="dnote">Player ratings unavailable for this match.</div>';
+  const motmPid = R.motm ? R.motm.pid : null;
+  const teams = (ev.competitions[0].competitors || []).map(z => ({ name: z.team.displayName, abbr: z.team.abbreviation || z.team.displayName, logo: z.team.logo || "" }));
+  const ferr = ' onerror="this.style.visibility=&#39;hidden&#39;"';
+  const col = team => {
+    const ps = all.filter(p => p.team === team.name).sort((a, b) => b.rating - a.rating);
+    const rows = ps.map(p => {
+      const s = p.m, ga = [];
+      if (s.totalGoals) ga.push((s.totalGoals > 3 ? '⚽' + s.totalGoals : '⚽'.repeat(s.totalGoals)));
+      if (s.goalAssists) ga.push('<b class="ast">' + s.goalAssists + 'A</b>');
+      const isM = p.pid === motmPid;
+      return '<div class="rtrow2' + (isM ? ' motmrow' : '') + '" onclick="event.stopPropagation();playerStatPop(\'' + ev.id + '\',\'' + p.pid + '\')">' +
+        '<span class="rtr ' + rateCls(p.rating) + '">' + p.rating.toFixed(1) + '</span>' +
+        '<span class="rtn2">' + esc(p.name) + (isM ? ' ⭐' : '') + '<i>' + esc(p.pos || p.c) + (ga.length ? ' · ' + ga.join(' ') : '') + '</i></span></div>';
+    }).join("");
+    return '<div class="rtcol"><div class="rthd"><img src="' + esc(team.logo) + '" alt=""' + ferr + '>' + esc(team.abbr) + '</div>' + rows + '</div>';
+  };
+  return '<div class="rthint">Tap any player for full stats →</div><div class="rt2col">' + teams.map(col).join("") + '</div>';
 }
 function lineupsTabbed(ros, ev) {
   if (ev.status.type.state !== "post") return pitchBlock(ros, ev);   // ratings only after full-time
