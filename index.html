@@ -379,7 +379,10 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 .brteam.egy .bn{color:#6dffb5}
 .brteam .bsc{font-family:'Oswald';font-weight:700;font-size:16px;color:#f4f6fb;font-variant-numeric:tabular-nums}
 .brv{font-size:9.5px;color:var(--dim);margin-top:6px;letter-spacing:.3px}
-.brdl{width:100%;background:linear-gradient(90deg,var(--rust),var(--gold));color:#16110a;border:none;border-radius:11px;padding:12px;font-family:'Oswald';font-weight:700;font-size:12.5px;letter-spacing:1px;cursor:pointer;margin:0 0 12px}
+.brdlrow{display:flex;gap:9px;margin:0 0 12px}
+.brdl{flex:1;background:linear-gradient(90deg,var(--rust),var(--gold));color:#16110a;border:none;border-radius:11px;padding:12px;font-family:'Oswald';font-weight:700;font-size:12px;letter-spacing:.8px;cursor:pointer}
+.brdl.alt{background:none;border:1.5px solid var(--gold);color:var(--gold)}
+.brdl:disabled{opacity:.6}
 .brdl:active{opacity:.85}
 </style>
 </head>
@@ -906,7 +909,8 @@ function renderBracket() {
     }
   }
   host.innerHTML = '<div class="rchips">' + chips + '</div>' +
-    '<button class="brdl" onclick="openBracketPoster()">⤢ OPEN FULL BRACKET TREE (LANDSCAPE)</button>' +
+    '<div class="brdlrow"><button class="brdl" onclick="openBracketPoster()">⤢ OPEN FULL TREE</button>' +
+    '<button class="brdl alt" onclick="downloadBracketPNG(this)">⬇ DOWNLOAD (PNG)</button></div>' +
     '<div class="brlegend">' + (_egyTrack ? '<span class="egl">★ Your nation — ' + esc(myNation().toUpperCase()) + '</span>' : '<span></span>') +
     '<span>Teams drop in as groups finish · times UAE</span></div>' +
     '<div class="brbody">' + body + '</div>';
@@ -1098,6 +1102,36 @@ function openBracketPoster(){
     '</style></head><body><div class="tip">World Cup 2026 — turn your phone sideways for the full-size bracket · screenshot to share</div>'+svg+'</body></html>';
   const url=URL.createObjectURL(new Blob([html],{type:"text/html"}));
   const w=window.open(url,"_blank"); if(!w) location.href=url;
+}
+function bpDataURI(u){ return fetch(u).then(r=>r.blob()).then(b=>new Promise(res=>{const f=new FileReader();f.onload=()=>res(f.result);f.onerror=()=>res(null);f.readAsDataURL(b);})).catch(()=>null); }
+async function bpFontCSS(){
+  try{
+    const css=await (await fetch("https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap")).text();
+    let out=""; for(const blk of css.split("@font-face").slice(1)){
+      const fam=(blk.match(/font-family:\s*'([^']+)'/)||[])[1], wt=(blk.match(/font-weight:\s*(\d+)/)||[])[1]||"400",
+            st=(blk.match(/font-style:\s*(\w+)/)||[])[1]||"normal", u=(blk.match(/url\(([^)]+\.woff2)\)/)||[])[1];
+      if(fam&&u&&(fam==="Oswald"||fam==="Inter")){ const d=await bpDataURI(u); if(d) out+="@font-face{font-family:'"+fam+"';font-style:"+st+";font-weight:"+wt+";src:url("+d+") format('woff2');}"; }
+    } return out;
+  }catch(e){ return ""; }
+}
+async function downloadBracketPNG(btn){
+  const orig=btn?btn.innerHTML:""; if(btn){ btn.innerHTML="PREPARING…"; btn.disabled=true; }
+  try{
+    let svg=bracketPosterSVG();
+    const tro=new URL("trophy.png",location.href).href, td=await bpDataURI(tro); if(td) svg=svg.split(tro).join(td);
+    const urls=[...new Set((svg.match(/href="(https:\/\/[^"]+\.(?:png|jpg|jpeg|svg))"/g)||[]).map(s=>s.slice(6,-1)))];
+    for(const u of urls){ const d=await bpDataURI(u); if(d) svg=svg.split('"'+u+'"').join('"'+d+'"'); }
+    const fc=await bpFontCSS(); if(fc) svg=svg.replace("<defs>","<defs><style>"+fc+"</style>");
+    const scale=1.5, W=2400*scale, H=1200*scale;
+    await new Promise((res,rej)=>{ const img=new Image();
+      const burl=URL.createObjectURL(new Blob([svg],{type:"image/svg+xml;charset=utf-8"}));
+      img.onload=()=>{ try{ const c=document.createElement("canvas"); c.width=W; c.height=H; const x=c.getContext("2d");
+          x.fillStyle="#100810"; x.fillRect(0,0,W,H); x.drawImage(img,0,0,W,H); URL.revokeObjectURL(burl);
+          c.toBlob(b=>{ if(!b){ rej(); return; } const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="World-Cup-2026-Bracket.png"; document.body.appendChild(a); a.click(); a.remove(); res(); }, "image/png"); }
+        catch(e){ URL.revokeObjectURL(burl); rej(e); } };
+      img.onerror=()=>{ URL.revokeObjectURL(burl); rej(); }; img.src=burl; });
+  }catch(e){ openBracketPoster(); }
+  if(btn){ btn.innerHTML=orig; btn.disabled=false; }
 }
 
 /* ================= HERO (my team) ================= */
