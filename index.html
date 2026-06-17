@@ -1911,7 +1911,7 @@ function motmCard(data, ev) {
   if (s.goalAssists) bits.push(s.goalAssists + (s.goalAssists > 1 ? " assists" : " assist"));
   if (m.c === "GK") { if (s.saves) bits.push(s.saves + " saves"); if (s.cleanSheet) bits.push("clean sheet"); }
   else { if (s.shotsOnTarget) bits.push(s.shotsOnTarget + " on tgt"); if (s.bigChanceCreated) bits.push(s.bigChanceCreated + " big chance" + (s.bigChanceCreated > 1 ? "s" : "")); }
-  return '<div class="motm" onclick="playerStatPop(\'' + ev.id + '\',\'' + m.pid + '\')"><span class="ic">⭐</span><div class="motmb"><div class="nm">' + esc(m.name) + ' <b class="motmr">' + m.rating.toFixed(1) + '</b></div><div class="sub">' + esc(m.team) + (bits.length ? ' · ' + bits.join(", ") : "") + ' · tap for stats</div></div><div class="tag">MOTM<br>(BY RATING)</div></div>';
+  return '<div class="motm" onclick="event.stopPropagation();playerStatPop(\'' + ev.id + '\',\'' + m.pid + '\')"><span class="ic">⭐</span><div class="motmb"><div class="nm">' + esc(m.name) + ' <b class="motmr">' + m.rating.toFixed(1) + '</b></div><div class="sub">' + esc(m.team) + (bits.length ? ' · ' + bits.join(", ") : "") + ' · tap for stats</div></div><div class="tag">MOTM<br>(BY RATING)</div></div>';
 }
 function playerStatPop(eventId, pid) {
   const R = _ratings[eventId]; if (!R || !R.byId || !R.byId[pid]) return;
@@ -1959,7 +1959,7 @@ function ratingsTable(ev) {
     const s = p.m;
     const head = p.c === "GK" ? ((s.saves || 0) + " sv" + (s.cleanSheet ? " · CS" : ""))
       : ([(s.totalGoals ? s.totalGoals + "G" : ""), (s.goalAssists ? s.goalAssists + "A" : "")].filter(Boolean).join(" ") || (Math.round((s.passPct || 0) * 100) + "% pass"));
-    return '<div class="rtrow' + (i === 0 ? " motmrow" : "") + '" onclick="playerStatPop(\'' + ev.id + '\',\'' + p.pid + '\')">' +
+    return '<div class="rtrow' + (i === 0 ? " motmrow" : "") + '" onclick="event.stopPropagation();playerStatPop(\'' + ev.id + '\',\'' + p.pid + '\')">' +
       '<span class="rtr ' + rateCls(p.rating) + '">' + p.rating.toFixed(1) + '</span>' +
       '<span class="rtn">' + esc(p.name) + '<i>' + esc(abbr[p.team] || "") + ' · ' + esc(p.pos || p.c) + (i === 0 ? ' · ⭐ MOTM' : '') + '</i></span>' +
       '<span class="rth">' + esc(head) + '</span></div>';
@@ -1967,7 +1967,7 @@ function ratingsTable(ev) {
 }
 function lineupsTabbed(ros, ev) {
   if (ev.status.type.state !== "post") return pitchBlock(ros, ev);   // ratings only after full-time
-  return '<div class="ldtabs"><button type="button" class="ldtab on" onclick="ldTab(this,\'form\')">FORMATION</button><button type="button" class="ldtab" onclick="ldTab(this,\'rate\')">PLAYER RATINGS</button></div>' +
+  return '<div class="ldtabs"><button type="button" class="ldtab on" onclick="event.stopPropagation();ldTab(this,\'form\')">FORMATION</button><button type="button" class="ldtab" onclick="event.stopPropagation();ldTab(this,\'rate\')">PLAYER RATINGS</button></div>' +
     '<div class="ldview" data-v="form">' + pitchBlock(ros, ev) + '</div>' +
     '<div class="ldview hide" data-v="rate">' + ratingsTable(ev) + '</div>';
 }
@@ -2117,7 +2117,7 @@ function subsLine(t, evId) {
   if (!su.length) return "";
   const RB = _ratings[evId] && _ratings[evId].ready ? _ratings[evId].byId : null;
   return '<div class="subs" style="margin:5px 2px 0">\u21C4 ' + esc(t.team.displayName) + ': ' +
-    su.map(p => { const a = p.athlete || {}; const rt = RB && RB[String(a.id)]; const nm = esc(a.shortName || a.displayName || ""); return rt ? '<span class="subln" onclick="playerStatPop(\'' + evId + '\',\'' + String(a.id) + '\')">' + nm + ' <b>' + rt.rating.toFixed(1) + '</b></span>' : nm; }).join(", ") + '</div>';
+    su.map(p => { const a = p.athlete || {}; const rt = RB && RB[String(a.id)]; const nm = esc(a.shortName || a.displayName || ""); return rt ? '<span class="subln" onclick="event.stopPropagation();playerStatPop(\'' + evId + '\',\'' + String(a.id) + '\')">' + nm + ' <b>' + rt.rating.toFixed(1) + '</b></span>' : nm; }).join(", ") + '</div>';
 }
 function pitchBlock(ros, ev) {
   const home = ros.find(r => r.homeAway === "home") || ros[0];
