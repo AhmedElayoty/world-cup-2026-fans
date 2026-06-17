@@ -919,19 +919,19 @@ const bpBR = n => BRACKET.find(x => x.n === n);
 const bpTrunc = (s, m) => { s = String(s == null ? "" : s); return s.length > m ? s.slice(0, m - 1) + "…" : s; };
 function bpPos() {
   const Lord = [74, 77, 73, 75, 83, 84, 81, 82], Rord = [76, 78, 79, 80, 86, 88, 85, 87];
-  const ys = [254, 372.5, 491, 609.5, 728, 846.5, 965, 1083.5];
-  const dim = { R32: [222, 84], R16: [230, 90], QF: [246, 100], SF: [264, 110], FINAL: [330, 150], BRONZE: [300, 86] };
+  const ys = [250, 368, 486, 604, 740, 858, 976, 1094];
+  const CW = 170;
+  const cxL = { R32: 131, R16: 309, QF: 487, SF: 665 }, cxR = { R32: 1553, R16: 1375, QF: 1197, SF: 1019 };
+  const dim = { R32: [CW, 84], R16: [CW, 90], QF: [CW, 96], SF: [CW, 102] };
   const pos = {};
-  Lord.forEach((n, i) => pos[n] = { y: ys[i], side: "L", round: "R32", w: 222, h: 84, x: 56 });
-  Rord.forEach((n, i) => pos[n] = { y: ys[i], side: "R", round: "R32", w: 222, h: 84, x: 1406 });
-  const add = (n, side, round) => { const nd = bpBR(n); const y = (pos[nd.h.m].y + pos[nd.a.m].y) / 2; const [w, h] = dim[round];
-    let x; if (round === "R16") x = side === "L" ? 320 : 1134; else if (round === "QF") x = side === "L" ? 590 : 848; else x = side === "L" ? (648 - w / 2) : (1036 - w / 2);
-    pos[n] = { y, side, round, w, h, x }; };
+  Lord.forEach((n, i) => pos[n] = { y: ys[i], side: "L", round: "R32", w: CW, h: 84, x: cxL.R32 - CW / 2 });
+  Rord.forEach((n, i) => pos[n] = { y: ys[i], side: "R", round: "R32", w: CW, h: 84, x: cxR.R32 - CW / 2 });
+  const add = (n, side, round) => { const nd = bpBR(n); const y = (pos[nd.h.m].y + pos[nd.a.m].y) / 2; const [w, h] = dim[round]; const cx = (side === "L" ? cxL : cxR)[round]; pos[n] = { y, side, round, w, h, x: cx - w / 2 }; };
   [89, 90, 93, 94].forEach(n => add(n, "L", "R16")); [91, 92, 95, 96].forEach(n => add(n, "R", "R16"));
   [97, 98].forEach(n => add(n, "L", "QF")); [99, 100].forEach(n => add(n, "R", "QF"));
   add(101, "L", "SF"); add(102, "R", "SF");
-  const [fw, fh] = dim.FINAL; pos[104] = { y: 648, side: "C", round: "FINAL", w: fw, h: fh, x: 842 - fw / 2 };
-  const [bw, bh] = dim.BRONZE; pos[103] = { y: 1000, side: "C", round: "BRONZE", w: bw, h: bh, x: 842 - bw / 2 };
+  pos[104] = { y: 672, side: "C", round: "FINAL", w: 180, h: 150, x: 842 - 90 };
+  pos[103] = { y: 912, side: "C", round: "BRONZE", w: 184, h: 82, x: 842 - 92 };
   return pos;
 }
 function bpSlot(node, side, x, top, w, slotH, big) {
@@ -963,8 +963,8 @@ function bpCell(n, p) {
   const egyCell = (th && th.name === myNation()) || (ta && ta.name === myNation()) || egyProvisional(node.h) || egyProvisional(node.a);
   const spineCol = { R32: "#19c8ff", R16: "#19c8ff", QF: "#ffc02e", SF: "#ff7a45", FINAL: "#ffc02e", BRONZE: "#cd7f32" }[p.round];
   const stripH = 20, slotH = (p.h - stripH) / 2, parts = node.uae.split(" "), time = parts.pop(), ko = parts.join(" ") + " · " + time;
-  const stroke = egyCell ? "#00d26a" : (bronze ? "#cd7f32" : "#22305f"), sw = egyCell ? 2 : (big ? 2 : 1.4), spineX = p.side === "R" ? p.x + p.w - 4 : p.x, r = brResult(n);
-  let o = '<rect x="' + p.x + '" y="' + top + '" width="' + p.w + '" height="' + p.h + '" rx="11" fill="#121d44" stroke="' + stroke + '" stroke-width="' + sw + '"/>';
+  const stroke = egyCell ? "#00d26a" : (big ? "#ffc02e" : (bronze ? "#cd7f32" : "#2a3a63")), sw = egyCell ? 2 : (big ? 2.5 : 1.4), spineX = p.side === "R" ? p.x + p.w - 4 : p.x, r = brResult(n);
+  let o = '<rect x="' + p.x + '" y="' + top + '" width="' + p.w + '" height="' + p.h + '" rx="11" fill="#121d44" stroke="' + stroke + '" stroke-width="' + sw + '"' + (big ? ' filter="url(#gg)"' : "") + '/>';
   o += '<rect x="' + spineX + '" y="' + top + '" width="4" height="' + p.h + '" rx="2" fill="' + (egyCell ? "#00d26a" : spineCol) + '"/>';
   o += '<text x="' + (p.x + 13) + '" y="' + (top + 13) + '" font-family="Oswald" font-weight="600" font-size="10.5" letter-spacing="1.1" fill="#5e6da0">M' + n + ' · ' + (bronze ? "3RD PLACE" : p.round) + '</text>';
   o += '<text x="' + (p.x + p.w - 13) + '" y="' + (top + 13) + '" text-anchor="end" font-family="Oswald" font-weight="500" font-size="10" fill="#8fa2d8">' + esc(ko) + '</text>';
@@ -975,13 +975,13 @@ function bpCell(n, p) {
   if (r && r.note) o += '<rect x="' + (p.x + p.w - 46) + '" y="' + (top + p.h - 15) + '" width="38" height="12" rx="3" fill="#ff3b5c"/><text x="' + (p.x + p.w - 27) + '" y="' + (top + p.h - 9) + '" text-anchor="middle" dominant-baseline="central" font-family="Inter" font-weight="600" font-size="8" fill="#fff">' + esc(r.note) + '</text>';
   return o;
 }
-function bpConnCol(f) { const r = brResult(f); if (!r || r.hs == null) return "#22305f"; return r.egyWin ? "#00d26a" : "#ffc02e"; }
+function bpConnCol(f) { const r = brResult(f); if (!r || r.hs == null) return "#33477a"; return r.egyWin ? "#00d26a" : "#ffc02e"; }
 function bpConn(fromN, toN, pos) {
   const f = pos[fromN], t = pos[toN]; let fx, tx;
   if (t.side === "C") { fx = f.side === "L" ? f.x + f.w : f.x; tx = f.side === "L" ? t.x : t.x + t.w; }
   else if (t.side === "L") { fx = f.x + f.w; tx = t.x; } else { fx = f.x; tx = t.x + t.w; }
   const midx = (fx + tx) / 2, col = bpConnCol(fromN), egy = col === "#00d26a";
-  return '<path d="M' + fx + ' ' + f.y + ' H' + midx + ' V' + t.y + ' H' + tx + '" fill="none" stroke="' + col + '" stroke-width="' + (egy ? 3 : (col === "#ffc02e" ? 2 : 1.4)) + '"' + (egy ? ' filter="url(#gg)"' : "") + '/>';
+  return '<path d="M' + fx + ' ' + f.y + ' H' + midx + ' V' + t.y + ' H' + tx + '" fill="none" stroke="' + col + '" stroke-width="' + (egy ? 3 : (col === "#ffc02e" ? 2.2 : 1.6)) + '" stroke-linejoin="round"' + (egy ? ' filter="url(#gg)"' : "") + '/>';
 }
 function bpHeader(emb) {
   return '<rect x="56" y="42" width="92" height="92" rx="18" fill="#fff"/><image href="' + emb + '" x="62" y="48" width="80" height="80" preserveAspectRatio="xMidYMid meet"/>' +
@@ -994,43 +994,44 @@ function bpHeader(emb) {
     '<line x1="56" y1="168" x2="1628" y2="168" stroke="#22305f" stroke-width="2"/>';
 }
 function bpRoundHeaders() {
-  const cols = [[167, "ROUND OF 32", "#19c8ff"], [435, "ROUND OF 16", "#4ea7d6"], [713, "QUARTER-FINALS", "#ffc02e"], [1517, "ROUND OF 32", "#19c8ff"], [1249, "ROUND OF 16", "#4ea7d6"], [971, "QUARTER-FINALS", "#ffc02e"]];
-  let o = ""; cols.forEach(([cx, lab, col]) => { o += '<text x="' + cx + '" y="206" text-anchor="middle" font-family="Oswald" font-weight="600" font-size="14" letter-spacing="3" fill="' + col + '">' + lab + '</text><line x1="' + (cx - 46) + '" y1="216" x2="' + (cx + 46) + '" y2="216" stroke="' + col + '" stroke-width="1.5"/>'; });
-  o += '<text x="648" y="206" text-anchor="middle" font-family="Oswald" font-weight="600" font-size="13" letter-spacing="2.5" fill="#ffc02e">SEMI-FINAL</text>';
-  o += '<text x="1036" y="206" text-anchor="middle" font-family="Oswald" font-weight="600" font-size="13" letter-spacing="2.5" fill="#ffc02e">SEMI-FINAL</text>';
+  const cols = [[131, "ROUND OF 32", "28 JUN – 1 JUL", "#19c8ff"], [309, "ROUND OF 16", "4 – 8 JUL", "#4ea7d6"], [487, "QUARTER-FINAL", "10 – 12 JUL", "#ffc02e"], [1553, "ROUND OF 32", "28 JUN – 1 JUL", "#19c8ff"], [1375, "ROUND OF 16", "4 – 8 JUL", "#4ea7d6"], [1197, "QUARTER-FINAL", "10 – 12 JUL", "#ffc02e"]];
+  let o = ""; cols.forEach(([cx, lab, dt, col]) => { o += '<text x="' + cx + '" y="198" text-anchor="middle" font-family="Oswald" font-weight="600" font-size="13" letter-spacing="2" fill="' + col + '">' + lab + '</text><line x1="' + (cx - 44) + '" y1="207" x2="' + (cx + 44) + '" y2="207" stroke="' + col + '" stroke-width="1.5"/><text x="' + cx + '" y="221" text-anchor="middle" font-family="Inter" font-weight="500" font-size="8.5" letter-spacing="0.5" fill="#5e6da0">' + dt + '</text>'; });
+  o += '<text x="665" y="198" text-anchor="middle" font-family="Oswald" font-weight="600" font-size="12" letter-spacing="2" fill="#ffc02e">SEMI</text><text x="665" y="216" text-anchor="middle" font-family="Inter" font-weight="500" font-size="8" fill="#5e6da0">14–15 JUL</text>';
+  o += '<text x="1019" y="198" text-anchor="middle" font-family="Oswald" font-weight="600" font-size="12" letter-spacing="2" fill="#ffc02e">SEMI</text><text x="1019" y="216" text-anchor="middle" font-family="Inter" font-weight="500" font-size="8" fill="#5e6da0">14–15 JUL</text>';
+  o += '<text x="842" y="198" text-anchor="middle" font-family="Oswald" font-weight="700" font-size="13" letter-spacing="3" fill="#ffc02e">FINAL</text><text x="842" y="216" text-anchor="middle" font-family="Inter" font-weight="500" font-size="8" fill="#5e6da0">19 JUL</text>';
   return o;
 }
 function bpTrophy(cx, cy) {
-  return '<g transform="translate(' + cx + ' ' + cy + ')" filter="url(#gg)">' +
-    '<ellipse cx="0" cy="58" rx="56" ry="9" fill="#ffc02e" opacity="0.16"/>' +
-    '<path d="M-22 -34 h44 v6 q0 20 -14 27 l-2 12 h8 v7 h-32 v-7 h8 l-2 -12 q-14 -7 -14 -27 z" fill="url(#tg)"/>' +
-    '<path d="M-22 -30 q-16 0 -16 -14 q0 -8 8 -8 v6 q-2 0 -2 2 q0 8 10 8 z" fill="url(#tg)"/>' +
-    '<path d="M22 -30 q16 0 16 -14 q0 -8 -8 -8 v6 q2 0 2 2 q0 8 -10 8 z" fill="url(#tg)"/>' +
-    '<rect x="-13" y="20" width="26" height="6" rx="2" fill="#e0962b"/><rect x="-17" y="26" width="34" height="7" rx="2" fill="#ffc02e"/></g>';
+  let rays = ""; for (let i = 0; i < 12; i++) { const a = i * 30 * Math.PI / 180, x1 = cx + Math.cos(a) * 40, y1 = cy - 6 + Math.sin(a) * 40, x2 = cx + Math.cos(a) * 88, y2 = cy - 6 + Math.sin(a) * 88; rays += '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '" stroke="#ffc02e" stroke-width="1" opacity="0.14"/>'; }
+  return '<circle cx="' + cx + '" cy="' + (cy - 6) + '" r="96" fill="url(#spot)"/>' + rays + '<g transform="translate(' + cx + ' ' + cy + ')" filter="url(#gg)">' +
+    '<ellipse cx="0" cy="60" rx="60" ry="9" fill="#ffc02e" opacity="0.18"/>' +
+    '<path d="M-24 -38 h48 v6 q0 23 -15 30 l-2 13 h9 v7 h-34 v-7 h9 l-2 -13 q-15 -7 -15 -30 z" fill="url(#tg)"/>' +
+    '<path d="M-24 -34 q-18 0 -18 -16 q0 -9 9 -9 v7 q-3 0 -3 2 q0 9 12 9 z" fill="url(#tg)"/>' +
+    '<path d="M24 -34 q18 0 18 -16 q0 -9 -9 -9 v7 q3 0 3 2 q0 9 -12 9 z" fill="url(#tg)"/>' +
+    '<ellipse cx="0" cy="-34" rx="24" ry="5" fill="#fff3d6" opacity="0.5"/>' +
+    '<rect x="-14" y="22" width="28" height="6" rx="2" fill="#e0962b"/><rect x="-19" y="28" width="38" height="8" rx="2" fill="#ffc02e"/></g>';
 }
 function bpChampion(pos) {
   const node = bpBR(104), r = brResult(104); if (!r || r.hs == null) return "";
   const t = r.hs >= r.as ? slotTeam(node.h) : slotTeam(node.a); if (!t) return "";
   const egy = t.name === myNation(), bg = egy ? "#00d26a" : "#ffc02e";
-  return '<g transform="translate(842 884)"><rect x="-170" y="-22" width="340" height="44" rx="10" fill="' + bg + '"/>' +
-    '<rect x="-160" y="-13" width="26" height="18" rx="3" fill="#fff"/><clipPath id="cchamp"><rect x="-160" y="-13" width="26" height="18" rx="3"/></clipPath>' +
-    '<image href="' + (t.logo || "") + '" x="-160" y="-13" width="26" height="18" preserveAspectRatio="xMidYMid meet" clip-path="url(#cchamp)"/>' +
-    '<text x="-120" y="-2" font-family="Oswald" font-weight="700" font-size="20" fill="#0a1230">' + esc(t.name.toUpperCase()) + '</text>' +
-    '<text x="-120" y="14" font-family="Oswald" font-weight="600" font-size="11" letter-spacing="3" fill="#0a1230">CHAMPIONS 2026</text>' +
-    '<text x="150" y="4" text-anchor="end" font-family="Oswald" font-weight="700" font-size="22" fill="#0a1230">★</text></g>';
+  return '<g transform="translate(842 802)"><rect x="-168" y="-21" width="336" height="42" rx="10" fill="' + bg + '"/>' +
+    '<rect x="-158" y="-13" width="26" height="18" rx="3" fill="#fff"/><clipPath id="cchamp"><rect x="-158" y="-13" width="26" height="18" rx="3"/></clipPath>' +
+    '<image href="' + (t.logo || "") + '" x="-158" y="-13" width="26" height="18" preserveAspectRatio="xMidYMid meet" clip-path="url(#cchamp)"/>' +
+    '<text x="-120" y="-1" font-family="Oswald" font-weight="700" font-size="19" fill="#0a1230">' + esc(t.name.toUpperCase()) + '</text>' +
+    '<text x="-120" y="14" font-family="Oswald" font-weight="600" font-size="10.5" letter-spacing="3" fill="#0a1230">CHAMPIONS 2026</text>' +
+    '<text x="152" y="4" text-anchor="end" font-family="Oswald" font-weight="700" font-size="20" fill="#0a1230">★</text></g>';
 }
 function bpCentre(pos, emb) {
-  let o = '<rect x="672" y="430" width="340" height="486" rx="16" fill="#0d1838" stroke="#ffc02e" stroke-width="1.5" opacity="0.92" filter="url(#gg)"/>';
-  o += '<rect x="672" y="430" width="340" height="486" rx="16" fill="none" stroke="#ffc02e" stroke-width="1.5" opacity="0.5"/>';
-  o += '<rect x="796" y="452" width="92" height="124" rx="14" fill="#fff"/><image href="' + emb + '" x="802" y="458" width="80" height="112" preserveAspectRatio="xMidYMid meet"/>';
-  o += '<text x="842" y="606" text-anchor="middle" font-family="Oswald" font-weight="700" font-size="26" letter-spacing="6" fill="#ffc02e">FINAL</text><line x1="752" y1="616" x2="932" y2="616" stroke="#ffc02e" stroke-width="1.5"/>';
+  let o = '<ellipse cx="842" cy="650" rx="220" ry="250" fill="#ffc02e" opacity="0.045"/>';
+  o += '<rect x="810" y="262" width="64" height="86" rx="12" fill="#fff"/><image href="' + emb + '" x="816" y="268" width="52" height="74" preserveAspectRatio="xMidYMid meet"/>';
+  o += bpTrophy(842, 478);
   o += bpCell(104, pos[104]);
-  o += '<text x="842" y="742" text-anchor="middle" font-family="Oswald" font-weight="500" font-size="11.5" letter-spacing="1" fill="#ffc02e">Sun 19 Jul · 23:00 GST · MetLife Stadium, New York/New Jersey</text>';
-  o += bpTrophy(842, 820);
+  o += '<text x="842" y="770" text-anchor="middle" font-family="Oswald" font-weight="500" font-size="11" letter-spacing="0.8" fill="#8a90b8">Sun 19 Jul · 23:00 GST · MetLife Stadium, New York/NJ</text>';
   const champ = bpChampion(pos);
-  o += champ || '<text x="842" y="884" text-anchor="middle" font-family="Oswald" font-weight="600" font-size="13" letter-spacing="3" fill="#5e6da0" stroke-dasharray="3 3">— AWAITING THE FINAL —</text>';
+  o += champ || '<text x="842" y="806" text-anchor="middle" font-family="Oswald" font-weight="600" font-size="13" letter-spacing="3" fill="#5e6da0">— AWAITING THE FINAL —</text>';
   o += bpCell(103, pos[103]);
-  o += '<text x="842" y="1052" text-anchor="middle" font-family="Oswald" font-weight="500" font-size="10.5" letter-spacing="1" fill="#8a6a3a">Sun 19 Jul · 01:00 GST · Hard Rock Stadium, Miami</text>';
+  o += '<text x="842" y="976" text-anchor="middle" font-family="Oswald" font-weight="500" font-size="10" letter-spacing="0.8" fill="#9a7a44">3rd place · Sun 19 Jul · Hard Rock Stadium, Miami</text>';
   return o;
 }
 function bpFooter() {
@@ -1044,9 +1045,13 @@ function bracketPosterSVG() {
   let s = '<defs><filter id="gg" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
     '<linearGradient id="tg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe9b8"/><stop offset="0.5" stop-color="#ffc02e"/><stop offset="1" stop-color="#e0962b"/></linearGradient>' +
     '<linearGradient id="rg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e05a2b"/><stop offset="1" stop-color="#ffc02e"/></linearGradient>' +
-    '<radialGradient id="vig" cx="50%" cy="55%" r="60%"><stop offset="0" stop-color="#0e1840"/><stop offset="1" stop-color="#0a1230"/></radialGradient></defs>';
+    '<radialGradient id="vig" cx="50%" cy="55%" r="60%"><stop offset="0" stop-color="#0e1840"/><stop offset="1" stop-color="#0a1230"/></radialGradient>' +
+    '<radialGradient id="spot" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffc02e" stop-opacity="0.24"/><stop offset="0.6" stop-color="#ffc02e" stop-opacity="0.06"/><stop offset="1" stop-color="#ffc02e" stop-opacity="0"/></radialGradient>' +
+    '<linearGradient id="frame" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e9c877"/><stop offset="0.5" stop-color="#a9863f"/><stop offset="1" stop-color="#e9c877"/></linearGradient></defs>';
   s += '<rect x="0" y="0" width="1684" height="1190" fill="url(#vig)"/>';
-  s += '<line x1="842" y1="220" x2="842" y2="1110" stroke="#16335c" stroke-width="1"/>';
+  s += '<rect x="18" y="18" width="1648" height="1154" rx="14" fill="none" stroke="url(#frame)" stroke-width="2.5" opacity="0.7"/>';
+  s += '<rect x="25" y="25" width="1634" height="1140" rx="10" fill="none" stroke="#2a3a63" stroke-width="1"/>';
+  s += '<line x1="842" y1="232" x2="842" y2="1096" stroke="#16335c" stroke-width="1"/>';
   s += bpHeader(emb) + bpRoundHeaders();
   [89, 90, 93, 94, 91, 92, 95, 96, 97, 98, 99, 100, 101, 102, 104].forEach(n => { const nd = bpBR(n); s += bpConn(nd.h.m, n, pos) + bpConn(nd.a.m, n, pos); });
   Object.keys(pos).forEach(k => { const n = +k; if (n !== 104 && n !== 103) s += bpCell(n, pos[n]); });
