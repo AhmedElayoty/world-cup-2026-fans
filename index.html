@@ -37,7 +37,9 @@ header{padding:10px 16px}
 .crest img{height:100%;width:auto;max-width:100%;object-fit:contain;display:block}
 .bname{font-family:'Oswald';font-weight:700;font-size:21px;letter-spacing:1px;line-height:1}
 .bname b{color:var(--rust2);font-weight:700}
-.bsub{font-family:'Oswald';font-weight:500;font-size:10.5px;letter-spacing:2.4px;color:var(--mut);margin-top:3px}
+.bsub{font-family:'Oswald';font-weight:500;font-size:10.5px;letter-spacing:2px;color:var(--mut);margin-top:3px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+#tzSel{background:rgba(255,255,255,.07);color:#fff;border:1px solid var(--line);border-radius:6px;font-family:'Oswald';font-weight:600;font-size:10.5px;letter-spacing:.8px;padding:2px 4px;cursor:pointer}
+#tzOff{color:var(--gold);font-family:'Oswald';font-weight:600;letter-spacing:1px}
 .hright{margin-left:auto;text-align:right}
 .uaeclock{font-family:'Oswald';font-weight:600;font-size:17px;letter-spacing:.5px}
 .constate{display:flex;align-items:center;gap:5px;justify-content:flex-end;font-family:'Oswald';
@@ -394,7 +396,7 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
   <div class="crest"><img src="logo.png" alt="World Cup 2026"></div>
   <div>
    <div class="bname">WORLD CUP <b>2026</b></div>
-   <div class="bsub">ALL TIMES UAE · GST (UTC+4)</div>
+   <div class="bsub">ALL TIMES <select id="tzSel" onchange="setTZ(this.value)" aria-label="Time zone"></select><span id="tzOff"></span></div>
   </div>
   <div class="hright">
    <div class="uaeclock" id="clock">--:--</div>
@@ -486,7 +488,7 @@ const PRED_KEY  = "capriole_wc26_predictions";
 const SEASON_RANGE = "20260611-20260719";
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const TZ = "Asia/Dubai";
+let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
 
 /* ================= STATE ================= */
@@ -552,6 +554,25 @@ setInterval(() => {
     cd.innerHTML = countdown(new Date(heroEvent.date)) + "<small>TO KICK-OFF</small>";
   }
 }, 1000);
+
+/* ================= TIME ZONE ================= */
+const ZONES = [
+  ["Gulf", [["Asia/Dubai","UAE","UAE"],["Asia/Riyadh","Saudi Arabia","KSA"],["Asia/Qatar","Qatar","QAT"],["Asia/Kuwait","Kuwait","KWT"],["Asia/Bahrain","Bahrain","BHR"],["Asia/Muscat","Oman","OMN"],["Asia/Baghdad","Iraq","IRQ"]]],
+  ["North Africa", [["Africa/Cairo","Egypt","EGY"],["Africa/Casablanca","Morocco","MAR"],["Africa/Algiers","Algeria","ALG"],["Africa/Tunis","Tunisia","TUN"],["Africa/Tripoli","Libya","LBY"],["Africa/Khartoum","Sudan","SDN"]]],
+  ["Levant", [["Asia/Amman","Jordan","JOR"],["Asia/Beirut","Lebanon","LBN"]]]
+];
+function tzAbbr() { for (const g of ZONES) for (const z of g[1]) if (z[0] === TZ) return z[2]; return "UAE"; }
+function tzOffset(tz) { try { const p = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "shortOffset" }).formatToParts(new Date()).find(x => x.type === "timeZoneName"); return p ? p.value.replace("GMT", "UTC") : ""; } catch (_) { return ""; } }
+function fillTZ() { const s = $("tzSel"); if (!s || s.options.length) return; s.innerHTML = ZONES.map(g => '<optgroup label="' + g[0] + '">' + g[1].map(z => '<option value="' + z[0] + '"' + (z[0] === TZ ? " selected" : "") + '>' + z[1] + '</option>').join("") + '</optgroup>').join(""); updateTzLabel(); }
+function updateTzLabel() { const o = $("tzOff"); if (o) { const off = tzOffset(TZ); o.textContent = off ? " · " + off : ""; } }
+function setTZ(v) {
+  TZ = v; try { localStorage.setItem("cs_tz", v); } catch (_) {}
+  const s = $("tzSel"); if (s) s.value = v;
+  updateTzLabel(); buildStrip(); renderHero();
+  if (!$("paneG").classList.contains("hide")) loadStandings();
+  if (!$("paneP").classList.contains("hide")) renderPredict();
+  if (!$("paneS").classList.contains("hide")) renderStats();
+}
 
 /* ================= TABS ================= */
 function showTab(t) {
@@ -656,7 +677,7 @@ function ymdShift(key, days) {
 }
 function renderMatches() {
   if (!events.length) {
-    $("mlist").innerHTML = `<div class="empty"><div class="big">🗓️</div>No matches this day (UAE time).<br>Pick another date above.</div>`;
+    $("mlist").innerHTML = `<div class="empty"><div class="big">🗓️</div>No matches this day (${tzAbbr()} time).<br>Pick another date above.</div>`;
     return;
   }
   $("mlist").innerHTML = events.map(e => {
@@ -682,8 +703,8 @@ function renderMatches() {
       badge = `<span class="badge ft">FULL-TIME${so ? " · PENS" : aet ? " · AET" : ""}</span>`;
       mid = `<div class="score">${H.score ?? "-"} – ${A.score ?? "-"}<small>${so ? esc(H.shootoutScore + "–" + A.shootoutScore + " ON PENS") : aet ? "AET" : "FT"}</small></div>`;
     } else {
-      badge = `<span class="badge pre">${ko} UAE</span>`;
-      mid = `<div class="score">${ko}<small>KICK-OFF UAE</small></div>`;
+      badge = `<span class="badge pre">${ko} ${tzAbbr()}</span>`;
+      mid = `<div class="score">${ko}<small>KICK-OFF ${tzAbbr()}</small></div>`;
     }
     const myp = myPreds[e.id];
     let predStrip = "";
@@ -1160,7 +1181,7 @@ function drawHero() {
   $("heroBox").innerHTML = '<div class="hero" onclick="heroJump()">' +
     '<div class="hl"><span>★ ' + esc(myNation().toUpperCase()) + (live ? " · LIVE NOW" : " · NEXT MATCH") + '</span>' +
     '<span>' + fmt(ko, { weekday: "short", day: "2-digit", month: "short" }).toUpperCase() +
-    ' · ' + fmt(ko, { hour: "2-digit", minute: "2-digit" }) + ' UAE' +
+    ' · ' + fmt(ko, { hour: "2-digit", minute: "2-digit" }) + ' ' + tzAbbr() +
     '<span class="heroChange" onclick="openNation(event)">CHANGE ⚙</span></span></div>' +
     '<div class="hm"><img src="' + (H.team.logo || "") + '" alt="">' +
     '<div class="ht1">' + esc(H.team.displayName) + ' <span style="color:var(--dim)">v</span> ' + esc(A.team.displayName) + '</div>' +
@@ -1260,7 +1281,7 @@ function predCard(e, started) {
       '<span class="pts' + pts + '">' + (p.h !== undefined ? pts + " PTS" : "NO PREDICTION") + '</span>';
   } else {
     meta = '<span>' + fmt(ko, { weekday: "short", day: "2-digit", month: "short" }).toUpperCase() +
-      ' · ' + fmt(ko, { hour: "2-digit", minute: "2-digit" }) + ' UAE</span>' +
+      ' · ' + fmt(ko, { hour: "2-digit", minute: "2-digit" }) + ' ' + tzAbbr() + '</span>' +
       '<span style="' + (done ? "color:var(--green)" : "") + '">' +
       (started ? "CLOSED" : done ? "SUBMITTED" : "OPEN") + '</span>';
   }
@@ -1589,7 +1610,7 @@ function shareMatch(ev) {
   const pre = e.status.type.state === "pre";
   const txt = "World Cup 2026: " + H.team.displayName + " " +
     (pre ? "v " + A.team.displayName + " — " + fmt(new Date(e.date), { weekday: "short", day: "2-digit", month: "short" }) +
-           " " + fmt(new Date(e.date), { hour: "2-digit", minute: "2-digit" }) + " UAE"
+           " " + fmt(new Date(e.date), { hour: "2-digit", minute: "2-digit" }) + " " + tzAbbr()
          : (H.score ?? 0) + "–" + (A.score ?? 0) + " " + A.team.displayName) +
     " · https://ahmedelayoty.github.io/capriole-sports/";
   if (navigator.share) navigator.share({ text: txt }).catch(() => {});
@@ -2050,6 +2071,7 @@ async function renderStats() {
   } catch (e) { $("stBody").innerHTML = '<div class="empty">Couldn\'t load stats — retrying.</div>'; }
 }
 setCon(null, "CONNECTING");
+fillTZ();
 buildStrip();
 renderChatComposer();
 if (cs_user) {
