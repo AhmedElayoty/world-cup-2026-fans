@@ -239,7 +239,7 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 .lbrow .ex{font-size:10.5px;color:var(--dim);width:96px;text-align:right}
 .lbrow.me{background:#26190f;border-radius:8px;padding:6px 8px}
 .thirds{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-top:13px}
-.thirds h3{font-family:'Oswald';font-weight:700;font-size:14px;letter-spacing:1.8px;color:var(--gold)}
+.thirds h3{font-family:'Oswald';font-weight:700;font-size:14px;letter-spacing:1.8px;color:var(--gold);display:flex;align-items:center;justify-content:space-between;gap:8px}
 .thirds .sub{font-size:11px;color:var(--dim);margin:3px 0 8px}
 .t3row{display:flex;align-items:center;gap:8px;padding:4.5px 0;border-bottom:1px solid #1a2750;font-size:12.5px}
 .t3row:last-child{border-bottom:none}
@@ -950,7 +950,12 @@ function renderThirds(groups) {
       (ti > -1 && ti < 8 ? "INSIDE THE BEST 8 — THROUGH" : "OUTSIDE THE BEST 8 — OUT");
   }
   const played = thirds.some(t => t.s.gamesPlayed > 0);
-  $("thirdsBox").innerHTML = '<div class="thirds"><h3>BEST 3RD-PLACED RACE</h3>' +
+  // the thirds race depends on every group → live while ANY group is provisional, confirmed once all settle
+  const anyLive = groups.some(g => g._liveMatch || (g._played && !g._inSync));
+  const t3badge = !played ? "" : (anyLive
+    ? '<span class="gstat live" title="Live — still changes as group results come in"><span class="dotp"></span>LIVE</span>'
+    : '<span class="gstat ok" title="All group results confirmed against the official tables">&#10003; CONFIRMED</span>');
+  $("thirdsBox").innerHTML = '<div class="thirds"><h3>BEST 3RD-PLACED RACE' + t3badge + '</h3>' +
     '<div class="sub">8 of the 12 third-placed teams also reach the Round of 32' +
     (played ? "" : " — fills in once results start") + '</div>' +
     thirds.map((t, i) => '<div class="t3row ' + (i < 8 ? "in" : "out") + (i === 7 ? " cut8" : "") + '"><div class="rk">' + (i + 1) + '</div>' +
