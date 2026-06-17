@@ -827,10 +827,48 @@ async function toggleM(id) {
 }
 
 /* ================= GROUPS ================= */
+/* ESPN's /standings stats lag minutes behind a finished match. Recompute each
+   team's table line from the live scoreboard results so the groups reflect
+   finished matches immediately. A "group match" = both teams sit in the same
+   group; only FINISHED (post) matches are counted. */
+function applyLiveStats(groups, evs) {
+  const tg = {};                                   // teamId -> group index
+  groups.forEach((g, gi) => ((g.standings && g.standings.entries) || []).forEach(e => { tg[e.team.id] = gi; }));
+  const acc = {}, get = id => acc[id] || (acc[id] = { gp: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 });
+  (evs || []).forEach(e => {
+    try {
+      const comp = e.competitions && e.competitions[0]; if (!comp) return;
+      const cs = comp.competitors || [], H = cs.find(x => x.homeAway === "home"), A = cs.find(x => x.homeAway === "away");
+      if (!H || !A || !H.team || !A.team) return;
+      const gi = tg[H.team.id]; if (gi == null || tg[A.team.id] !== gi) return;   // same-group match only
+      if (!e.status || !e.status.type || e.status.type.state !== "post") return;  // finished only
+      const hs = parseInt(H.score, 10), as = parseInt(A.score, 10); if (isNaN(hs) || isNaN(as)) return;
+      const sh = get(H.team.id), sa = get(A.team.id);
+      sh.gp++; sa.gp++; sh.gf += hs; sh.ga += as; sa.gf += as; sa.ga += hs;
+      if (hs > as) { sh.w++; sh.pts += 3; sa.l++; }
+      else if (as > hs) { sa.w++; sa.pts += 3; sh.l++; }
+      else { sh.d++; sa.d++; sh.pts++; sa.pts++; }
+    } catch (_) {}
+  });
+  groups.forEach(g => ((g.standings && g.standings.entries) || []).forEach(e => {
+    const a = acc[e.team.id] || { gp: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 }, gd = a.gf - a.ga;
+    e.stats = [                                     // overwrite with live numbers (no rank → ranks by pts→GD→GF)
+      { name: "gamesPlayed", value: a.gp, displayValue: String(a.gp) },
+      { name: "wins", value: a.w, displayValue: String(a.w) },
+      { name: "ties", value: a.d, displayValue: String(a.d) },
+      { name: "losses", value: a.l, displayValue: String(a.l) },
+      { name: "pointsFor", value: a.gf, displayValue: String(a.gf) },
+      { name: "pointsAgainst", value: a.ga, displayValue: String(a.ga) },
+      { name: "pointDifferential", value: gd, displayValue: (gd > 0 ? "+" : "") + gd },
+      { name: "points", value: a.pts, displayValue: String(a.pts) }
+    ];
+  }));
+  return groups;
+}
 async function loadStandings() {
   try {
-    const d = await getJSON(STAND);
-    const groups = d.children || [];
+    const [d, evs] = await Promise.all([ getJSON(STAND), seasonEvents(true).catch(() => seasonCache.events) ]);
+    const groups = applyLiveStats(d.children || [], evs);
     $("ggrid").innerHTML = groups.map(g => {
       const rows = rankRows((g.standings && g.standings.entries) || []);
       const hasEgy = rows.some(r => r.team.displayName === myNation());
