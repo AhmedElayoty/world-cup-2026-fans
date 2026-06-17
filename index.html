@@ -574,6 +574,7 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
   <label class="authrem" id="authRemRow"><span>Remember me on this device</span><input type="checkbox" id="auRem" checked></label>
   <button id="authBtn" onclick="authSubmit()">LET'S GO ⚽</button>
   <button id="authSkip" class="authskip" onclick="authSkip()">Not now — just browsing 👀</button>
+  <button id="authOut" class="authskip" onclick="signOut()" style="display:none">↩ Sign out of this device</button>
   <div class="authnote">Log in once per device — that's it. Forgot your password? Ask Ahmed to reset it.</div>
  </div>
 </div>
@@ -721,7 +722,8 @@ function buildStrip() {
   }
   $("dstrip").innerHTML = html;
   $("dstrip").querySelectorAll(".dchip").forEach(c => c.onclick = () => pickDate(c.dataset.d));
-  pickDate(today >= "20260611" && today <= "20260719" ? today : first, true);
+  const _want = (selDate && $("dc" + selDate)) ? selDate : (today >= "20260611" && today <= "20260719" ? today : first);   // keep the browsed day on TZ/format change
+  pickDate(_want, true);
 }
 function pickDate(key, scroll) {
   selDate = key;
@@ -966,8 +968,8 @@ async function loadStandings() {
         rows.map((r, i) => {
           const s = {}; (r.stats || []).forEach(x => s[x.name] = x.displayValue);
           const egy = r.team.displayName === myNation();
-          const zone = i < 2 ? "q1" : i === 2 ? "q3" : "qo";
-          return `<tr class="${zone}${i === 1 ? " cutline" : ""}${egy ? " egy" : ""}">
+          const zone = _show ? (i < 2 ? "q1" : i === 2 ? "q3" : "qo") : "";   // no qualify coloring until the group has started
+          return `<tr class="${zone}${(_show && i === 1) ? " cutline" : ""}${egy ? " egy" : ""}">
             <td class="pos">${i + 1}</td>
             <td><span class="tm"><img src="${r.team.logos && r.team.logos[0] ? r.team.logos[0].href : ""}" alt="">${esc(r.team.displayName)}</span></td>
             <td>${s.gamesPlayed || 0}</td><td>${s.wins || 0}</td><td>${s.ties || 0}</td><td>${s.losses || 0}</td>
@@ -990,7 +992,7 @@ function rankRows(rows) {
   return [...rows].sort((a, b) => {
     const A = statmap(a), B = statmap(b);
     if (A.rank && B.rank && A.rank !== B.rank) return A.rank - B.rank;
-    return (B.points - A.points) || (B.pointDifferential - A.pointDifferential) || (B.pointsFor - A.pointsFor);
+    return (B.points - A.points) || (B.pointDifferential - A.pointDifferential) || (B.pointsFor - A.pointsFor) || String((a.team || {}).displayName || "").localeCompare(String((b.team || {}).displayName || ""));
   });
 }
 function renderThirds(groups) {
@@ -1001,7 +1003,7 @@ function renderThirds(groups) {
     if (!rows.length) return;
     const ranked = rankRows(rows);
     const gl = (g.name || "").replace("Group ", "");
-    if (ranked[2]) thirds.push({ g: gl, r: ranked[2], s: statmap(ranked[2]) });
+    if (ranked[2] && statmap(ranked[2]).gamesPlayed > 0) thirds.push({ g: gl, r: ranked[2], s: statmap(ranked[2]) });   // only count groups that have actually started
     const NN = myNation().toUpperCase();
     const i = ranked.findIndex(r => r.team.displayName === myNation());
     if (i === 0) egyLine = NN + ": 1ST IN GROUP " + gl + " — DIRECT R32 SPOT";
@@ -1130,7 +1132,7 @@ function renderBracket() {
     '<div class="brdlrow"><button class="brdl" onclick="openBracketPoster()">⤢ OPEN FULL TREE</button>' +
     '<button class="brdl alt" onclick="downloadBracketPNG(this)">⬇ DOWNLOAD (PNG)</button></div>' +
     '<div class="brlegend">' + (_egyTrack ? '<span class="egl">★ Your nation — ' + esc(myNation().toUpperCase()) + '</span>' : '<span></span>') +
-    '<span>Teams drop in as groups finish · times UAE</span></div>' +
+    '<span>Teams drop in as groups finish · times ' + tzAbbr() + '</span></div>' +
     '<div class="brbody">' + body + '</div>';
 }
 
@@ -1413,8 +1415,10 @@ function heroJump() {
 }
 
 /* ================= PREDICTIONS ================= */
+// fixed UTC+4 day key — the prediction/champion "week" is a SHARED concept, so it must NOT depend on the viewer's TZ
+const fixedYMD = d => { const p = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Dubai", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(d).reduce((a, x) => (a[x.type] = x.value, a), {}); return p.year + p.month + p.day; };
 function uaeDateUTC(d) {
-  const k = uaeYMD(d);
+  const k = fixedYMD(d);
   return new Date(Date.UTC(+k.slice(0, 4), +k.slice(4, 6) - 1, +k.slice(6, 8)));
 }
 function weekStartKey(d) {
@@ -1446,7 +1450,7 @@ async function renderPredict() {
     await syncMyPreds();
     const evs = await seasonEvents();
     const now = Date.now();
-    const up = evs.filter(e => e.status.type.state === "pre" && new Date(e.date) > now);
+    const up = evs.filter(e => e.status.type.state === "pre" && new Date(e.date) > now && ((e.competitions[0] || {}).competitors || []).every(c => c.team && c.team.logo));   // real-team fixtures only (skip knockout placeholders)
     const curWk = weekStartKey(new Date());
     const nextWk = weekKeyAddDays(curWk, 7);
     const nextOpen = up.some(e => weekStartKey(new Date(e.date)) === nextWk && (new Date(e.date) - now) <= 2 * 86400000);  // next week opens 2 days before its first match
@@ -1507,10 +1511,10 @@ function predCard(e, started) {
     ? '<div class="subok">YOUR FINAL ANSWER — LOCKED IN</div>'
     : '<button class="subbtn" data-id="' + e.id + '" onclick="submitPred(this,event)">SUBMIT — ONE TIME ONLY</button>';
   return '<div class="pcard' + ((started || done) ? " lock" : "") + '"><div class="pmeta">' + meta + '</div><div class="prow">' +
-    '<div class="pt"><img src="' + (H.team.logo || "") + '" alt=""><span>' + esc(H.team.displayName) + '</span></div>' +
+    '<div class="pt"><img src="' + (H.team.logo || "") + '" alt="" onerror="this.style.visibility=&#39;hidden&#39;"><span>' + esc(H.team.displayName) + '</span></div>' +
     '<input class="pin" id="ph-' + e.id + '" type="number" min="0" max="20" inputmode="numeric" value="' + (p.h ?? "") + '" ' + dis + '>' +
     '<input class="pin" id="pa-' + e.id + '" type="number" min="0" max="20" inputmode="numeric" value="' + (p.a ?? "") + '" ' + dis + '>' +
-    '<div class="pt r"><img src="' + (A.team.logo || "") + '" alt=""><span>' + esc(A.team.displayName) + '</span></div></div>' +
+    '<div class="pt r"><img src="' + (A.team.logo || "") + '" alt="" onerror="this.style.visibility=&#39;hidden&#39;"><span>' + esc(A.team.displayName) + '</span></div></div>' +
     action + '</div>';
 }
 function scorePred(p, h, a) {
@@ -1641,16 +1645,23 @@ function cardMetaHTML(e) {
   return (tv ? '<span class="cmchip tv"><i>TV</i>' + esc(tv) + '</span>' : '') + (ref ? '<span class="cmchip ref"><i>REF</i>' + esc(ref) + '</span>' : '');
 }
 function paintCardMeta(e) { const el = $("cmeta" + e.id); if (el) el.innerHTML = cardMetaHTML(e); }
+let _enriching = false;
+const _metaFetched = {};   // eventId -> match state at which we fetched its summary for card meta
 async function enrichCardMeta() {
-  const now = Date.now();
-  for (const e of events.slice()) {
-    if (lineups[e.id]) { paintCardMeta(e); continue; }
-    const st = e.status.type.state;
-    if (!(st === "in" || st === "post" || (new Date(e.date) - now < 3 * 86400000))) continue;   // skip far-future (referee not assigned yet)
-    try { lineups[e.id] = await getJSON(API + "/summary?event=" + e.id); } catch (_) { continue; }
-    paintCardMeta(e);
-    await new Promise(r => setTimeout(r, 120));
-  }
+  if (_enriching) return; _enriching = true;   // dedupe overlapping poll-driven loops
+  try {
+    const now = Date.now();
+    for (const e of events.slice()) {
+      const st = e.status.type.state;
+      // (re)fetch if uncached, OR it was cached while still "pre" but has since advanced — referee is assigned at match time
+      const need = !lineups[e.id] || (_metaFetched[e.id] === "pre" && st !== "pre");
+      if (!need) { paintCardMeta(e); continue; }
+      if (!(st === "in" || st === "post" || (new Date(e.date) - now < 3 * 86400000))) { paintCardMeta(e); continue; }
+      try { lineups[e.id] = await getJSON(API + "/summary?event=" + e.id); _metaFetched[e.id] = st; } catch (_) { paintCardMeta(e); continue; }
+      paintCardMeta(e);
+      await new Promise(r => setTimeout(r, 120));
+    }
+  } finally { _enriching = false; }
 }
 // attendance stays in the expanded detail (it's a post-match figure)
 function matchMeta(data, ev) {
@@ -1668,7 +1679,7 @@ function formH2H(data, ev) {
     const f = forms.find(x => String((x.team || {}).id) === String(team.id));
     const me = team.displayName === myNation() ? " me" : "";
     let pills = "";
-    if (f) pills = (f.events || []).filter(e => String(e.id) !== String(ev.id)).slice(0, 5).map((e, i) => {
+    if (f) pills = (f.events || []).filter(e => String(e.id) !== String(ev.id)).slice().reverse().slice(0, 5).map((e, i) => {   // ESPN lastFiveGames is oldest-first → reverse so index 0 (gold ".now") is the most recent
       const r = String(e.gameResult || "").toUpperCase(), cl = r === "W" ? "w" : r === "L" ? "l" : "d";
       const ti = esc(r + " " + (e.score || "") + (e.opponent ? " v " + (e.opponent.abbreviation || e.opponent.displayName || "") : "") + (e.gameDate ? " &#183; " + fmt(new Date(e.gameDate), { day: "2-digit", month: "short" }) : ""));
       return '<span class="fp ' + cl + (i === 0 ? " now" : "") + '" title="' + ti + '">' + (r || "?") + '</span>';
@@ -1716,7 +1727,7 @@ function matchDetail(data, ev) {
   return html + '</div>';
 }
 function starMan(data, ev) {
-  if (ev.status.type.state === "pre") return "";
+  if (ev.status.type.state !== "post") return "";   // crown a star only after full-time (no live 0-0 GK "clean sheet")
   let best = null;
   (data.rosters || []).forEach(r => {
     (r.roster || []).forEach(p => {
@@ -1743,7 +1754,7 @@ function evTimeline(ev, data) {
   const c = ev.competitions[0];
   const H = c.competitors.find(x => x.homeAway === "home");
   const A = c.competitors.find(x => x.homeAway === "away");
-  const minNum = s => parseInt(String(s == null ? "0" : s).replace(/[^0-9].*/, "")) || 0;
+  const minNum = s => { const m = String(s == null ? "" : s).match(/(\d+)(?:\+(\d+))?/); return m ? (+m[1]) * 100 + (+(m[2] || 0)) : 0; };   // keep stoppage time orderable (90+12 → 9012)
   const isHomeId = id => H.team && String(id) === String(H.team.id);
   const gc = (c.details || []).filter(d => (d.scoringPlay || /card/i.test((d.type && d.type.text) || "")) && !d.shootout);
   let hh = 0, aa = 0;
@@ -2036,6 +2047,7 @@ function authMode(m) {
   $("atL").classList.toggle("on", m === "L");
   $("auUser").style.display = ""; $("auPass").style.display = "";
   $("authRemRow").style.display = "";
+  $("authOut").style.display = "none";
   $("auNation").style.display = m === "C" ? "" : "none";
   $("authTitle").textContent = m === "C" ? "JOIN WORLD CUP 2026" : "WELCOME BACK";
   $("authBtn").textContent = "LET'S GO ⚽";
@@ -2097,12 +2109,25 @@ function finishAuth(a) {
   persistUser();
   localStorage.setItem("cs_name", a.username);
   myId = a.uid;
+  myPreds = {}; try { localStorage.removeItem("cs_preds"); } catch (_) {}   // drop the previous account's cached predictions on (re)login
   $("nameModal").classList.add("hide");
   syncMyPreds().then(() => {
     if (events.length) renderMatches();
     if (!$("paneP").classList.contains("hide")) renderPredict();
   });
   renderHero(); loadStandings(); pollChat(); renderChatComposer();
+}
+function signOut() {   // shared-device safety: fully clear the signed-in identity + its cached predictions
+  cs_user = null;
+  try { localStorage.removeItem("cs_user"); sessionStorage.removeItem("cs_user"); localStorage.removeItem("cs_name"); localStorage.removeItem("cs_preds"); } catch (_) {}
+  myPreds = {};
+  let gid = localStorage.getItem("cs_id"); if (!gid) { gid = "u" + Math.random().toString(36).slice(2, 9); try { localStorage.setItem("cs_id", gid); } catch (_) {} }
+  myId = gid;
+  window._predSkipped = true;
+  $("nameModal").classList.add("hide");
+  if (events.length) renderMatches();
+  renderHero(); renderChatComposer(); loadStandings();
+  if (!$("paneP").classList.contains("hide")) renderPredict();
 }
 function openNation(ev) {
   if (ev) ev.stopPropagation();
@@ -2113,6 +2138,7 @@ function openNation(ev) {
   $("authTitle").textContent = "CHANGE MY NATION";
   $("auUser").style.display = "none"; $("auPass").style.display = "none";
   $("authRemRow").style.display = "none";
+  $("authOut").style.display = "";
   $("auNation").style.display = "";
   $("authBtn").textContent = "SAVE NATION";
   $("authErr").textContent = "";
@@ -2199,7 +2225,7 @@ async function pollChat() {
   const human = msgs.filter(m => !isBot(m));
   const onChat = !$("paneC").classList.contains("hide");
   const latest = human.reduce((mx, m) => Math.max(mx, m.ts || 0), 0);
-  if (localStorage.getItem("cs_chat_seen") == null) setChatSeen(latest);         // first run → no backlog of unread
+  if (localStorage.getItem("cs_chat_seen") == null && human.length) setChatSeen(latest);   // only seed once a real read returns messages (avoid spurious unread on a transient empty read)         // first run → no backlog of unread
   if (_chatKnownIds && !onChat) {                                                // new since last poll, not mine → phone-style toast
     human.filter(m => !_chatKnownIds.has(m.id) && m.uid !== myId && m.uid !== "brkbot" && (m.ts || 0) > chatSeenTs())
          .slice(-3).forEach(showChatToast);
