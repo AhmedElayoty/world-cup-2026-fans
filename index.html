@@ -377,6 +377,11 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 .h2hsc i{font-style:normal;color:var(--dim);margin:0 1px;font-weight:600}
 .h2hsc.win-l{color:var(--rust2);border-color:rgba(255,122,69,.40)}
 .h2hsc.win-r{color:var(--cyan);border-color:rgba(25,200,255,.40)}
+.h2hsc.draw{color:#cdd9ff;background:#243056;border-color:#3a4a7a}
+.h2drawtag{display:block;font-family:'Oswald';font-weight:700;font-size:7px;letter-spacing:1.6px;color:#9fb0e0;margin-top:1px;line-height:1}
+.h2hr.win-l .h2side.r,.h2hr.win-r .h2side.l{opacity:.45}
+.h2hr.win-l .h2side.l .h2ab{color:var(--rust2)}
+.h2hr.win-r .h2side.r .h2ab{color:var(--cyan)}
 .h2dt{flex:0 0 50px;text-align:right;font-family:'Oswald';font-weight:500;font-size:9.5px;letter-spacing:.6px;color:var(--dim);text-transform:uppercase}
 .flabel{display:flex;align-items:center;justify-content:space-between;font-family:'Oswald';font-size:11px;letter-spacing:1px;color:var(--mut);margin:8px 2px 5px}
 .flabel b{color:#fff;font-weight:600}
@@ -1684,9 +1689,13 @@ function formH2H(data, ev) {
     const tot = hw + aw + dr || 1;
     const seg = (cl, n) => n > 0 ? '<i class="seg ' + cl + '" style="width:' + (n / tot * 100).toFixed(1) + '%"></i>' : "";
     const rows = meet.slice(0, 4).map(e => {
-      const win = (+e.homeTeamScore > +e.awayTeamScore) ? " win-l" : (+e.awayTeamScore > +e.homeTeamScore) ? " win-r" : "";
+      // ALWAYS orient to the current match: current home team (H) on the LEFT, current away (A) on the RIGHT,
+      // mapping that meeting's scores accordingly — so a team never flips sides between the card and the H2H.
+      const hHome = String(e.homeTeamId) === String(H.team.id);
+      const hs = +(hHome ? e.homeTeamScore : e.awayTeamScore), as = +(hHome ? e.awayTeamScore : e.homeTeamScore);
+      const res = hs > as ? "win-l" : as > hs ? "win-r" : "draw";
       const dt = e.gameDate ? esc(fmt(new Date(e.gameDate), { month: "short", year: "numeric" })) : "";
-      return '<div class="h2hr"><span class="h2side l"><span class="h2ab">' + esc(ab[String(e.homeTeamId)] || "") + '</span><img class="h2flag" src="' + esc(flagOf(e.homeTeamId)) + '" alt=""' + ferr + '></span><span class="h2hsc' + win + '">' + esc(e.homeTeamScore) + '<i>&#8211;</i>' + esc(e.awayTeamScore) + '</span><span class="h2side r"><img class="h2flag" src="' + esc(flagOf(e.awayTeamId)) + '" alt=""' + ferr + '><span class="h2ab">' + esc(ab[String(e.awayTeamId)] || "") + '</span></span><span class="h2dt">' + dt + '</span></div>';
+      return '<div class="h2hr ' + res + '"><span class="h2side l"><span class="h2ab">' + esc(ab[String(H.team.id)] || "") + '</span><img class="h2flag" src="' + esc(H.team.logo || "") + '" alt=""' + ferr + '></span><span class="h2hsc ' + res + '">' + hs + '<i>&#8211;</i>' + as + (res === "draw" ? '<b class="h2drawtag">DRAW</b>' : '') + '</span><span class="h2side r"><img class="h2flag" src="' + esc(A.team.logo || "") + '" alt=""' + ferr + '><span class="h2ab">' + esc(ab[String(A.team.id)] || "") + '</span></span><span class="h2dt">' + dt + '</span></div>';
     }).join("");
     h2hSec = '<section class="fhsec h2hsec"><header class="fhhead"><span class="fhico fhico--h2h"><svg viewBox="0 0 24 24" width="11" height="11" aria-hidden="true"><path fill="currentColor" d="M4 7h6v2H4zM4 11h6v2H4zM14 7h6v2h-6zM14 11h6v2h-6zM11 4h2v16h-2z"/></svg></span><span class="fhttl">HEAD-TO-HEAD</span><span class="fhrule"></span><span class="fhmeta">' + tot + ' MET</span></header><div class="h2hagg"><span class="aggside l"><img class="aggflag" src="' + esc(H.team.logo || "") + '" alt=""' + ferr + '><b class="aggn">' + hw + '</b></span><span class="aggbar">' + seg("h", hw) + seg("d", dr) + seg("a", aw) + '</span><span class="aggside r"><b class="aggn">' + aw + '</b><img class="aggflag" src="' + esc(A.team.logo || "") + '" alt=""' + ferr + '></span></div><span class="aggdraws">' + dr + ' DRAWN</span>' + rows + '</section>';
   }
