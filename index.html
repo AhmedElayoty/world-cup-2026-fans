@@ -482,6 +482,11 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 .brteam.egy .bn{color:#6dffb5}
 .brteam .bsc{font-family:'Oswald';font-weight:700;font-size:16px;color:#f4f6fb;font-variant-numeric:tabular-nums}
 .brv{font-size:9.5px;color:var(--dim);margin-top:6px;letter-spacing:.3px}
+.brteam.win .bn{color:var(--gold)}
+.brteam.win .bsc{color:var(--gold)}
+.brteam.lose{opacity:.5}
+.brnote{font-family:'Oswald';font-weight:700;font-size:8px;letter-spacing:.5px;color:#16110a;background:var(--gold);border-radius:4px;padding:1px 4px;margin-left:5px;vertical-align:middle}
+.brnote.live{color:#fff;background:var(--red);animation:pulse 1.4s infinite}
 .brdlrow{display:flex;gap:9px;margin:0 0 12px}
 .brdl{flex:1;background:linear-gradient(90deg,var(--rust),var(--gold));color:#16110a;border:none;border-radius:11px;padding:12px;font-family:'Oswald';font-weight:700;font-size:12px;letter-spacing:.8px;cursor:pointer}
 .brdl.alt{background:none;border:1.5px solid var(--gold);color:var(--gold)}
@@ -956,6 +961,7 @@ async function loadStandings() {
   try {
     const [d, evs] = await Promise.all([ getJSON(STAND), seasonEvents(true).catch(() => seasonCache.events) ]);
     const groups = applyLiveStats(d.children || [], evs);
+    syncKnockout(evs);   // populate knockout results from real fixtures
     $("ggrid").innerHTML = groups.map(g => {
       const rows = rankRows((g.standings && g.standings.entries) || []);
       const hasEgy = rows.some(r => r.team.displayName === myNation());
@@ -1093,11 +1099,14 @@ function egyProvisional(slot) {
   if (slot.t === "R" && slot.g === _egyTrack.g && _egyTrack.rank === 1) return true;
   return false;
 }
-function brTeamRow(slot) {
-  const t = slotTeam(slot);
+function brTeamRow(node, side) {
+  const slot = side === "h" ? node.h : node.a;
+  const t = nodeTeam(node, side);
+  const r = _nodeResult[node.n], sc = r ? (side === "h" ? r.hs : r.as) : null;
+  const isWin = !!(r && r.win && r.win === side), isLose = !!(r && r.win && r.win !== side);
   if (t) {
     const egy = t.name === myNation();
-    return '<div class="brteam' + (egy ? " egy" : "") + '"><img src="' + (t.logo || "") + '" alt="" onerror="this.style.visibility=&#39;hidden&#39;"><span class="bn">' + esc(t.name) + '</span><span class="bsc"></span></div>';
+    return '<div class="brteam' + (egy ? " egy" : "") + (isWin ? " win" : "") + (isLose ? " lose" : "") + '"><img src="' + (t.logo || "") + '" alt="" onerror="this.style.visibility=&#39;hidden&#39;"><span class="bn">' + esc(t.name) + '</span><span class="bsc">' + (sc != null ? sc : "") + '</span></div>';
   }
   const L = slotLabel(slot), prov = egyProvisional(slot);
   return '<div class="brteam ph' + (prov ? " egy" : "") + '"><span class="phc"></span><span class="bn">' + esc(L.main) +
@@ -1105,16 +1114,18 @@ function brTeamRow(slot) {
     (L.sub ? ' <i class="bsub">' + esc(L.sub) + '</i>' : "") + '</span><span class="bsc"></span></div>';
 }
 function bracketCell(n) {
-  const ht = slotTeam(n.h), at = slotTeam(n.a);
+  const ht = nodeTeam(n, "h"), at = nodeTeam(n, "a");
   const egyCell = (ht && ht.name === myNation()) || (at && at.name === myNation()) || egyProvisional(n.h) || egyProvisional(n.a);
   const _w = koWhen(n.uae), ko = _w.dayW + " · " + _w.time;
+  const r = _nodeResult[n.n], note = (r && r.note) ? ' <b class="brnote">' + esc(r.note) + '</b>' : (r && r.live ? ' <b class="brnote live">● LIVE</b>' : "");
   return '<div class="brcell' + (egyCell ? " egy" : "") + '">' +
-    '<div class="brh"><span>' + n.r + ' · MATCH ' + n.n + '</span><span class="brko">' + esc(ko) + '</span></div>' +
-    brTeamRow(n.h) + brTeamRow(n.a) +
+    '<div class="brh"><span>' + n.r + ' · MATCH ' + n.n + note + '</span><span class="brko">' + esc(ko) + '</span></div>' +
+    brTeamRow(n, "h") + brTeamRow(n, "a") +
     '<div class="brv">🏟️ ' + esc(n.city) + '</div></div>';
 }
 function renderBracket() {
   const host = $("gPaneBracket"); if (!host) return;
+  if (seasonCache.events.length) syncKnockout(seasonCache.events);   // keep knockout results fresh from the season cache
   const chips = BR_ROUNDS.map(([r]) => '<button class="rchip' + (r === bracketRound ? " on" : "") + '" onclick="setBracketRound(\'' + r + '\')">' + r + '</button>').join("");
   let body = "";
   if (bracketRound === "R32") {
@@ -1137,7 +1148,39 @@ function renderBracket() {
 }
 
 /* ===== BRACKET POSTER (premium wallchart, opens in a new landscape tab) ===== */
-let _nodeResult = {};                 // phase 2: num -> {hs,as,note,ht,at}
+let _nodeResult = {};                 // knockout results: num -> {ht,at,hs,as,win,note,live}
+// map finished/live ESPN knockout events onto BRACKET nodes (by venue + UTC+4 date) and store the result
+function syncKnockout(evs) {
+  const norm = s => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  (evs || []).forEach(e => {
+    try {
+      const stt = e.status && e.status.type && e.status.type.state; if (stt === "pre") return;
+      const comp = e.competitions && e.competitions[0]; if (!comp) return;
+      const ymd = fixedYMD(new Date(e.date)), vn = norm((comp.venue || {}).fullName), vc = norm(((comp.venue || {}).address || {}).city);
+      const node = BRACKET.find(n => { const nd = uaeStrToDate(n.uae); return nd && fixedYMD(nd) === ymd && ((vn && vn === norm(n.st)) || (vc && vc === norm(n.city))); });
+      if (!node) return;
+      const cs = comp.competitors || [], H = cs.find(x => x.homeAway === "home"), A = cs.find(x => x.homeAway === "away");
+      if (!H || !A || !H.team || !A.team) return;
+      const tm = c => ({ name: c.team.displayName, logo: c.team.logo || ((c.team.logos && c.team.logos[0]) ? c.team.logos[0].href : "") });
+      const hs = (H.score != null && H.score !== "") ? +H.score : null, as = (A.score != null && A.score !== "") ? +A.score : null;
+      const hso = +H.shootoutScore || 0, aso = +A.shootoutScore || 0, hasSO = H.shootoutScore != null && A.shootoutScore != null && (hso || aso);
+      let win = null;
+      if (stt === "post" && hs != null && as != null) win = hs > as ? "h" : as > hs ? "a" : (hasSO ? (hso > aso ? "h" : "a") : null);
+      _nodeResult[node.n] = { ht: tm(H), at: tm(A), hs, as, win, live: stt === "in",
+        note: hasSO ? (hso + "–" + aso + " PENS") : /extra|aet/i.test((e.status.type.description || "") + (e.status.type.detail || "")) ? "AET" : null };
+    } catch (_) {}
+  });
+}
+// resolve a node side's team: real fixture team if known, else projected (group W/R, or winner of the feeder match)
+function nodeTeam(node, side) {
+  const r = _nodeResult[node.n];
+  if (r) { const t = side === "h" ? r.ht : r.at; if (t && t.name) return t; }
+  const slot = side === "h" ? node.h : node.a;
+  const gt = slotTeam(slot); if (gt) return gt;
+  if (slot.t === "WM") return bpWinTeam(slot.m);
+  if (slot.t === "LM") { const rr = _nodeResult[slot.m]; if (rr && rr.win) return rr.win === "h" ? rr.at : rr.ht; }
+  return null;
+}
 const bpBR = n => BRACKET.find(x => x.n === n);
 const bpTrunc = (s, m) => { s = String(s == null ? "" : s); return s.length > m ? s.slice(0, m - 1) + "…" : s; };
 const BPC = { txt:"#EAD9EE", win:"#F4D27A", lose:"#7A6A72", ph:"#9A8AA0", meta:"#9A8AA0", plat:"#BFC6D8", hair:"#4A3550", div:"#38263E", ember:"#FF5C3B", nat:"#00E08A", bronze:"#B07A3A", gold:"#E7B85A" };
@@ -1146,9 +1189,9 @@ const bpcxL = { R32:176, R16:424, QF:672, SF:920 }, bpcxR = { R32:2224, R16:1976
 const bpYs = [246,366,486,606,726,846,966,1086];
 const bpDimH = { R32:92, R16:92, QF:100, SF:108 };
 function bpRes(n){ return _nodeResult[n] || null; }
-function bpDecided(n){ const r=_nodeResult[n]; return !!(r && r.hs!=null && r.as!=null); }
-function bpWinTeam(n){ const r=_nodeResult[n]; if(!bpDecided(n)) return null; return r.hs>=r.as ? (r.ht||null) : (r.at||null); }
-function bpSlotTeam(node, side){ const slot = side==="h"?node.h:node.a; const t=slotTeam(slot); if(t) return t; if(slot.t==="WM") return bpWinTeam(slot.m); if(slot.t==="LM"){ const r=_nodeResult[slot.m]; if(bpDecided(slot.m)) return r.hs>=r.as?(r.at||null):(r.ht||null); } return null; }
+function bpDecided(n){ const r=_nodeResult[n]; return !!(r && !r.live && (r.win==="h"||r.win==="a")); }
+function bpWinTeam(n){ const r=_nodeResult[n]; if(!bpDecided(n)) return null; return r.win==="h" ? (r.ht||null) : (r.at||null); }
+function bpSlotTeam(node, side){ return nodeTeam(node, side); }
 function bpNatIn(n){ const nd=bpBR(n); const th=bpSlotTeam(nd,"h"), ta=bpSlotTeam(nd,"a"); if((th&&th.name===myNation())||(ta&&ta.name===myNation())) return true; if(egyProvisional(nd.h)||egyProvisional(nd.a)) return true; return false; }
 function bpBuildPos(){
   const Lord=[74,77,73,75,83,84,81,82], Rord=[76,78,79,80,86,88,85,87], pos={};
@@ -1188,7 +1231,7 @@ function bpSlotGlyph(slot){
 }
 function bpSlotR(node, side, x, top, w, sh, scale){
   const team=bpSlotTeam(node,side), r=bpRes(node.n), s=scale||1, tileW=30*s, tileH=22*s, fx=x+11, fy=top+(sh-tileH)/2, nameX=fx+tileW+11, cy=top+sh/2;
-  const ns=(scale&&scale>1.2)?22:16, score=r?(side==="h"?r.hs:r.as):null, win=r&&r.hs!=null?(r.hs>=r.as?"h":"a"):null, isWin=win===side;
+  const ns=(scale&&scale>1.2)?22:16, score=r?(side==="h"?r.hs:r.as):null, win=r?(r.win||null):null, isWin=win===side;
   let o="";
   if(team){
     const egy=team.name===myNation();
