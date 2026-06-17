@@ -215,6 +215,7 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
  padding:13px 15px;margin-bottom:12px;cursor:pointer}
 .hero .hl{font-family:'Oswald';font-size:10.5px;letter-spacing:1.6px;color:#6dffb5;display:flex;justify-content:space-between}
 .hero .hm{display:flex;align-items:center;gap:10px;margin-top:8px}
+.hero .hpick{margin-top:8px;font-family:'Oswald';font-weight:500;font-size:13px;color:#cfeede;letter-spacing:.3px;line-height:1.45}
 .hero .hm img{width:30px;height:30px;object-fit:contain}
 .hero .ht1{font-family:'Oswald';font-weight:600;font-size:17px;flex:1}
 .hero .cd{font-family:'Oswald';font-weight:700;font-size:21px;color:#6dffb5;letter-spacing:1px;text-align:right}
@@ -639,7 +640,7 @@ const NATIONS_FALLBACK = ["Algeria","Argentina","Australia","Austria","Belgium",
  "Morocco","Netherlands","New Zealand","Norway","Panama","Paraguay","Portugal","Qatar","Saudi Arabia",
  "Scotland","Senegal","South Africa","South Korea","Spain","Sweden","Switzerland","Tunisia",
  "Türkiye","United States","Uruguay","Uzbekistan"];
-function myNation() { try { return (cs_user && cs_user.nation) || localStorage.getItem("cs_guest_nation") || "Egypt"; } catch (_) { return (cs_user && cs_user.nation) || "Egypt"; } }
+function myNation() { try { return (cs_user && cs_user.nation) || localStorage.getItem("cs_guest_nation") || ""; } catch (_) { return (cs_user && cs_user.nation) || ""; } }
 
 /* ================= HELPERS ================= */
 const $ = id => document.getElementById(id);
@@ -1433,6 +1434,12 @@ async function renderHero() {
   } catch (_) { $("heroBox").innerHTML = ""; }
 }
 function drawHero() {
+  if (!myNation()) {   // no nation chosen yet → prompt in the green card instead of defaulting to Egypt
+    $("heroBox").innerHTML = '<div class="hero" onclick="openNation(event)" style="cursor:pointer">' +
+      '<div class="hl"><span>★ CHOOSE YOUR NATION</span><span class="heroChange">PICK ⚙</span></div>' +
+      '<div class="hpick">Tap to follow your team — your next match, live highlights &amp; their road to the final</div></div>';
+    return;
+  }
   const e = heroEvent;
   if (!e) {
     $("heroBox").innerHTML = '<div class="hero" style="cursor:default"><div class="hl">' +
