@@ -681,6 +681,7 @@ function toggleHour12() { setHour12(!HOUR12); }
 
 /* ================= TABS ================= */
 function showTab(t) {
+  if (t !== "M" && openId) { openId = null; renderMatches(); }   // leaving Matches → collapse the open match
   ["M", "G", "S", "P", "C"].forEach(x => {
     $("tab" + x).classList.toggle("on", x === t);
     $("pane" + x).classList.toggle("hide", x !== t);
