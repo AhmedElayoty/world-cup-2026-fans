@@ -675,6 +675,10 @@ async function loadMatches() {
       if (posts.length) postRoom(posts).catch(() => {});
     }
     renderMatches();
+    if (openId) {                                   // open match is live → its cached detail is stale, refresh it
+      const oe = events.find(x => x.id === openId);
+      if (oe && oe.status.type.state === "in") fillDetail(openId, true);
+    }
     lastFetch = Date.now();
     setCon(true, "LIVE FEED · UPDATED 0S AGO");
     const now = Date.now();
@@ -772,20 +776,34 @@ function renderMatches() {
       <div class="mdetail" id="det${e.id}"><div class="dnote">Loading line-ups…</div></div>
     </div>`;
   }).join("");
+  // the live poll rebuilds this list every 15s — repaint the open match's detail from cache
+  // so the stats/line-ups the user is reading don't blank back to "Loading…"
+  if (openId) {
+    const oe = events.find(x => x.id === openId);
+    if (oe && lineups[openId]) {
+      const box = document.getElementById("det" + openId);
+      if (box) box.innerHTML = matchDetail(lineups[openId], oe);
+    }
+  }
 }
 const logo = c => `<img src="${c.team.logo || ""}" alt="" onerror="this.style.visibility='hidden'">`;
+async function fillDetail(id, force) {
+  if (!$("det" + id)) return;
+  try {
+    if (force) delete lineups[id];
+    const data = lineups[id] || (lineups[id] = await getJSON(API + "/summary?event=" + id));
+    if (openId !== id) return;                      // user closed it / opened another while fetching
+    const box = $("det" + id);
+    if (box) box.innerHTML = matchDetail(data, events.find(x => x.id === id));
+  } catch (e) {
+    const box = $("det" + id);
+    if (box) box.innerHTML = `<div class="dnote">Couldn't load line-ups (${esc(String(e.message || e))}).</div>`;
+  }
+}
 async function toggleM(id) {
   openId = openId === id ? null : id;
   renderMatches();
-  if (!openId) return;
-  const box = $("det" + id);
-  try {
-    const data = lineups[id] || (lineups[id] = await getJSON(API + "/summary?event=" + id));
-    if (openId !== id || !box) return;
-    box.innerHTML = matchDetail(data, events.find(x => x.id === id));
-  } catch (e) {
-    if (box) box.innerHTML = `<div class="dnote">Couldn't load line-ups (${esc(String(e.message || e))}).</div>`;
-  }
+  if (openId) fillDetail(openId);
 }
 
 /* ================= GROUPS ================= */
