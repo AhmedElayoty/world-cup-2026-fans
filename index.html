@@ -97,6 +97,10 @@ main{flex:1;padding:14px 14px calc(20px + env(safe-area-inset-bottom));overflow-
 .mven{margin-top:9px;font-size:11px;color:var(--dim);display:flex;justify-content:space-between;gap:8px}
 .mven b{color:var(--mut);font-weight:600;flex:none}
 .mven span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+.mhint{margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);text-align:center;
+ font-family:'Oswald';font-weight:600;font-size:9.5px;letter-spacing:1.6px;text-transform:uppercase;color:var(--mut)}
+.mcard:active .mhint{color:var(--gold)}
+.mcard.open .mhint{display:none}
 .team:not(.away) img{box-shadow:-3px 0 0 0 var(--rust2)}
 .team.away img{box-shadow:3px 0 0 0 var(--cyan)}
 .team.lose{opacity:.48}
@@ -763,6 +767,9 @@ function renderMatches() {
     const hWin = fin && (+H.score) > (+A.score), aWin = fin && (+A.score) > (+H.score);
     const hCls = "team" + (aWin ? " lose" : ""), aCls = "team away" + (hWin ? " lose" : "");
     const liveCls = state === "in" ? " islive" : "";
+    const detailHint = state === "pre"
+      ? '<div class="mhint">&#9662; Press for match details</div>'
+      : '<div class="mhint">&#9662; Press for line-ups, formation &amp; stats</div>';
     return `<div class="mcard${egy ? " egy" : ""}${flashIds.has(e.id) ? " goal" : ""}${openId === e.id ? " open" : ""}${liveCls}" onclick="toggleM('${e.id}')">
       <div class="mtop">${badge}<span>${esc(note)}</span><span style="margin-left:auto">${dayw}</span></div>
       <div class="mrow">
@@ -773,6 +780,7 @@ function renderMatches() {
       ${goalSummary}
       <div class="mven"><span>🏟️ ${esc(c.venue ? c.venue.fullName : "")}</span><b>${esc(c.venue && c.venue.address ? (c.venue.address.city || "") : "")}</b></div>
       ${predStrip}
+      ${detailHint}
       <div class="mdetail" id="det${e.id}"><div class="dnote">Loading line-ups…</div></div>
     </div>`;
   }).join("");
