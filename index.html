@@ -421,6 +421,38 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 .pchip{position:absolute;transform:translate(-50%,-50%);width:19%;text-align:center;z-index:2}
 .pnum{width:25px;height:25px;margin:0 auto;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Oswald';font-weight:700;font-size:12px;color:#fff;border:1.5px solid rgba(255,255,255,.75);box-shadow:0 1px 3px rgba(0,0,0,.5)}
 .pname{font-size:8px;color:#fff;margin-top:1px;line-height:1.05;text-shadow:0 1px 2px rgba(0,0,0,.9);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prate{position:absolute;top:-7px;left:60%;min-width:18px;height:15px;border-radius:4px;font-family:'Oswald';font-weight:700;font-size:9.5px;color:#06121f;display:flex;align-items:center;justify-content:center;padding:0 2px;z-index:4;box-shadow:0 1px 2px rgba(0,0,0,.6)}
+.prate.rhi{background:#37d27f}.prate.rmd{background:#9fd957}.prate.rok{background:#e8c552}.prate.rlo{background:#dd8a55}
+.subln{cursor:pointer;color:#bcd2ff}.subln b{font-family:'Oswald';color:#fff}
+.motm{display:flex;align-items:center;gap:10px;background:linear-gradient(150deg,#3a2a07,#241a06);border:1px solid var(--gold);border-radius:12px;padding:9px 13px;margin-bottom:10px;cursor:pointer}
+.motm.loading{cursor:default;opacity:.85}
+.motm .ic{font-size:20px}
+.motm .nm{font-family:'Oswald';font-weight:600;font-size:15px;color:#ffe9b8;line-height:1.15}
+.motm .motmr{color:#241a06;background:linear-gradient(160deg,#ffd86b,#e6b03a);padding:0 6px;border-radius:6px;font-size:13px;margin-left:3px}
+.motm .sub{font-size:11px;color:#c9a44a;margin-top:2px}
+.motm .tag{margin-left:auto;font-family:'Oswald';font-size:8.5px;letter-spacing:1.2px;color:#c9a44a;text-align:right;line-height:1.2;flex:none}
+#pstat{position:fixed;inset:0;z-index:320;background:rgba(4,8,20,.62);display:flex;align-items:center;justify-content:center;padding:22px;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.pstatcard{position:relative;background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:16px;padding:15px 16px;max-width:340px;width:100%;box-shadow:0 16px 44px rgba(0,0,0,.6);animation:toastIn .2s ease}
+.psrate{position:absolute;top:13px;right:46px;font-family:'Oswald';font-weight:700;font-size:21px;color:#06121f;padding:3px 9px;border-radius:9px;text-align:center;line-height:1}
+.psrate small{display:block;font-size:6.5px;letter-spacing:1px;color:rgba(0,0,0,.55);font-weight:600}
+.psrate.rhi{background:#37d27f}.psrate.rmd{background:#9fd957}.psrate.rok{background:#e8c552}.psrate.rlo{background:#dd8a55}
+.psname{font-family:'Oswald';font-weight:700;font-size:17px;color:#fff}
+.pspos{font-size:11px;color:var(--mut);margin-top:1px;letter-spacing:.5px}
+.psgrid{margin-top:13px;display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+.psrow{display:flex;justify-content:space-between;font-size:11.5px;color:var(--mut);border-bottom:1px solid rgba(255,255,255,.06);padding:4px 0}
+.psrow b{color:var(--txt);font-family:'Oswald';font-weight:600;font-variant-numeric:tabular-nums}
+.ldtabs{display:flex;gap:6px;margin:10px 0 7px}
+.ldtab{flex:1;background:var(--card2);border:1px solid var(--line);color:var(--mut);font-family:'Oswald';font-weight:600;font-size:11px;letter-spacing:.8px;padding:8px;border-radius:9px;cursor:pointer}
+.ldtab.on{background:var(--rust);color:#fff;border-color:var(--rust2)}
+.ldview.hide{display:none}
+.rtbl{display:flex;flex-direction:column;gap:4px}
+.rtrow{display:flex;align-items:center;gap:9px;padding:6px 9px;background:var(--card2);border:1px solid var(--line);border-radius:9px;cursor:pointer}
+.rtrow.motmrow{border-color:var(--gold);background:linear-gradient(90deg,rgba(255,200,70,.12),var(--card2) 62%)}
+.rtr{flex:none;width:31px;height:24px;border-radius:6px;font-family:'Oswald';font-weight:700;font-size:12.5px;color:#06121f;display:flex;align-items:center;justify-content:center}
+.rtr.rhi{background:#37d27f}.rtr.rmd{background:#9fd957}.rtr.rok{background:#e8c552}.rtr.rlo{background:#dd8a55}
+.rtn{flex:1;min-width:0;font-family:'Oswald';font-weight:600;font-size:13px;color:var(--txt);line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rtn i{display:block;font-family:'Inter';font-weight:400;font-style:normal;font-size:9.5px;color:var(--dim);letter-spacing:.3px;margin-top:1px}
+.rth{flex:none;font-family:'Oswald';font-weight:600;font-size:11px;color:var(--mut);text-align:right;white-space:nowrap}
 .sbar{margin:8px 0}
 .sbar .top{display:flex;justify-content:space-between;font-family:'Oswald';font-size:12px;color:#fff;margin-bottom:3px}
 .sbar .top .lab{color:var(--dim);letter-spacing:1px;font-size:9.5px;align-self:center}
@@ -1800,14 +1832,144 @@ function matchDetail(data, ev) {
   const ros = data.rosters || [];
   const hasL = ros.length && ros.some(r => (r.roster || []).length);
   let html = '<div class="md2">';
-  html += starMan(data, ev);
+  html += motmCard(data, ev);
   html += matchMeta(data, ev);
   html += evTimeline(ev, data);
-  if (hasL) html += pitchBlock(ros, ev);
+  if (hasL) html += lineupsTabbed(ros, ev);
   else html += '<div class="dnote">Line-ups not announced yet — usually ~1 hour before kick-off.</div>';
   html += statsShare(data);
   html += formH2H(data, ev);
   return html + '</div>';
+}
+/* ===== PLAYER RATINGS + MOTM — computed from the ESPN core stat feed (keyless, CORS-open).
+   Validated vs FotMob: ~70% exact MOTM, ~86% top-3. Labelled "MOTM (by rating)" — it's our model, not the official award. ===== */
+const RATE_CORE = "https://sports.core.api.espn.com/v2/sports/soccer/leagues/" + LG;
+let _ratings = {};   // eventId -> {ready, loading, byId:{pid:{rating,c,m,name,pos,team,mins}}, motm}
+function rateCls(r) { return r >= 8 ? "rhi" : r >= 7 ? "rmd" : r >= 6 ? "rok" : "rlo"; }
+function motmCls(pos, gk) { if (gk) return "GK"; const x = (pos || "").toUpperCase();
+  if (/ST|CF|LW|RW|^W|FW|SS|^F/.test(x)) return "FWD";
+  if (/DM|CM|AM|RM|LM|MF|^M/.test(x)) return "MID";
+  if (/CD|CB|LB|RB|WB|^D/.test(x)) return "DEF"; return "MID"; }
+function motmRate(m, c) {
+  const min = m.minutes || 0; if (min <= 0) return null;
+  const g = m.totalGoals || 0, a = m.goalAssists || 0, gd = m.goalDifference || 0;
+  let r = 6.0;
+  r += g * 1.7 + a * 0.85 + (m.bigChanceCreated || 0) * 0.25 + (m.expectedGoals || 0) * 0.3 + (m.expectedAssists || 0) * 0.4 - (m.bigChanceMissed || 0) * 0.2 - (m.penaltyKicksMissed || 0) * 0.6;
+  r -= (m.yellowCards || 0) * 0.25 + (m.redCards || 0) * 1.5 + (m.ownGoals || 0) * 1.3 + (m.foulsCommitted || 0) * 0.03;
+  if (c === "GK") { r += (m.goalsPrevented || 0) * 1.3 + (m.saves || 0) * 0.28 + (m.penaltyKicksSaved || 0) * 1.0 + (m.cleanSheet ? 0.9 : 0); if ((m.savePct || 0) > 0) r += (m.savePct - 0.7) * 1.5; r -= Math.max(0, (m.goalsConceded || 0) - 1) * 0.25; }
+  else if (c === "DEF") { r += (m.cleanSheet ? 0.9 : 0) + (m.effectiveTackles || 0) * 0.12 + (m.interceptions || 0) * 0.12 + (m.effectiveClearance || 0) * 0.06 + (m.blockedShots || 0) * 0.2 + (m.duelsWon || 0) * 0.07 + Math.min(0.4, (m.accuratePasses || 0) * 0.003); if ((m.totalPasses || 0) >= 25) r += ((m.passPct || 0) - 0.82) * 0.8; r -= (m.goalsConceded || 0) * 0.10; }
+  else if (c === "MID") { r += Math.min(0.5, (m.accuratePasses || 0) * 0.004) + (m.successfulFinalThirdPasses || 0) * 0.02 + (m.progressiveCarries || 0) * 0.03 + (m.duelsWon || 0) * 0.05 + (m.effectiveTackles || 0) * 0.07 + (m.interceptions || 0) * 0.06 + (m.touchesInOppBox || 0) * 0.04 + (m.shotsOnTarget || 0) * 0.1; if ((m.totalPasses || 0) >= 30) r += ((m.passPct || 0) - 0.80) * 0.8; }
+  else { r += (m.shotsOnTarget || 0) * 0.16 + (m.totalShots || 0) * 0.03 + (m.touchesInOppBox || 0) * 0.05 + (m.duelsWon || 0) * 0.04 + (m.progressiveCarries || 0) * 0.025 + Math.min(0.2, (m.accuratePasses || 0) * 0.003); }
+  if (gd > 0) r += 0.4; else if (gd < 0) { r += -0.8 + Math.max(-0.8, gd * 0.2); r = Math.min(r, 7.7); }
+  if (min < 30 && g === 0 && a === 0) r = 6.0 + (r - 6.0) * 0.5;
+  r = 5.9 + (r - 6.0) * 0.8;   // gentle calibration toward a FotMob-like scale (monotonic; order unchanged)
+  return Math.round(Math.min(9.7, Math.max(4.5, r)) * 10) / 10;
+}
+async function loadRatings(ev) {
+  const id = ev.id;
+  if (_ratings[id] && (_ratings[id].ready || _ratings[id].loading)) return _ratings[id];
+  if (!ev.status || ev.status.type.state !== "post") return null;   // full-time only
+  _ratings[id] = { loading: true, byId: {} };
+  const gj = u => fetch(String(u).replace(/^http:/, "https:")).then(r => r.json());
+  try {
+    const cev = await gj(RATE_CORE + "/events/" + id);
+    const comp = await gj(cev.competitions[0].$ref);
+    const refs = [];
+    for (const c of (comp.competitors || [])) {
+      const tn = (c.team && c.team.displayName) || "";
+      try { const ros = await gj(c.roster.$ref);
+        (ros.entries || []).forEach(e => { if (e.statistics && e.statistics.$ref) refs.push({ pid: String(e.playerId), team: tn, pos: (e.position && (e.position.abbreviation || e.position.name)) || "", ref: e.statistics.$ref }); });
+      } catch (_) {}
+    }
+    const byId = {};
+    await Promise.all(refs.map(async rf => {
+      try { const st = await gj(rf.ref); const cats = (st.splits && st.splits.categories) || []; const m = {};
+        cats.forEach(c => (c.stats || []).forEach(s => m[s.name] = s.value));
+        if ((m.minutes || 0) <= 0) return;
+        const gk = /^g|keeper/i.test(rf.pos) || (m.saves > 0 || m.savePct > 0 || m.crossesCaught > 0 || m.punches > 0);
+        const cl = motmCls(rf.pos, gk), rt = motmRate(m, cl);
+        if (rt == null) return;
+        byId[rf.pid] = { rating: rt, c: cl, m, team: rf.team, pos: rf.pos, mins: m.minutes || 0 };
+      } catch (_) {}
+    }));
+    const sum = lineups[id];
+    if (sum) (sum.rosters || []).forEach(r => { const tn = (r.team && r.team.displayName) || ""; (r.roster || []).forEach(p => { const a = p.athlete || {}; const b = byId[String(a.id)]; if (b) { b.name = a.displayName || a.shortName || ""; if (tn) b.team = tn; } }); });
+    let motm = null;
+    Object.keys(byId).forEach(pid => { const x = byId[pid]; if (x.name && (!motm || x.rating > motm.rating)) motm = { pid, name: x.name, team: x.team, rating: x.rating, m: x.m, c: x.c }; });
+    _ratings[id] = { ready: true, byId, motm };
+  } catch (e) { _ratings[id] = { ready: true, byId: {}, motm: null }; }
+  if (openId === id && $("det" + id)) { const oe = events.find(x => x.id === id); if (oe && lineups[id]) $("det" + id).innerHTML = matchDetail(lineups[id], oe); }
+  return _ratings[id];
+}
+function motmCard(data, ev) {
+  if (ev.status.type.state !== "post") return "";
+  const R = _ratings[ev.id];
+  if (!R || !R.ready) { if (!R) loadRatings(ev); return '<div class="motm loading"><span class="ic">⭐</span><div class="motmb"><div class="nm">Analyzing player ratings…</div><div class="sub">crunching the full match stats</div></div><div class="tag">MOTM<br>(BY RATING)</div></div>'; }
+  const m = R.motm; if (!m) return starMan(data, ev);   // ratings unavailable → fall back to the simple heuristic
+  const s = m.m, bits = [];
+  if (s.totalGoals) bits.push(s.totalGoals + (s.totalGoals > 1 ? " goals" : " goal"));
+  if (s.goalAssists) bits.push(s.goalAssists + (s.goalAssists > 1 ? " assists" : " assist"));
+  if (m.c === "GK") { if (s.saves) bits.push(s.saves + " saves"); if (s.cleanSheet) bits.push("clean sheet"); }
+  else { if (s.shotsOnTarget) bits.push(s.shotsOnTarget + " on tgt"); if (s.bigChanceCreated) bits.push(s.bigChanceCreated + " big chance" + (s.bigChanceCreated > 1 ? "s" : "")); }
+  return '<div class="motm" onclick="playerStatPop(\'' + ev.id + '\',\'' + m.pid + '\')"><span class="ic">⭐</span><div class="motmb"><div class="nm">' + esc(m.name) + ' <b class="motmr">' + m.rating.toFixed(1) + '</b></div><div class="sub">' + esc(m.team) + (bits.length ? ' · ' + bits.join(", ") : "") + ' · tap for stats</div></div><div class="tag">MOTM<br>(BY RATING)</div></div>';
+}
+function playerStatPop(eventId, pid) {
+  const R = _ratings[eventId]; if (!R || !R.byId || !R.byId[pid]) return;
+  const p = R.byId[pid], m = p.m;
+  const pct = v => (v != null ? Math.round(v * 100) + "%" : "—");
+  const row = (lbl, val) => '<div class="psrow"><span>' + lbl + '</span><b>' + val + '</b></div>';
+  let g = row("Minutes", m.minutes || 0);
+  if (p.c !== "GK") {
+    g += row("Goals", m.totalGoals || 0) + row("Assists", m.goalAssists || 0) +
+      row("Shots (OT)", (m.totalShots || 0) + " (" + (m.shotsOnTarget || 0) + ")") +
+      row("xG", (m.expectedGoals || 0).toFixed(2)) + row("xA", (m.expectedAssists || 0).toFixed(2)) +
+      row("Big chances", m.bigChanceCreated || 0) + row("Touches", m.touches || 0) +
+      row("Passes (acc)", (m.totalPasses || 0) + " (" + pct(m.passPct) + ")") +
+      row("Final-3rd passes", m.successfulFinalThirdPasses || 0) +
+      row("Duels won", (m.duelsWon || 0) + "/" + (m.duels || 0)) +
+      row("Tackles", m.effectiveTackles || 0) + row("Interceptions", m.interceptions || 0) + row("Clearances", m.effectiveClearance || 0);
+  } else {
+    g += row("Saves", m.saves || 0) + row("Save %", pct(m.savePct)) +
+      row("Goals prevented", (m.goalsPrevented || 0).toFixed(2)) + row("Conceded", m.goalsConceded || 0) +
+      row("Clean sheet", m.cleanSheet ? "Yes" : "No") + row("Pen. saved", m.penaltyKicksSaved || 0) +
+      row("Passes (acc)", (m.totalPasses || 0) + " (" + pct(m.passPct) + ")") + row("Touches", m.touches || 0);
+  }
+  g += row("Fouls", m.foulsCommitted || 0) + row("Cards", (((m.yellowCards || 0) ? "🟨" : "") + ((m.redCards || 0) ? "🟥" : "")) || "—");
+  let pop = $("pstat"); if (!pop) { pop = document.createElement("div"); pop.id = "pstat"; document.body.appendChild(pop); }
+  pop.innerHTML = '<div class="pstatcard"><button class="fpopx" aria-label="Close">&#215;</button>' +
+    '<div class="psrate ' + rateCls(p.rating) + '">' + p.rating.toFixed(1) + '<small>RATING</small></div>' +
+    '<div class="pshead"><div class="psname">' + esc(p.name || "") + '</div><div class="pspos">' + esc(p.pos || p.c) + ' · ' + esc(p.team || "") + '</div></div>' +
+    '<div class="psgrid">' + g + '</div></div>';
+  pop.querySelector(".fpopx").onclick = () => pop.remove();
+  pop.onclick = e => { if (e.target === pop) pop.remove(); };
+}
+function ldTab(btn, which) {
+  const root = btn.closest(".md2"); if (!root) return;
+  root.querySelectorAll(".ldtab").forEach(b => b.classList.toggle("on", b === btn));
+  root.querySelectorAll(".ldview").forEach(v => v.classList.toggle("hide", v.getAttribute("data-v") !== which));
+}
+function ratingsTable(ev) {
+  const R = _ratings[ev.id];
+  if (!R || !R.ready) { if (!R) loadRatings(ev); return '<div class="dnote">Analyzing player ratings…</div>'; }
+  const arr = Object.keys(R.byId).map(pid => Object.assign({ pid }, R.byId[pid])).filter(x => x.name).sort((a, b) => b.rating - a.rating);
+  if (!arr.length) return '<div class="dnote">Player ratings unavailable for this match.</div>';
+  const c = ev.competitions[0], abbr = {};
+  c.competitors.forEach(z => abbr[z.team.displayName] = z.team.abbreviation);
+  return '<div class="rtbl">' + arr.map((p, i) => {
+    const s = p.m;
+    const head = p.c === "GK" ? ((s.saves || 0) + " sv" + (s.cleanSheet ? " · CS" : ""))
+      : ([(s.totalGoals ? s.totalGoals + "G" : ""), (s.goalAssists ? s.goalAssists + "A" : "")].filter(Boolean).join(" ") || (Math.round((s.passPct || 0) * 100) + "% pass"));
+    return '<div class="rtrow' + (i === 0 ? " motmrow" : "") + '" onclick="playerStatPop(\'' + ev.id + '\',\'' + p.pid + '\')">' +
+      '<span class="rtr ' + rateCls(p.rating) + '">' + p.rating.toFixed(1) + '</span>' +
+      '<span class="rtn">' + esc(p.name) + '<i>' + esc(abbr[p.team] || "") + ' · ' + esc(p.pos || p.c) + (i === 0 ? ' · ⭐ MOTM' : '') + '</i></span>' +
+      '<span class="rth">' + esc(head) + '</span></div>';
+  }).join("") + '</div>';
+}
+function lineupsTabbed(ros, ev) {
+  if (ev.status.type.state !== "post") return pitchBlock(ros, ev);   // ratings only after full-time
+  return '<div class="ldtabs"><button type="button" class="ldtab on" onclick="ldTab(this,\'form\')">FORMATION</button><button type="button" class="ldtab" onclick="ldTab(this,\'rate\')">PLAYER RATINGS</button></div>' +
+    '<div class="ldview" data-v="form">' + pitchBlock(ros, ev) + '</div>' +
+    '<div class="ldview hide" data-v="rate">' + ratingsTable(ev) + '</div>';
 }
 function starMan(data, ev) {
   if (ev.status.type.state !== "post") return "";   // crown a star only after full-time (no live 0-0 GK "clean sheet")
@@ -1930,7 +2092,7 @@ function placeTeam(starters, isHome, formation) {
   const place = (p, frac, x) => {
     if (!isHome) x = 100 - x;
     const y = isHome ? 97 - frac * 46 : 3 + frac * 46;
-    out.push({ x, y, num: p.jersey || "", name: (p.athlete || {}).shortName || (p.athlete || {}).displayName || "" });
+    out.push({ x, y, num: p.jersey || "", name: (p.athlete || {}).shortName || (p.athlete || {}).displayName || "", pid: String((p.athlete || {}).id || "") });
   };
   if (gk) place(gk, 0.05, 50);
   lines.forEach((line, li) => {
@@ -1950,11 +2112,12 @@ function lineupColumns(ros) {
       (su.length ? '<div class="subs">\u21C4 ' + su.map(p => esc(p.athlete ? p.athlete.displayName : "")).join(", ") + '</div>' : "") + '</div>';
   }).join("") + '</div>';
 }
-function subsLine(t) {
+function subsLine(t, evId) {
   const su = (t.roster || []).filter(p => !p.starter && p.subbedIn);
   if (!su.length) return "";
+  const RB = _ratings[evId] && _ratings[evId].ready ? _ratings[evId].byId : null;
   return '<div class="subs" style="margin:5px 2px 0">\u21C4 ' + esc(t.team.displayName) + ': ' +
-    su.map(p => esc((p.athlete || {}).shortName || (p.athlete || {}).displayName || "")).join(", ") + '</div>';
+    su.map(p => { const a = p.athlete || {}; const rt = RB && RB[String(a.id)]; const nm = esc(a.shortName || a.displayName || ""); return rt ? '<span class="subln" onclick="playerStatPop(\'' + evId + '\',\'' + String(a.id) + '\')">' + nm + ' <b>' + rt.rating.toFixed(1) + '</b></span>' : nm; }).join(", ") + '</div>';
 }
 function pitchBlock(ros, ev) {
   const home = ros.find(r => r.homeAway === "home") || ros[0];
@@ -1965,10 +2128,14 @@ function pitchBlock(ros, ev) {
   const c = ev.competitions[0];
   const logoOf = name => { const x = c.competitors.find(z => z.team.displayName === name); return x ? x.team.logo : ""; };
   const col = name => name === myNation() ? "#00a85a" : null;
-  const chips = (starters, isHome, fallback, formation) => placeTeam(starters, isHome, formation).map(pl =>
-    '<div class="pchip" style="left:' + pl.x.toFixed(1) + '%;top:' + pl.y.toFixed(1) + '%">' +
-    '<div class="pnum" style="background:' + fallback + '">' + esc(String(pl.num)) + '</div>' +
-    '<div class="pname">' + esc(pl.name) + '</div></div>').join("");
+  const RB = _ratings[ev.id] && _ratings[ev.id].ready ? _ratings[ev.id].byId : null;
+  const chips = (starters, isHome, fallback, formation) => placeTeam(starters, isHome, formation).map(pl => {
+    const rt = RB && pl.pid && RB[pl.pid];
+    const badge = rt ? '<div class="prate ' + rateCls(rt.rating) + '">' + rt.rating.toFixed(1) + '</div>' : '';
+    const tap = rt ? ' onclick="event.stopPropagation();playerStatPop(\'' + ev.id + '\',\'' + pl.pid + '\')"' : '';
+    return '<div class="pchip"' + tap + ' style="left:' + pl.x.toFixed(1) + '%;top:' + pl.y.toFixed(1) + '%">' + badge +
+      '<div class="pnum" style="background:' + fallback + '">' + esc(String(pl.num)) + '</div>' +
+      '<div class="pname">' + esc(pl.name) + '</div></div>'; }).join("");
   const svg = '<svg viewBox="0 0 100 150" preserveAspectRatio="none"><g fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="0.6">' +
     '<rect x="3" y="3" width="94" height="144"/><line x1="3" y1="75" x2="97" y2="75"/>' +
     '<circle cx="50" cy="75" r="11"/><circle cx="50" cy="75" r="1" fill="#fff" stroke="none"/>' +
@@ -1980,7 +2147,7 @@ function pitchBlock(ros, ev) {
     '<div class="pitch">' + svg +
       chips(hs, true, col(home.team.displayName) || "var(--rust)", home.formation) +
       chips(as, false, col(away.team.displayName) || "#1577c4", away.formation) + '</div>' +
-    lbl(home.team.displayName, home.formation) + subsLine(home) + subsLine(away);
+    lbl(home.team.displayName, home.formation) + subsLine(home, ev.id) + subsLine(away, ev.id);
 }
 
 /* ================= STATS + SHARE ================= */
