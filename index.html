@@ -199,8 +199,6 @@ main{flex:1;padding:14px 14px calc(20px + env(safe-area-inset-bottom));overflow-
  color:var(--txt);font-size:15px;padding:12px 14px;outline:none;text-align:center;margin-bottom:12px}
 #nameModal button{width:100%;background:var(--rust);border:none;color:#fff;font-family:'Oswald';
  font-weight:600;letter-spacing:1.5px;font-size:14px;border-radius:12px;padding:13px;cursor:pointer}
-.refresh{background:var(--card2);border:1px solid var(--line);color:var(--mut);font-family:'Oswald';
- letter-spacing:1px;font-size:11px;border-radius:20px;padding:6px 14px;cursor:pointer;margin-left:auto;flex:none}
 .secrow{display:flex;align-items:center;gap:8px;margin:2px 0 12px}
 .sect{font-family:'Oswald';font-weight:600;font-size:13px;letter-spacing:2px;color:var(--mut)}
 .scorekey{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:-4px 0 13px;font-family:'Oswald'}
@@ -298,8 +296,6 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 .mypred{margin-top:8px;background:#26190f;border:1px solid #5a3a1a;border-radius:8px;padding:6px 10px;
  font-family:'Oswald';font-size:11px;letter-spacing:1px;color:var(--gold)}
 .mypred.hint{background:var(--card2);border-color:var(--line);color:var(--dim);cursor:pointer}
-.lbchamp{background:#26190f;border:1px solid #5a3a1a;border-radius:8px;padding:7px 10px;
- font-family:'Oswald';font-size:11px;letter-spacing:.8px;color:var(--gold);margin-bottom:8px}
 .md2{margin-top:2px}
 .starman{display:flex;align-items:center;gap:10px;background:linear-gradient(150deg,#3a2a07,#241a06);border:1px solid var(--gold);border-radius:12px;padding:9px 13px;margin-bottom:10px}
 .starman .ic{font-size:20px}
@@ -708,7 +704,6 @@ function setTZ(v) {
 }
 function updateFmtTog() { const seg = $("fmtTog"); if (!seg) return; const cur = HOUR12 ? "1" : "0"; seg.querySelectorAll(".fseg").forEach(b => b.classList.toggle("on", b.dataset.h12 === cur)); }
 function setHour12(v) { if (HOUR12 === v) return; HOUR12 = v; try { localStorage.setItem("cs_h12", v ? "1" : "0"); } catch (_) {} updateFmtTog(); reRenderTimes(); }
-function toggleHour12() { setHour12(!HOUR12); }
 
 /* ================= TABS ================= */
 function showTab(t) {
@@ -1014,7 +1009,7 @@ async function loadStandings() {
           const zone = _show ? (i < 2 ? "q1" : i === 2 ? "q3" : "qo") : "";   // no qualify coloring until the group has started
           return `<tr class="${zone}${(_show && i === 1) ? " cutline" : ""}${egy ? " egy" : ""}">
             <td class="pos">${i + 1}</td>
-            <td><span class="tm"><img src="${r.team.logos && r.team.logos[0] ? r.team.logos[0].href : ""}" alt="">${esc(r.team.displayName)}</span></td>
+            <td><span class="tm"><img src="${esc(r.team.logos && r.team.logos[0] ? r.team.logos[0].href : "")}" alt="">${esc(r.team.displayName)}</span></td>
             <td>${s.gamesPlayed || 0}</td><td>${s.wins || 0}</td><td>${s.ties || 0}</td><td>${s.losses || 0}</td>
             <td>${s.pointDifferential || s.pointsDiff || 0}</td><td class="pts">${s.points || 0}</td></tr>`;
         }).join("") + `</table></div>`;
@@ -1517,9 +1512,6 @@ function weekKeyAddDays(key, n) {
   d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().slice(0, 10).replace(/-/g, "");
 }
-function weekStartMs(key) {
-  return Date.UTC(+key.slice(0, 4), +key.slice(4, 6) - 1, +key.slice(6, 8)) - 4 * 3600000;
-}
 async function syncMyPreds() {
   try {
     const all = await readKey(PRED_KEY, {});
@@ -1702,17 +1694,6 @@ function bcRegion() {
   }
   return null;
 }
-// region-aware broadcaster: beIN for MENA (the WC26 rights holder), real US channels from ESPN, else nothing
-function broadcastFor(data) {
-  const reg = bcRegion();
-  if (reg === "MENA") return "beIN SPORTS";
-  if (reg === "US") {
-    const tv = (data.broadcasts || []).filter(b => b.region === "us" && /tv|television/i.test(((b.type || {}).longName || (b.type || {}).shortName || "")));
-    const names = [...new Set(tv.map(b => { const m = b.media || {}, n = m.shortName || m.name || ""; return n === "Tele" ? "Telemundo" : n; }).filter(Boolean))];
-    return names.length ? names.join(" · ") : null;
-  }
-  return null;   // CA / MX / unknown → no broadcast line (don't show channels that don't serve the region)
-}
 // TV + REFEREE live on the match CARD (static info, not live data) — TV from the scoreboard (region-aware),
 // referee from the summary (lazily fetched + cached in `lineups`, which also makes expanding instant).
 function cardTV(e) {
@@ -1725,29 +1706,9 @@ function cardTV(e) {
   }
   return null;
 }
-function cardRef(e) { const s = lineups[e.id], o = s && s.gameInfo && (s.gameInfo.officials || [])[0]; return (o && o.displayName) || ""; }
 function cardMetaHTML(e) {   // card shows TV only (from the scoreboard — no per-card fetch); referee lives in the expanded detail
   const tv = cardTV(e);
   return tv ? '<span class="cmchip tv"><i>TV</i>' + esc(tv) + '</span>' : '';
-}
-function paintCardMeta(e) { const el = $("cmeta" + e.id); if (el) el.innerHTML = cardMetaHTML(e); }
-let _enriching = false;
-const _metaFetched = {};   // eventId -> match state at which we fetched its summary for card meta
-async function enrichCardMeta() {
-  if (_enriching) return; _enriching = true;   // dedupe overlapping poll-driven loops
-  try {
-    const now = Date.now();
-    for (const e of events.slice()) {
-      const st = e.status.type.state;
-      // (re)fetch if uncached, OR it was cached while still "pre" but has since advanced — referee is assigned at match time
-      const need = !lineups[e.id] || (_metaFetched[e.id] === "pre" && st !== "pre");
-      if (!need) { paintCardMeta(e); continue; }
-      if (!(st === "in" || st === "post" || (new Date(e.date) - now < 3 * 86400000))) { paintCardMeta(e); continue; }
-      try { lineups[e.id] = await getJSON(API + "/summary?event=" + e.id); _metaFetched[e.id] = st; } catch (_) { paintCardMeta(e); continue; }
-      paintCardMeta(e);
-      await new Promise(r => setTimeout(r, 120));
-    }
-  } finally { _enriching = false; }
 }
 // attendance stays in the expanded detail (it's a post-match figure)
 function matchMeta(data, ev) {   // referee + attendance, in the expanded detail (summary is already loaded here)
@@ -1901,7 +1862,6 @@ function posGroup(ab) {
   if (ab.indexOf("M") >= 0) return "MID";
   return "FWD";
 }
-function lrKey(ab) { ab = (ab || "").toUpperCase(); if (ab.indexOf("L") >= 0) return -1; if (ab.indexOf("R") >= 0) return 1; return 0; }
 // horizontal lane: full-backs / wing-backs / wingers sit widest (±2), inner defenders/mids ±1, central 0
 function laneKey(ab) {
   ab = (ab || "").toUpperCase();
@@ -2046,10 +2006,6 @@ function shareMatch(ev) {
 }
 
 /* ================= PREDICTION CHAMPION ================= */
-function dayLabel(key) {
-  const d = new Date(Date.UTC(+key.slice(0, 4), +key.slice(4, 6) - 1, +key.slice(6, 8), 12));
-  return fmt(d, { weekday: "long", day: "2-digit", month: "short" });
-}
 function weekScores(evsWeek, all) {
   return Object.entries(all).map(([uid, u]) => {
     let pts = 0, exact = 0;
@@ -2114,7 +2070,6 @@ async function announceChampion() {
 }
 
 /* ================= CHAT ================= */
-function ensureName() { if (!cs_user) openAuth("C"); }
 function openAuth(m, opts) {
   opts = opts || {};
   window._authCtx = opts.ctx || null;
