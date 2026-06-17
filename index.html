@@ -1866,11 +1866,11 @@ function motmRate(m, c) {
   let r = 6.0;
   r += g * 1.7 + a * 0.85 + (m.bigChanceCreated || 0) * 0.25 + (m.expectedGoals || 0) * 0.3 + (m.expectedAssists || 0) * 0.4 - (m.bigChanceMissed || 0) * 0.2 - (m.penaltyKicksMissed || 0) * 0.6;
   r -= (m.yellowCards || 0) * 0.25 + (m.redCards || 0) * 1.5 + (m.ownGoals || 0) * 1.3 + (m.foulsCommitted || 0) * 0.03;
-  if (c === "GK") { r += (m.goalsPrevented || 0) * 1.3 + (m.saves || 0) * 0.28 + (m.penaltyKicksSaved || 0) * 1.0 + (m.cleanSheet ? 0.9 : 0); if ((m.savePct || 0) > 0) r += (m.savePct - 0.7) * 1.5; r -= Math.max(0, (m.goalsConceded || 0) - 1) * 0.25; }
+  if (c === "GK") { const conc = m.goalsConceded || 0, sv = m.saves || 0, svp = sv / Math.max(1, sv + conc); r += sv * 0.45 + Math.max(0, m.goalsPrevented || 0) * 1.3 + (m.penaltyKicksSaved || 0) * 1.3 + (m.cleanSheet ? 1.3 : 0) + (svp - 0.55) * 2.2 - conc * 0.3; }   // GK: judged on saves / save% / clean sheet — NOT shots or passes (ESPN savePct is a tiny per-shot-faced fraction, unusable; goalsPrevented can be negative — clamp)
   else if (c === "DEF") { r += (m.cleanSheet ? 0.9 : 0) + (m.effectiveTackles || 0) * 0.12 + (m.interceptions || 0) * 0.12 + (m.effectiveClearance || 0) * 0.06 + (m.blockedShots || 0) * 0.2 + (m.duelsWon || 0) * 0.07 + Math.min(0.4, (m.accuratePasses || 0) * 0.003); if ((m.totalPasses || 0) >= 25) r += ((m.passPct || 0) - 0.82) * 0.8; r -= (m.goalsConceded || 0) * 0.10; }
   else if (c === "MID") { r += Math.min(0.5, (m.accuratePasses || 0) * 0.004) + (m.successfulFinalThirdPasses || 0) * 0.02 + (m.progressiveCarries || 0) * 0.03 + (m.duelsWon || 0) * 0.05 + (m.effectiveTackles || 0) * 0.07 + (m.interceptions || 0) * 0.06 + (m.touchesInOppBox || 0) * 0.04 + (m.shotsOnTarget || 0) * 0.1; if ((m.totalPasses || 0) >= 30) r += ((m.passPct || 0) - 0.80) * 0.8; }
   else { r += (m.shotsOnTarget || 0) * 0.16 + (m.totalShots || 0) * 0.03 + (m.touchesInOppBox || 0) * 0.05 + (m.duelsWon || 0) * 0.04 + (m.progressiveCarries || 0) * 0.025 + Math.min(0.2, (m.accuratePasses || 0) * 0.003); }
-  if (gd > 0) r += 0.4; else if (gd < 0) { r += -0.8 + Math.max(-0.8, gd * 0.2); r = Math.min(r, 7.7); }
+  if (gd > 0) r += 0.4; else if (gd < 0) { const f = c === "GK" ? 0 : c === "DEF" ? 0.5 : 1; if (f) { r += (-0.8 + Math.max(-0.8, gd * 0.2)) * f; r = Math.min(r, 7.7); } }   // don't double-penalize the keeper for a team loss (conceding already costs him); soften it for defenders
   if (min < 30 && g === 0 && a === 0) r = 6.0 + (r - 6.0) * 0.5;
   r = 5.9 + (r - 6.0) * 0.8;   // gentle calibration toward a FotMob-like scale (monotonic; order unchanged)
   return Math.round(Math.min(9.7, Math.max(4.5, r)) * 10) / 10;
@@ -1883,48 +1883,53 @@ function rtPayload(byId, motm) {
   return { byId: b, motm: motm ? { pid: motm.pid, name: motm.name, team: motm.team, rating: motm.rating, c: motm.c, m: rtTrimM(motm.m) } : null };
 }
 function rtPersist(id, payload, alsoShared) {
-  try { localStorage.setItem("cs_rtv1_" + id, JSON.stringify(payload)); }
-  catch (_) { try { Object.keys(localStorage).filter(k => k.indexOf("cs_rtv1_") === 0).forEach(k => localStorage.removeItem(k)); localStorage.setItem("cs_rtv1_" + id, JSON.stringify(payload)); } catch (__) {} }
-  if (alsoShared) { try { writeKey("capriole_wc26_rt_" + id, payload); } catch (_) {} }   // share globally → others read it instead of recomputing
+  try { localStorage.setItem("cs_rtv2_" + id, JSON.stringify(payload)); }
+  catch (_) { try { Object.keys(localStorage).filter(k => k.indexOf("cs_rtv2_") === 0).forEach(k => localStorage.removeItem(k)); localStorage.setItem("cs_rtv2_" + id, JSON.stringify(payload)); } catch (__) {} }
+  if (alsoShared) { try { writeKey("capriole_wc26_rt2_" + id, payload); } catch (_) {} }   // share globally → others read it instead of recomputing
 }
 async function loadRatings(ev) {
   const id = ev.id;
   if (_ratings[id] && (_ratings[id].ready || _ratings[id].loading)) return _ratings[id];
-  try { const _c = localStorage.getItem("cs_rtv1_" + id); if (_c) { const _d = JSON.parse(_c); if (_d && _d.byId) return (_ratings[id] = { ready: true, byId: _d.byId, motm: _d.motm }); } } catch (_) {}   // a finished match's ratings never change → reuse the saved copy (no recompute)
+  try { const _c = localStorage.getItem("cs_rtv2_" + id); if (_c) { const _d = JSON.parse(_c); if (_d && _d.byId) return (_ratings[id] = { ready: true, byId: _d.byId, motm: _d.motm }); } } catch (_) {}   // a finished match's ratings never change → reuse the saved copy (no recompute)
   if (!ev.status || ev.status.type.state !== "post") return null;   // full-time only
   _ratings[id] = { loading: true, byId: {} };
   const gj = u => fetch(String(u).replace(/^http:/, "https:")).then(r => r.json());
   let byId = {}, motm = null, fromShared = false;
   try {
     // 1) shared global cache — if anyone already computed this match, reuse it (no recompute for everyone else)
-    try { const sh = await readKey("capriole_wc26_rt_" + id, null); if (sh && sh.byId && Object.keys(sh.byId).length) { byId = sh.byId; motm = sh.motm; fromShared = true; } } catch (_) {}
+    try { const sh = await readKey("capriole_wc26_rt2_" + id, null); if (sh && sh.byId && Object.keys(sh.byId).length) { byId = sh.byId; motm = sh.motm; fromShared = true; } } catch (_) {}
     if (!fromShared) {                                    // 2) nobody has → compute it from the core feed
+      // build a positions/names map from the summary FIRST — the core roster entry's position is a bare $ref (empty),
+      // so without this defenders get mis-classified as midfielders (rated on shots/passes instead of tackles).
+      const sm = {};
+      const sum = lineups[id];
+      if (sum) (sum.rosters || []).forEach(r => { const tn = (r.team && r.team.displayName) || ""; (r.roster || []).forEach(p => { const a = p.athlete || {}; sm[String(a.id)] = { name: a.displayName || a.shortName || "", pos: (p.position && (p.position.abbreviation || p.position.name)) || "", team: tn }; }); });
       const cev = await gj(RATE_CORE + "/events/" + id);
       const comp = await gj(cev.competitions[0].$ref);
       const refs = [];
       for (const c of (comp.competitors || [])) {
-        const tn = (c.team && c.team.displayName) || "";
         try { const ros = await gj(c.roster.$ref);
-          (ros.entries || []).forEach(e => { if (e.statistics && e.statistics.$ref) refs.push({ pid: String(e.playerId), team: tn, pos: (e.position && (e.position.abbreviation || e.position.name)) || "", ref: e.statistics.$ref }); });
+          (ros.entries || []).forEach(e => { if (e.statistics && e.statistics.$ref) refs.push({ pid: String(e.playerId), ref: e.statistics.$ref }); });
         } catch (_) {}
       }
       await Promise.all(refs.map(async rf => {
         try { const st = await gj(rf.ref); const cats = (st.splits && st.splits.categories) || []; const m = {};
           cats.forEach(c => (c.stats || []).forEach(s => m[s.name] = s.value));
           if ((m.minutes || 0) <= 0) return;
-          const gk = /^g|keeper/i.test(rf.pos) || (m.saves > 0 || m.savePct > 0 || m.crossesCaught > 0 || m.punches > 0);
-          const cl = motmCls(rf.pos, gk), rt = motmRate(m, cl);
+          const meta = sm[rf.pid] || {}, pos = meta.pos || "";
+          const gk = /^g|keeper/i.test(pos) || (m.saves > 0 || m.punches > 0 || m.crossesCaught > 0);
+          const cl = motmCls(pos, gk), rt = motmRate(m, cl);
           if (rt == null) return;
-          byId[rf.pid] = { rating: rt, c: cl, m, team: rf.team, pos: rf.pos, mins: m.minutes || 0 };
+          byId[rf.pid] = { rating: rt, c: cl, m, team: meta.team || "", pos, name: meta.name || "", mins: m.minutes || 0 };
         } catch (_) {}
       }));
-      const sum = lineups[id];
-      if (sum) (sum.rosters || []).forEach(r => { const tn = (r.team && r.team.displayName) || ""; (r.roster || []).forEach(p => { const a = p.athlete || {}; const b = byId[String(a.id)]; if (b) { b.name = a.displayName || a.shortName || ""; if (tn) b.team = tn; } }); });
       Object.keys(byId).forEach(pid => { const x = byId[pid]; if (x.name && (!motm || x.rating > motm.rating)) motm = { pid, name: x.name, team: x.team, rating: x.rating, m: x.m, c: x.c }; });
     }
   } catch (e) {}
   _ratings[id] = { ready: true, byId, motm };
-  if (Object.keys(byId).length) rtPersist(id, fromShared ? { byId, motm } : rtPayload(byId, motm), !fromShared);   // save locally always; publish to the shared store only when we computed it
+  // publish to the shared store ONLY for a complete compute — motm is set only when names resolved (i.e. the
+  // summary lineup was loaded). Guards against ever pushing a nameless / all-midfielder compute to everyone.
+  if (Object.keys(byId).length) rtPersist(id, fromShared ? { byId, motm } : rtPayload(byId, motm), !fromShared && !!motm);
   if (openId === id && $("det" + id)) { const oe = events.find(x => x.id === id); if (oe && lineups[id]) $("det" + id).innerHTML = matchDetail(lineups[id], oe); }
   return _ratings[id];
 }
