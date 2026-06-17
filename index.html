@@ -426,8 +426,8 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
  </section>
  <section id="paneP" class="hide">
   <div id="brkBox"></div>
-  <div class="lb"><h3>&#127942; CAPRIOLE LEADERBOARD</h3>
-  <div class="brknote">&#127859; Weekly top scorer wins breakfast on the team — all next week</div><div id="lbBody"><div class="empty">Loading…</div></div></div>
+  <div class="lb"><h3>&#127942; LEADERBOARD</h3>
+  <div class="brknote">&#127942; Weekly top predictor is crowned the <b>Prediction Champion</b></div><div id="lbBody"><div class="empty">Loading…</div></div></div>
   <div class="secrow"><span class="sect">YOUR PREDICTIONS</span>
    <span style="margin-left:auto;font-size:10px;color:var(--dim);font-family:'Oswald';letter-spacing:1px">EXACT = 3 PTS · RESULT = 1 PT</span></div>
   <div id="predList"><div class="empty">Loading…</div></div>
@@ -1240,7 +1240,7 @@ async function renderPredict() {
     const recent = evs.filter(e => e.status.type.state !== "pre").slice(-6).reverse();
     if (recent.length) html += '<div class="secrow" style="margin-top:14px"><span class="sect">LOCKED / FINISHED</span></div>' +
       recent.map(e => predCard(e, true)).join("");
-    const guestBanner = !cs_user ? '<div class="guestbar">👀 You’re browsing as a guest — <button onclick="openAuth(\'C\',{ctx:\'predict\'})">Sign in</button> to make predictions &amp; win breakfast.</div>' : "";
+    const guestBanner = !cs_user ? '<div class="guestbar">👀 You’re browsing as a guest — <button onclick="openAuth(\'C\',{ctx:\'predict\'})">Sign in</button> to make predictions &amp; climb the leaderboard.</div>' : "";
     $("predList").innerHTML = guestBanner + html;
     loadLeaderboard(evs);
   } catch (err) {
@@ -1354,9 +1354,9 @@ async function loadLeaderboard(evs) {
     if (w) {
       const sc = weekScores(w.events, all);
       champ = sc.length
-        ? '<div class="lbchamp">&#127859; LAST WEEK&rsquo;S CHAMPION: ' + esc(sc.filter(s => s.pts === sc[0].pts).map(s => s.name).join(" & ")) +
+        ? '<div class="lbchamp">&#127942; LAST WEEK&rsquo;S CHAMPION: ' + esc(sc.filter(s => s.pts === sc[0].pts).map(s => s.name).join(" & ")) +
           ' (' + sc[0].pts + ' pts) — eating free all this week</div>'
-        : '<div class="lbchamp">&#127859; LAST WEEK: no points scored — jackpot rolls over</div>';
+        : '<div class="lbchamp">&#127942; LAST WEEK: no points scored — jackpot rolls over</div>';
     }
     const wkHead = '<div style="font-family:Oswald;font-size:11px;letter-spacing:1px;color:var(--cyan);margin-bottom:8px">THIS WEEK' +
       (wkRange ? " · " + wkRange : "") + ' · POINTS RESET EVERY MONDAY</div>';
@@ -1596,7 +1596,7 @@ function shareMatch(ev) {
   else { if (navigator.clipboard) navigator.clipboard.writeText(txt); alert("Copied — paste it in WhatsApp!"); }
 }
 
-/* ================= BREAKFAST CHAMPION ================= */
+/* ================= PREDICTION CHAMPION ================= */
 function dayLabel(key) {
   const d = new Date(Date.UTC(+key.slice(0, 4), +key.slice(4, 6) - 1, +key.slice(6, 8), 12));
   return fmt(d, { weekday: "long", day: "2-digit", month: "short" });
@@ -1628,7 +1628,7 @@ function lastCompletedWeek(evs) {
                fmt(new Date(ds[ds.length - 1].date), { day: "2-digit", month: "short" })).toUpperCase();
   return { wk, events: ds, lab };
 }
-async function announceBreakfast() {
+async function announceChampion() {
   try {
     const evs = await seasonEvents();
     const w = lastCompletedWeek(evs);
@@ -1636,20 +1636,19 @@ async function announceBreakfast() {
     const all = await readKey(PRED_KEY, {});
     const scores = weekScores(w.events, all);
     if (!scores.length) {
-      $("brkBox").innerHTML = '<div class="brk none">&#127859; BREAKFAST WATCH — nobody scored prediction points last week (' +
-        w.lab + '). The breakfast jackpot rolls over!</div>';
+      $("brkBox").innerHTML = '<div class="brk none">&#127942; No Prediction Champion yet — nobody scored points last week (' +
+        w.lab + ').</div>';
       return;
     }
     const top = scores[0].pts;
     const winners = scores.filter(s => s.pts === top);
     const names = winners.map(x => x.name).join(" & ");
     const plural = winners.length > 1;
-    $("brkBox").innerHTML = '<div class="brk">&#127859; <b>BREAKFAST CHAMPION' + (plural ? "S" : "") + '</b> — ' +
-      esc(names) + ' won last week (' + w.lab + ') with ' + top + ' pts.' +
-      '<span>BREAKFAST IS ON THE TEAM ALL THIS WEEK!</span></div>';
-    postRoom([{ id: "brkfst-w" + w.wk, uid: "brkbot", name: "\uD83C\uDF73 BREAKFAST BOT",
-      text: names + (plural ? " share" : " takes") + " last week's crown (" + w.lab + ", " + top + " pts) — " +
-            (plural ? "breakfasts are" : "breakfast is") + " on the team ALL THIS WEEK! \uD83C\uDFC6",
+    $("brkBox").innerHTML = '<div class="brk">&#127942; <b>PREDICTION CHAMPION' + (plural ? "S" : "") + '</b> — ' +
+      esc(names) + ' topped last week (' + w.lab + ') with ' + top + ' pts.' +
+      '<span>CHAMPION OF THE WEEK!</span></div>';
+    postRoom([{ id: "brkfst-w" + w.wk, uid: "brkbot", name: "\uD83C\uDFC6 PREDICTIONS",
+      text: names + (plural ? " share" : " takes") + " the crown — Prediction Champion" + (plural ? "s" : "") + " for " + w.lab + " with " + top + " pts! \uD83C\uDFC6",
       ts: Date.now() }]).catch(() => {});
   } catch (_) {}
 }
@@ -1665,7 +1664,7 @@ function openAuth(m, opts) {
   const skip = $("authSkip"); if (skip) skip.style.display = (opts.skippable === false) ? "none" : "";
   const sub = $("authSub");
   if (sub) sub.textContent = opts.ctx === "predict"
-    ? "Sign in to make predictions, earn points & win breakfast — browsing stays free."
+    ? "Sign in to make predictions, earn points & climb the leaderboard — browsing stays free."
     : opts.ctx === "chat"
     ? "Sign in to post in the team chat — reading is always free."
     : "One-time setup — username, password & your nation";
@@ -2059,8 +2058,8 @@ if (cs_user) {
 }
 renderHero();
 setInterval(renderHero, 300000);
-announceBreakfast();
-setInterval(announceBreakfast, 600000);
+announceChampion();
+setInterval(announceChampion, 600000);
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) {
     loadMatches();
