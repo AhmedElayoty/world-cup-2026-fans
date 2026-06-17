@@ -307,6 +307,23 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 .tlside b{color:#fff;font-weight:600}
 .tlmin{flex:0 0 44px;text-align:center;font-family:'Oswald';font-weight:600;font-size:11px;color:#9fb3e6;background:#1a2548;border:1px solid var(--line);border-radius:10px;padding:2px 0;position:relative;z-index:1;line-height:1.15}
 .tlmin small{display:block;font-size:10px;color:#fff;font-weight:700}
+.minforow{display:flex;flex-wrap:wrap;gap:7px 14px;margin:4px 0 2px;font-family:'Oswald';font-size:11.5px;color:var(--txt)}
+.minforow span{display:inline-flex;align-items:center;gap:5px}
+.minforow i{font-style:normal;font-size:9px;font-weight:600;letter-spacing:.8px;color:var(--dim);background:#1a2548;border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+.tlrow.sub .ev.sub{color:var(--cyan);font-size:13px}
+.tlrow.sub .si{color:#6dffb5;font-weight:600}
+.tlrow.sub .subo{color:#9a7777;font-size:11px}
+.fh{display:flex;flex-direction:column;gap:8px}
+.formrow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.formrow .ft{font-family:'Oswald';font-weight:600;font-size:12.5px;color:var(--txt);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fpills{display:flex;gap:4px;flex:none}
+.fp{width:18px;height:18px;border-radius:5px;font-family:'Oswald';font-weight:700;font-size:10px;color:#fff;display:inline-flex;align-items:center;justify-content:center}
+.fp.w{background:#1f9d57}.fp.d{background:#5a6688}.fp.l{background:#c0392b}
+.fdim{color:var(--dim);font-size:11px;font-family:'Inter'}
+.h2hwrap{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
+.h2ht{font-family:'Oswald';font-size:9.5px;letter-spacing:1.2px;color:var(--dim);margin-bottom:5px}
+.h2hr{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--mut);padding:2px 0}
+.h2hr .h2s b{color:#fff}
 .flabel{display:flex;align-items:center;justify-content:space-between;font-family:'Oswald';font-size:11px;letter-spacing:1px;color:var(--mut);margin:8px 2px 5px}
 .flabel b{color:#fff;font-weight:600}
 .flabel img{width:16px;height:16px;object-fit:contain;vertical-align:-3px;margin-right:3px}
@@ -1534,16 +1551,77 @@ async function loadLeaderboard(evs) {
 }
 
 /* ================= MATCH DETAIL (timeline · pitch · star man · stats) ================= */
+// map the selected timezone to a broadcast region (reuses ZONES groups)
+function bcRegion() {
+  for (const grp of ZONES) {
+    if (grp[1].some(z => z[0] === TZ)) {
+      if (grp[0] === "Gulf" || grp[0] === "North Africa" || grp[0] === "Levant") return "MENA";
+      if (TZ === "America/Mexico_City") return "MX";
+      if (TZ === "America/Toronto" || TZ === "America/Vancouver") return "CA";
+      if (TZ.indexOf("America/") === 0) return "US";
+    }
+  }
+  return null;
+}
+// region-aware broadcaster: beIN for MENA (the WC26 rights holder), real US channels from ESPN, else nothing
+function broadcastFor(data) {
+  const reg = bcRegion();
+  if (reg === "MENA") return "beIN SPORTS";
+  if (reg === "US") {
+    const tv = (data.broadcasts || []).filter(b => b.region === "us" && /tv|television/i.test(((b.type || {}).longName || (b.type || {}).shortName || "")));
+    const names = [...new Set(tv.map(b => { const m = b.media || {}, n = m.shortName || m.name || ""; return n === "Tele" ? "Telemundo" : n; }).filter(Boolean))];
+    return names.length ? names.join(" · ") : null;
+  }
+  return null;   // CA / MX / unknown → no broadcast line (don't show channels that don't serve the region)
+}
+function matchMeta(data, ev) {
+  const gi = data.gameInfo || {}, bits = [];
+  if (gi.attendance) bits.push('<span><i>ATT</i>' + Number(gi.attendance).toLocaleString() + '</span>');
+  const ref = (gi.officials || [])[0];
+  if (ref && ref.displayName) bits.push('<span><i>REF</i>' + esc(ref.displayName) + '</span>');
+  const bc = broadcastFor(data);
+  if (bc) bits.push('<span><i>TV</i>' + esc(bc) + '</span>');
+  return bits.length ? '<div class="minforow">' + bits.join("") + '</div>' : "";
+}
+function formH2H(data, ev) {
+  const c = ev.competitions[0];
+  const H = c.competitors.find(x => x.homeAway === "home"), A = c.competitors.find(x => x.homeAway === "away");
+  const forms = (data.lastFiveGames && data.lastFiveGames.length ? data.lastFiveGames : (data.boxscore || {}).form) || [];
+  const pill = r => '<span class="fp ' + (r === "W" ? "w" : r === "L" ? "l" : "d") + '">' + esc(r || "?") + '</span>';
+  const formFor = id => {
+    const f = forms.find(x => String((x.team || {}).id) === String(id));
+    return f ? (f.events || []).filter(e => String(e.id) !== String(ev.id)).slice(0, 5).map(e => pill(e.gameResult)).join("") : "";
+  };
+  const hF = formFor(H.team.id), aF = formFor(A.team.id);
+  let h2h = "";
+  const hg = data.headToHeadGames || [];
+  if (hg.length) {
+    const ab = {}; ab[String(H.team.id)] = H.team.abbreviation || H.team.displayName; ab[String(A.team.id)] = A.team.abbreviation || A.team.displayName;
+    const evs = ((hg[0] || {}).events || []).filter(e => String(e.id) !== String(ev.id)).slice(0, 4);
+    if (evs.length) h2h = '<div class="h2hwrap"><div class="h2ht">PREVIOUS MEETINGS</div>' +
+      evs.map(e => '<div class="h2hr"><span class="h2d">' + esc(fmt(new Date(e.gameDate), { month: "short", year: "numeric" })) +
+        '</span><span class="h2s">' + esc(ab[String(e.homeTeamId)] || "") + ' <b>' + esc((e.homeTeamScore != null ? e.homeTeamScore : "") + "–" + (e.awayTeamScore != null ? e.awayTeamScore : "")) + '</b> ' + esc(ab[String(e.awayTeamId)] || "") + '</span></div>').join("") + '</div>';
+  }
+  if (!hF && !aF && !h2h) return "";
+  let o = '<div class="sech">FORM &amp; HEAD-TO-HEAD</div><div class="fh">';
+  if (hF || aF) {
+    o += '<div class="formrow"><span class="ft">' + esc(H.team.displayName) + '</span><span class="fpills">' + (hF || '<span class="fdim">no recent data</span>') + '</span></div>';
+    o += '<div class="formrow"><span class="ft">' + esc(A.team.displayName) + '</span><span class="fpills">' + (aF || '<span class="fdim">no recent data</span>') + '</span></div>';
+  }
+  return o + h2h + '</div>';
+}
 function matchDetail(data, ev) {
   if (!ev) return statsShare(data);
   const ros = data.rosters || [];
   const hasL = ros.length && ros.some(r => (r.roster || []).length);
   let html = '<div class="md2">';
   html += starMan(data, ev);
-  html += evTimeline(ev);
+  html += matchMeta(data, ev);
+  html += evTimeline(ev, data);
   if (hasL) html += pitchBlock(ros, ev);
   else html += '<div class="dnote">Line-ups not announced yet — usually ~1 hour before kick-off.</div>';
   html += statsShare(data);
+  html += formH2H(data, ev);
   return html + '</div>';
 }
 function starMan(data, ev) {
@@ -1570,38 +1648,45 @@ function starMan(data, ev) {
     '</div><div class="sub">' + esc(best.team) + (bits.length ? ' \u00B7 ' + bits.join(", ") : "") +
     '</div></div><div class="tag">STAR OF<br>THE MATCH</div></div>';
 }
-function evTimeline(ev) {
+function evTimeline(ev, data) {
   const c = ev.competitions[0];
   const H = c.competitors.find(x => x.homeAway === "home");
   const A = c.competitors.find(x => x.homeAway === "away");
-  const evs = (c.details || []).filter(d => (d.scoringPlay || /card/i.test((d.type && d.type.text) || "")) && !d.shootout);
-  if (!evs.length) return "";
-  const minNum = d => parseInt((((d.clock || {}).displayValue) || "0").replace(/[^0-9].*/, "")) || 0;
-  const isHome = d => d.team && H.team && String(d.team.id) === String(H.team.id);
+  const minNum = s => parseInt(String(s == null ? "0" : s).replace(/[^0-9].*/, "")) || 0;
+  const isHomeId = id => H.team && String(id) === String(H.team.id);
+  const gc = (c.details || []).filter(d => (d.scoringPlay || /card/i.test((d.type && d.type.text) || "")) && !d.shootout);
   let hh = 0, aa = 0;
-  evs.slice().sort((a, b) => minNum(a) - minNum(b)).forEach(d => {
-    if (d.scoringPlay) { if (isHome(d)) hh++; else aa++; d._rs = hh + "&#8211;" + aa; }
+  gc.slice().sort((a, b) => minNum((a.clock || {}).displayValue) - minNum((b.clock || {}).displayValue)).forEach(d => {
+    if (d.scoringPlay) { if (isHomeId((d.team || {}).id)) hh++; else aa++; d._rs = hh + "&#8211;" + aa; }
   });
-  evs.sort((a, b) => minNum(b) - minNum(a));
-  const rows = evs.map(d => {
+  const items = [];
+  gc.forEach(d => {
     const who = (d.athletesInvolved && d.athletesInvolved[0]) ? d.athletesInvolved[0].displayName : "";
-    const t = esc(((d.clock || {}).displayValue) || "");
-    const home = isHome(d);
+    const t = esc(((d.clock || {}).displayValue) || ""), home = isHomeId((d.team || {}).id);
     let ic, txt, goalCls = "";
     if (d.scoringPlay) {
       ic = "\u26BD"; goalCls = " goal " + (home ? "l" : "r");
       txt = "<b>" + esc(who || "Goal") + "</b>" + (d.penaltyKick ? " (P)" : "") + (d.ownGoal ? " (OG)" : "");
     } else { ic = d.redCard ? "\uD83D\uDFE5" : "\uD83D\uDFE8"; txt = esc(who); }
-    const minCell = '<div class="tlmin">' + t + (d._rs ? '<small>' + d._rs + '</small>' : "") + '</div>';
     const ev_ = '<span class="ev">' + ic + '</span>';
-    return '<div class="tlrow' + goalCls + '"><div class="tlside l">' + (home ? (txt + ev_) : "") + '</div>' +
-      minCell + '<div class="tlside r">' + (home ? "" : (ev_ + txt)) + '</div></div>';
-  }).join("");
+    items.push({ m: minNum((d.clock || {}).displayValue), html: '<div class="tlrow' + goalCls + '"><div class="tlside l">' + (home ? (txt + ev_) : "") + '</div><div class="tlmin">' + t + (d._rs ? '<small>' + d._rs + '</small>' : "") + '</div><div class="tlside r">' + (home ? "" : (ev_ + txt)) + '</div></div>' });
+  });
+  ((data && data.keyEvents) || []).forEach(k => {
+    if (((k.type || {}).type || "") !== "substitution") return;
+    const inN = (((k.participants || [])[0] || {}).athlete || {}).displayName || "";
+    const outN = (((k.participants || [])[1] || {}).athlete || {}).displayName || "";
+    if (!inN && !outN) return;
+    const t = esc(((k.clock || {}).displayValue) || ""), home = isHomeId((k.team || {}).id);
+    const txt = '<b class="si">' + esc(inN) + '</b> <span class="subo">' + esc(outN) + '</span>';
+    const ev_ = '<span class="ev sub">&#8644;</span>';
+    items.push({ m: minNum((k.clock || {}).displayValue), html: '<div class="tlrow sub"><div class="tlside l">' + (home ? (txt + ev_) : "") + '</div><div class="tlmin">' + t + '</div><div class="tlside r">' + (home ? "" : (ev_ + txt)) + '</div></div>' });
+  });
+  if (!items.length) return "";
+  items.sort((a, b) => b.m - a.m);
   const _st = ev.status.type, fs = (H.score != null ? H.score : 0) + "&#8211;" + (A.score != null ? A.score : 0);
   const _top = _st.state === "post" ? ("FULL TIME &#183; " + fs + (/penalt/i.test(_st.description || "") ? " (PENS)" : /extra/i.test(_st.description || "") ? " (AET)" : ""))
     : _st.state === "in" ? (esc(ev.status.displayClock || "LIVE") + " &#183; " + fs) : fs;
-  return '<div class="sech">GOALS &amp; CARDS</div><div class="tl">' +
-    '<div class="tlmark top">' + _top + '</div>' + rows + '<div class="tlmark bot">KICK-OFF</div></div>';
+  return '<div class="sech">TIMELINE</div><div class="tl"><div class="tlmark top">' + _top + '</div>' + items.map(i => i.html).join("") + '<div class="tlmark bot">KICK-OFF</div></div>';
 }
 function posGroup(ab) {
   ab = (ab || "").toUpperCase();
