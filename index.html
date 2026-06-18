@@ -105,6 +105,11 @@ main{flex:1;padding:14px 14px calc(20px + env(safe-area-inset-bottom));overflow-
 .tname{font-family:'Oswald';font-weight:600;font-size:15.5px;letter-spacing:.4px;white-space:nowrap;
  overflow:hidden;text-overflow:ellipsis}
 .tname.egy{color:#6dffb5}
+.tcol{display:flex;flex-direction:column;gap:4px;min-width:0}
+.frank{align-self:flex-start;font-family:'Oswald';font-weight:600;font-size:10px;letter-spacing:.6px;line-height:1.45;
+ white-space:nowrap;color:var(--gold);background:rgba(255,192,46,.12);border:1px solid rgba(255,192,46,.5);border-radius:999px;padding:0 7px}
+.team.away .frank{align-self:flex-end}
+.frank.egy{color:#6dffb5;background:rgba(0,210,106,.14);border-color:rgba(0,210,106,.5)}
 .score{font-family:'Oswald';font-weight:700;font-size:26px;letter-spacing:1px;min-width:74px;text-align:center}
 .score small{display:block;font-size:10px;font-weight:500;letter-spacing:1.6px;color:var(--cyan);margin-top:1px}
 .mven{margin-top:9px;font-size:11px;color:var(--dim);display:flex;justify-content:space-between;gap:8px}
@@ -935,9 +940,9 @@ function renderMatches() {
     return `<div class="mcard${egy ? " egy" : ""}${flashIds.has(e.id) ? " goal" : ""}${openId === e.id ? " open" : ""}${liveCls}" onclick="toggleM('${e.id}')">
       <div class="mtop">${badge}<span>${esc(note)}</span><span style="margin-left:auto">${dayw}</span></div>
       <div class="mrow">
-        <div class="${hCls}">${logo(H)}<span class="tname${H.team.displayName === myNation() ? " egy" : ""}">${esc(H.team.displayName)}</span></div>
+        <div class="${hCls}">${logo(H)}<span class="tcol"><span class="tname${H.team.displayName === myNation() ? " egy" : ""}">${esc(H.team.displayName)}</span>${rankChip(H)}</span></div>
         ${mid}
-        <div class="${aCls}">${logo(A)}<span class="tname${A.team.displayName === myNation() ? " egy" : ""}">${esc(A.team.displayName)}</span></div>
+        <div class="${aCls}">${logo(A)}<span class="tcol"><span class="tname${A.team.displayName === myNation() ? " egy" : ""}">${esc(A.team.displayName)}</span>${rankChip(A)}</span></div>
       </div>
       ${goalSummary}
       <div class="mven"><span>🏟️ ${esc(c.venue ? c.venue.fullName : "")}</span><b>${esc(c.venue && c.venue.address ? (c.venue.address.city || "") : "")}</b></div>
@@ -973,6 +978,11 @@ function renderMatches() {
   // card TV comes straight from the scoreboard — no per-card /summary fetch (keeps the matches list light)
 }
 const logo = c => `<img src="${c.team.logo || ""}" alt="" onerror="this.style.visibility='hidden'">`;
+// Official FIFA Men's World Ranking snapshot — as of 18 Jun 2026 — keyed by ESPN 3-letter team code (matched by code,
+// not name, so IR Iran/Iran, Cabo Verde/Cape Verde etc. can't mis-map). Static: FIFA doesn't update mid-tournament;
+// refresh these 48 values when FIFA publishes a new ranking. Non-WC teams + bracket placeholders aren't in the map → no chip.
+const FIFA_RANK = {ARG:1,FRA:2,ESP:3,ENG:4,BRA:5,MAR:6,POR:7,NED:8,GER:9,BEL:10,COL:11,MEX:13,CRO:14,USA:15,SEN:16,JPN:17,URU:18,SUI:19,AUT:21,KOR:22,AUS:23,IRN:24,TUR:26,NOR:27,ECU:28,EGY:29,CIV:30,ALG:31,CAN:32,SWE:34,SCO:37,PAN:40,PAR:42,COD:43,CZE:44,QAT:49,TUN:55,UZB:56,KSA:59,IRQ:60,RSA:61,BIH:63,CPV:64,GHA:65,JOR:68,NZL:82,CUW:83,HAI:85};
+function rankChip(c) { const t = c && c.team; const r = t && FIFA_RANK[t.abbreviation]; if (!r) return ""; const mine = t.displayName === myNation(); return `<span class="frank${mine ? " egy" : ""}">FIFA #${r}</span>`; }
 async function fillDetail(id, force) {
   if (!$("det" + id)) return;
   try {
