@@ -252,15 +252,15 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 .pin:disabled{opacity:.55}
 .psl{display:inline-flex;gap:6px}
 .pkrow.penmode .psl{display:none}
-.pwin{display:none;align-items:center;gap:6px;flex:none}
-.pkrow.penmode .pwin{display:inline-flex}
-.pwin .wbtn{max-width:82px;background:var(--navy2);border:1.5px solid var(--line);color:var(--mut);font-family:'Oswald';font-weight:600;font-size:11px;letter-spacing:.2px;border-radius:9px;padding:8px 7px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pwin .wbtn.on{background:var(--rust);border-color:var(--rust2);color:#fff}
-.pwin .wbtn:disabled{opacity:.85;cursor:default}
-.pwin .pvs{font-style:normal;color:var(--dim);font-size:10px;font-family:'Oswald'}
-.pentog{display:block;width:100%;margin-top:8px;background:none;border:1px dashed var(--line);color:var(--mut);font-family:'Oswald';font-weight:600;font-size:10.5px;letter-spacing:.4px;border-radius:9px;padding:8px;cursor:pointer}
+.penpick{display:none;margin-top:10px;text-align:center}
+.penpick .pplbl{font-family:'Oswald';font-weight:600;font-size:11px;letter-spacing:1px;color:var(--cyan);margin-bottom:8px}
+.penpick .ppb{display:flex;gap:8px;justify-content:center}
+.penpick .wbtn{flex:1;max-width:180px;background:var(--navy2);border:1.5px solid var(--line);color:var(--mut);font-family:'Oswald';font-weight:600;font-size:13px;border-radius:10px;padding:12px 8px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.penpick .wbtn.on{background:var(--rust);border-color:var(--rust2);color:#fff}
+.penpick .wbtn:disabled{opacity:.85;cursor:default}
+.pentog{display:block;width:100%;margin-top:10px;background:none;border:1px dashed var(--line);color:var(--mut);font-family:'Oswald';font-weight:600;font-size:12px;letter-spacing:.4px;border-radius:9px;padding:9px;cursor:pointer}
 .pentog:hover{color:var(--gold);border-color:var(--gold)}
-.finnote{margin-top:9px;font-size:11px;line-height:1.5;color:var(--gold);background:rgba(255,192,46,.08);border:1px solid rgba(255,192,46,.32);border-radius:9px;padding:8px 11px}
+.finnote{margin-top:9px;font-size:12px;color:var(--gold);background:rgba(255,192,46,.08);border:1px solid rgba(255,192,46,.32);border-radius:9px;padding:8px 11px;font-family:'Oswald';font-weight:500;letter-spacing:.2px}
 .finnote b{color:#fff;font-weight:700}
 .infomodal{position:fixed;inset:0;background:rgba(4,8,22,.86);z-index:120;display:flex;align-items:center;justify-content:center;padding:18px}
 .infomodal .ibox{position:relative;background:var(--card);border:1px solid #2a3a6b;border-radius:20px;padding:24px 20px;max-width:340px;width:100%;text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.5);max-height:88vh;overflow-y:auto}
@@ -1816,10 +1816,10 @@ function predCard(e, started) {
     const wbtn = (side, t) => '<button type="button" class="wbtn' + (wSel === side ? " on" : "") + '" data-w="' + side + '" ' + (dis ? "disabled" : "") + ' onclick="pickWinner(\'' + e.id + '\',\'' + side + '\',event)">' + esc(t.team.displayName) + '</button>';
     body =
       '<div class="prow pkrow' + (penMode ? " penmode" : "") + '" id="pcw-' + e.id + '" data-pen="' + (penMode ? "1" : "0") + '"' + (wSel ? ' data-w="' + wSel + '"' : '') + '>' +
-        ptH + '<span class="psl">' + scoreInputs + '</span>' +
-        '<span class="pwin">' + wbtn("home", H) + '<i class="pvs">v</i>' + wbtn("away", A) + '</span>' + ptA + '</div>' +
-      (started || done ? '' : '<button type="button" class="pentog" id="ptg-' + e.id + '" onclick="togglePens(\'' + e.id + '\',event)">' + (penMode ? "↩ Predict a scoreline instead" : "⚽ No winner in normal time? → goes to penalties") + '</button>') +
-      (isFin ? '<div class="finnote">⭐ <b>THE FINAL</b> — exact score (or the right penalty winner) scores <b>10 pts</b>; the correct winner scores <b>4 pts</b>.</div>' : '');
+        ptH + '<span class="psl">' + scoreInputs + '</span>' + ptA + '</div>' +
+      '<div class="penpick" id="pp-' + e.id + '"' + (penMode ? ' style="display:block"' : '') + '><div class="pplbl">👇 WHO WINS ON PENALTIES?</div><div class="ppb">' + wbtn("home", H) + wbtn("away", A) + '</div></div>' +
+      (started || done ? '' : '<button type="button" class="pentog" id="ptg-' + e.id + '" onclick="togglePens(\'' + e.id + '\',event)">' + (penMode ? "↩ Predict a scoreline instead" : "⚽ This match will go to penalties") + '</button>') +
+      (isFin ? '<div class="finnote">⭐ <b>FINAL:</b> 10 pts for the exact result · 4 pts for the winner</div>' : '');
   } else {
     body = '<div class="prow">' + ptH + scoreInputs + ptA + '</div>';
   }
@@ -1913,29 +1913,29 @@ function togglePens(id, ev) {   // knockout card: switch between scoreline mode 
   const row = document.getElementById("pcw-" + id); if (!row) return;
   const on = row.classList.toggle("penmode");
   row.dataset.pen = on ? "1" : "0";
+  const pp = document.getElementById("pp-" + id); if (pp) pp.style.display = on ? "block" : "none";
   const tg = document.getElementById("ptg-" + id);
-  if (tg) tg.textContent = on ? "↩ Predict a scoreline instead" : "⚽ No winner in normal time? → goes to penalties";
+  if (tg) tg.textContent = on ? "↩ Predict a scoreline instead" : "⚽ This match will go to penalties";
 }
 function pickWinner(id, w, ev) {   // knockout card: choose the penalty-shootout winner
   if (ev) ev.stopPropagation();
-  const row = document.getElementById("pcw-" + id); if (!row) return;
-  row.dataset.w = w;
-  row.querySelectorAll(".wbtn").forEach(b => b.classList.toggle("on", b.dataset.w === w));
+  const row = document.getElementById("pcw-" + id); if (row) row.dataset.w = w;
+  const pp = document.getElementById("pp-" + id); if (pp) pp.querySelectorAll(".wbtn").forEach(b => b.classList.toggle("on", b.dataset.w === w));
 }
 /* ---- one-time info popups on the Predict tab ---- */
 const KO_RULES_HTML = `<div style="font-size:38px;line-height:1;margin-bottom:4px">⚽</div>
 <h2>KNOCKOUTS ARE HERE</h2>
-<p>No more draws — every knockout match must have a winner. Here's how predicting works now:</p>
+<p>No more draws — every knockout match has a winner. Here's how predicting works now:</p>
 <div class="irow"><span class="ic">①</span><div><b>Predict a scoreline</b> like normal (e.g. 2–1) — it just can't be a draw.</div></div>
-<div class="irow"><span class="ic">②</span><div>Think it'll be level? Tick <b>"⚽ goes to penalties"</b> and pick who wins the shootout.</div></div>
+<div class="irow"><span class="ic">②</span><div>Think it'll be level? Choose <b>"this match will go to penalties"</b> and pick who wins the shootout.</div></div>
 <div class="irow"><span class="ic">🎯</span><div><b>3 pts</b> — exact score, OR you called penalties + the right winner.<br><b>1 pt</b> — right winner either way.</div></div>
-<div class="irow"><span class="ic">⭐</span><div>The <b>FINAL</b> is worth more — <b>10 pts</b> exact / <b>4 pts</b> for the winner.</div></div>
 <button class="igo" onclick="closeInfo()">GOT IT ⚽</button>`;
 const FINALE_HTML = `<div style="font-size:38px;line-height:1;margin-bottom:4px">🏆</div>
 <h2>GRAND FINALE</h2>
 <p>This is it — the final days of the World Cup, and the prediction championship is decided <b style="color:#fff">now</b>.</p>
 <div class="irow"><span class="ic">📊</span><div><b>Overall table is live</b> — the leaderboard now shows your total points across <b style="color:var(--gold)">every week</b> combined.</div></div>
 <div class="irow"><span class="ic">⚽</span><div><b>Last chance to score</b> — the 3rd-place play-off and the FINAL are open to predict.</div></div>
+<div class="irow"><span class="ic">⭐</span><div><b>The final is worth the most</b> — exact result scores <b style="color:var(--gold)">10 pts</b> and the correct winner scores <b style="color:var(--gold)">4 pts</b>.</div></div>
 <div class="irow"><span class="ic">🥇</span><div><b>Winner takes all</b> — top the overall table at the final whistle to be crowned <b style="color:var(--gold)">Prediction Champion</b>.</div></div>
 <p style="margin-top:2px">Good luck — may the best predictor win! 🍀</p>
 <button class="igo" onclick="closeInfo()">LET'S GO ⚽</button>`;
