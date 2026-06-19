@@ -355,14 +355,15 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 .metarow>.mven{margin-left:auto}
 .dwrap{display:flex;align-items:flex-start;gap:8px}
 .dwrap>.dstrip{flex:1;min-width:0}
-#natFilter{flex:none;max-width:43%;height:55px;background:rgba(255,255,255,.06);color:var(--gold);border:1px solid var(--gold);border-radius:11px;font-family:'Oswald';font-weight:600;font-size:11px;letter-spacing:.5px;padding:0 8px;cursor:pointer}
-#natFilter option,#natFilter optgroup{background:#0d1838;color:#eef2ff}
-.filterbanner{display:flex;align-items:center;gap:8px;background:rgba(25,200,255,.08);border:1px solid rgba(25,200,255,.4);border-radius:10px;padding:7px 10px;font-size:12px}
-.filterbanner img{width:20px;height:20px;object-fit:contain;flex:none}
-.filterbanner .fn{font-family:'Oswald';font-weight:600;letter-spacing:.4px;color:var(--txt)}
-.filterbanner .fc{color:var(--mut);font-size:11px}
-.filterbanner .fbx{margin-left:auto;background:rgba(255,255,255,.1);border:none;color:var(--txt);width:24px;height:24px;min-width:24px;border-radius:50%;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.filterbanner.me{background:rgba(0,210,106,.10);border-color:rgba(0,210,106,.45)}
+#natFilter{flex:none;width:114px;height:55px;background:rgba(255,255,255,.06);color:var(--gold);border:1px solid var(--gold);border-radius:11px;font-family:'Oswald';font-weight:600;font-size:11.5px;letter-spacing:.4px;padding:0 10px;cursor:text}
+#natFilter::placeholder{color:var(--gold);opacity:.95}
+.filterbanner{display:flex;align-items:center;gap:10px;background:rgba(25,200,255,.10);border:1px solid rgba(25,200,255,.45);border-radius:12px;padding:8px 10px 8px 13px}
+.filterbanner .ff{width:26px;height:26px;object-fit:contain;flex:none}
+.filterbanner .fmeta{display:flex;flex-direction:column;line-height:1.15;min-width:0}
+.filterbanner .fn{font-family:'Oswald';font-weight:700;font-size:17px;letter-spacing:.5px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.filterbanner .fc{font-size:10.5px;color:var(--mut);letter-spacing:.6px;text-transform:uppercase}
+.filterbanner .fbx{margin-left:auto;flex:none;display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.12);border:1px solid var(--line);color:var(--txt);border-radius:999px;padding:6px 13px;font-family:'Oswald';font-weight:600;font-size:11.5px;letter-spacing:.8px;cursor:pointer}
+.filterbanner.me{background:rgba(0,210,106,.12);border-color:rgba(0,210,106,.5)}
 .filterbanner.me .fn{color:#6dffb5}
 /* ===== RECENT FORM + HEAD-TO-HEAD — premium broadcast match-detail (design panel) ===== */
 .fhsec{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:14px;padding:12px 12px 11px;margin-top:12px;box-shadow:0 4px 14px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.04)}
@@ -612,7 +613,7 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 <main>
  <section id="paneM">
   <div id="heroBox"></div>
-  <div class="dwrap" id="dwrap"><div class="dstrip" id="dstrip"></div><select id="natFilter" onchange="setNationFilter(this.value)" aria-label="Filter matches by nation"></select></div>
+  <div class="dwrap" id="dwrap"><div class="dstrip" id="dstrip"></div><input id="natFilter" list="natList" placeholder="🔎 Nation" autocomplete="off" onchange="setNationFilter(this.value)" aria-label="Filter matches by nation"><datalist id="natList"></datalist></div>
   <div class="filterbanner hide" id="filterBanner"></div>
   <div id="mlist"><div class="empty"><div class="big">⚽</div>Loading matches…</div></div>
  </section>
@@ -699,6 +700,7 @@ let events = [];             // merged events for selected UAE day
 let openId = null;           // expanded match id
 let nationFilter = "";       // "" = normal date view; else a nation displayName → show only its matches
 let _natMatches = [];        // that nation's matches (from seasonEvents), sorted by date
+let _natNames = [];          // all WC nation names, for the type-to-search filter list
 let _openState = null;       // state of the open match at last render (to detect kick-off / full-time)
 let lineups = {};            // eventId -> summary data
 let lineupsTs = {};          // eventId -> when it was fetched (re-pull stale form/H2H on reopen)
@@ -851,7 +853,7 @@ function pickDate(key, scroll) {
   loadMatches();
 }
 async function fillNatFilter() {
-  const sel = $("natFilter"); if (!sel || sel.options.length > 1) return;
+  const dl = $("natList"); if (!dl || dl.children.length) return;
   let names = NATIONS_FALLBACK;
   try {
     const evs = await seasonEvents();
@@ -860,11 +862,15 @@ async function fillNatFilter() {
       if (!/winner|runner|loser|place|tbd|play|qualif|round|third|group [a-l]/i.test(n)) s.add(n); }));
     if (s.size >= 32 && s.size <= 60) names = [...s].sort();
   } catch (_) {}
-  sel.innerHTML = '<option value="">⚑ Nation</option>' + names.map(n => '<option>' + esc(n) + '</option>').join("");
+  _natNames = names;
+  dl.innerHTML = names.map(n => '<option value="' + esc(n) + '"></option>').join("");
 }
-async function setNationFilter(name) {
-  nationFilter = name || "";
-  if (!nationFilter) return clearNationFilter();
+async function setNationFilter(raw) {
+  const v = (raw || "").trim();
+  if (!v) return clearNationFilter();
+  const name = _natNames.find(n => n.toLowerCase() === v.toLowerCase());   // resolve typed text to a real nation
+  if (!name) return;   // partial / unrecognised text — wait for a valid pick from the list
+  nationFilter = name;
   let evs = []; try { evs = await seasonEvents(); } catch (_) {}
   _natMatches = evs.filter(e => (e.competitions[0].competitors || []).some(c => c.team && c.team.displayName === nationFilter))
                    .sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -873,9 +879,9 @@ async function setNationFilter(name) {
   $("dwrap").classList.add("hide");
   const fb = $("filterBanner");
   fb.className = "filterbanner" + (nationFilter === myNation() ? " me" : "");
-  fb.innerHTML = (logoUrl ? '<img src="' + esc(logoUrl) + '" alt="" onerror="this.style.display=\'none\'">' : '') +
-    '<span class="fn">' + esc(nationFilter) + '</span><span class="fc">· ' + _natMatches.length + ' match' + (_natMatches.length === 1 ? '' : 'es') + '</span>' +
-    '<button class="fbx" onclick="clearNationFilter()" aria-label="Clear nation filter">×</button>';
+  fb.innerHTML = (logoUrl ? '<img class="ff" src="' + esc(logoUrl) + '" alt="" onerror="this.style.display=\'none\'">' : '') +
+    '<div class="fmeta"><span class="fn">' + esc(nationFilter) + '</span><span class="fc">' + _natMatches.length + ' match' + (_natMatches.length === 1 ? '' : 'es') + '</span></div>' +
+    '<button class="fbx" onclick="clearNationFilter()" aria-label="Clear nation filter">× Clear</button>';
   renderMatches();
 }
 function clearNationFilter() {
