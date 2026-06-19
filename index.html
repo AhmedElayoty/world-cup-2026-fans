@@ -112,10 +112,9 @@ main{flex:1;padding:14px 14px calc(20px + env(safe-area-inset-bottom));overflow-
 .frank.egy{color:#6dffb5;background:rgba(0,210,106,.14);border-color:rgba(0,210,106,.5)}
 .score{font-family:'Oswald';font-weight:700;font-size:26px;letter-spacing:1px;min-width:74px;text-align:center}
 .score small{display:block;font-size:10px;font-weight:500;letter-spacing:1.6px;color:var(--cyan);margin-top:1px}
-.mven{margin-top:9px;font-size:11px;color:var(--dim);display:flex;justify-content:space-between;gap:8px}
-.mven b{color:var(--mut);font-weight:600;flex:none}
-.mven span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
-.mvt{margin-top:3px;font-size:11px;color:var(--gold);font-weight:600;letter-spacing:.3px}
+.mven{margin-top:9px;font-size:11px;color:var(--dim);display:flex;flex-direction:column;align-items:flex-end;text-align:right;gap:2px}
+.mven b{color:var(--mut);font-weight:600;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mven span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;color:var(--mut);font-weight:600}
 .mhint{margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);text-align:center;
  font-family:'Oswald';font-weight:600;font-size:9.5px;letter-spacing:1.6px;text-transform:uppercase;color:var(--mut)}
 .mcard:active .mhint{color:var(--gold)}
@@ -963,8 +962,7 @@ function renderMatches() {
         <div class="${aCls}">${logo(A)}<span class="tcol"><span class="tname${A.team.displayName === myNation() ? " egy" : ""}">${esc(A.team.displayName)}</span>${rankChip(A)}</span></div>
       </div>
       ${goalSummary}
-      <div class="mven"><span>🏟️ ${esc(c.venue ? c.venue.fullName : "")}</span><b>${esc(c.venue && c.venue.address ? (c.venue.address.city || "") : "")}</b></div>
-      ${vt ? `<div class="mvt">🕒 ${vt} local kick-off (stadium time)</div>` : ""}
+      <div class="mven"><span>🏟️ ${esc(c.venue ? c.venue.fullName : "")}</span><b>${esc(c.venue && c.venue.address ? (c.venue.address.city || "") : "")}</b>${vt ? `<span>🕒 ${vt} local kick-off</span>` : ""}</div>
       <div class="cardmeta" id="cmeta${e.id}">${cardMetaHTML(e)}</div>
       ${predStrip}
       ${detailHint}
