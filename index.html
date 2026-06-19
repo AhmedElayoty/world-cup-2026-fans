@@ -115,6 +115,7 @@ main{flex:1;padding:14px 14px calc(20px + env(safe-area-inset-bottom));overflow-
 .mven{margin-top:9px;font-size:11px;color:var(--dim);display:flex;justify-content:space-between;gap:8px}
 .mven b{color:var(--mut);font-weight:600;flex:none}
 .mven span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+.mvt{margin-top:3px;font-size:11px;color:var(--gold);font-weight:600;letter-spacing:.3px}
 .mhint{margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);text-align:center;
  font-family:'Oswald';font-weight:600;font-size:9.5px;letter-spacing:1.6px;text-transform:uppercase;color:var(--mut)}
 .mcard:active .mhint{color:var(--gold)}
@@ -716,6 +717,20 @@ function myNation() { try { return (cs_user && cs_user.nation) || localStorage.g
 /* ================= HELPERS ================= */
 const $ = id => document.getElementById(id);
 const fmt = (d, o) => { let s = new Intl.DateTimeFormat("en-GB", Object.assign({ timeZone: TZ, hour12: HOUR12 }, o)).format(d); return (o && o.hour && HOUR12) ? s.replace(/\b([ap])\.?m\.?\b/i, m => m.toUpperCase()) : s; };
+// kick-off time AT the stadium — the 16 WC2026 venues span 5 US/Canada/Mexico zones. Keyed by ESPN's stable
+// venue id (ESPN gives no timezone field). Intl handles US/Canada DST; Mexico has no DST since 2022.
+const VENUE_TZ = {
+  "1421":"America/New_York","4643":"America/New_York","4727":"America/New_York","7485":"America/New_York","10660":"America/New_York","10143":"America/Toronto",
+  "3871":"America/Chicago","6262":"America/Chicago","10897":"America/Chicago",
+  "4485":"America/Los_Angeles","5960":"America/Los_Angeles","9115":"America/Los_Angeles","4370":"America/Vancouver",
+  "1672":"America/Mexico_City","5009":"America/Mexico_City","6351":"America/Monterrey"
+};
+function venueTime(e) {
+  const c = e && e.competitions && e.competitions[0]; const v = c && c.venue;
+  const tz = v && VENUE_TZ[String(v.id)]; if (!tz || !e.date) return "";
+  let s = new Intl.DateTimeFormat("en-GB", { timeZone: tz, hour: "2-digit", minute: "2-digit", hour12: HOUR12 }).format(new Date(e.date));
+  return HOUR12 ? s.replace(/\b([ap])\.?m\.?\b/i, m => m.toUpperCase()) : s;
+}
 const uaeYMD = d => {
   const p = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" })
     .formatToParts(d).reduce((a, x) => (a[x.type] = x.value, a), {});
@@ -759,6 +774,7 @@ function fillTZ() { const s = $("tzSel"); if (!s || s.options.length) return; s.
 function updateTzLabel() { const o = $("tzOff"); if (o) { const off = tzOffset(TZ); o.textContent = off ? " · " + off : ""; } }
 function reRenderTimes() {
   buildStrip(); renderHero();
+  if (!$("paneM").classList.contains("hide")) renderMatches();   // refresh card kick-off + stadium-local times on TZ/format change
   if (!$("paneG").classList.contains("hide")) loadStandings();
   if (!$("paneP").classList.contains("hide")) renderPredict();
   if (!$("paneS").classList.contains("hide")) renderStats();
@@ -938,6 +954,7 @@ function renderMatches() {
     const detailHint = state === "pre"
       ? '<div class="mhint">&#9662; Press for match details</div>'
       : '<div class="mhint">&#9662; Press for line-ups, formation &amp; stats</div>';
+    const vt = venueTime(e);
     return `<div class="mcard${egy ? " egy" : ""}${flashIds.has(e.id) ? " goal" : ""}${openId === e.id ? " open" : ""}${liveCls}" onclick="toggleM('${e.id}')">
       <div class="mtop">${badge}<span>${esc(note)}</span><span style="margin-left:auto">${dayw}</span></div>
       <div class="mrow">
@@ -947,6 +964,7 @@ function renderMatches() {
       </div>
       ${goalSummary}
       <div class="mven"><span>🏟️ ${esc(c.venue ? c.venue.fullName : "")}</span><b>${esc(c.venue && c.venue.address ? (c.venue.address.city || "") : "")}</b></div>
+      ${vt ? `<div class="mvt">🕒 ${vt} local kick-off (stadium time)</div>` : ""}
       <div class="cardmeta" id="cmeta${e.id}">${cardMetaHTML(e)}</div>
       ${predStrip}
       ${detailHint}
