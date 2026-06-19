@@ -750,6 +750,7 @@ const ZONES = [
   ["Gulf", [["Asia/Dubai","UAE","UAE"],["Asia/Riyadh","Saudi Arabia","KSA"],["Asia/Qatar","Qatar","QAT"],["Asia/Kuwait","Kuwait","KWT"],["Asia/Bahrain","Bahrain","BHR"],["Asia/Muscat","Oman","OMN"],["Asia/Baghdad","Iraq","IRQ"]]],
   ["North Africa", [["Africa/Cairo","Egypt","EGY"],["Africa/Casablanca","Morocco","MAR"],["Africa/Algiers","Algeria","ALG"],["Africa/Tunis","Tunisia","TUN"],["Africa/Tripoli","Libya","LBY"],["Africa/Khartoum","Sudan","SDN"]]],
   ["Levant", [["Asia/Amman","Jordan","JOR"],["Asia/Beirut","Lebanon","LBN"]]],
+  ["Europe 🇪🇺", [["Europe/London","UK — Eng/Sco","UK"],["Europe/Lisbon","Portugal","POR"],["Europe/Madrid","Spain","ESP"],["Europe/Paris","France","FRA"],["Europe/Brussels","Belgium","BEL"],["Europe/Amsterdam","Netherlands","NED"],["Europe/Berlin","Germany","GER"],["Europe/Zurich","Switzerland","SUI"],["Europe/Vienna","Austria","AUT"],["Europe/Zagreb","Croatia","CRO"],["Europe/Oslo","Norway","NOR"],["Europe/Stockholm","Sweden","SWE"],["Europe/Prague","Czechia","CZE"],["Europe/Sarajevo","Bosnia & H.","BIH"]]],
   ["Host Nations 🌎", [["America/New_York","USA — East","USA-E"],["America/Chicago","USA — Central","USA-C"],["America/Los_Angeles","USA — West","USA-W"],["America/Toronto","Canada — East","CAN-E"],["America/Vancouver","Canada — West","CAN-W"],["America/Mexico_City","Mexico","MEX"]]]
 ];
 function tzAbbr() { for (const g of ZONES) for (const z of g[1]) if (z[0] === TZ) return z[2]; return "UAE"; }
