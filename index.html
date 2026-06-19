@@ -350,6 +350,9 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 .cmchip i{font-style:normal;font-size:8.5px;font-weight:700;letter-spacing:.8px;color:var(--dim)}
 .cmchip.tv i{color:var(--cyan)}
 .cmchip.ref i{color:var(--gold)}
+.metarow{display:flex;align-items:flex-start;gap:10px;margin-top:8px}
+.metarow>.cardmeta,.metarow>.mven{margin-top:0}
+.metarow>.mven{margin-left:auto}
 /* ===== RECENT FORM + HEAD-TO-HEAD — premium broadcast match-detail (design panel) ===== */
 .fhsec{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:14px;padding:12px 12px 11px;margin-top:12px;box-shadow:0 4px 14px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.04)}
 .fhhead{display:flex;align-items:center;gap:8px;margin-bottom:11px}
@@ -962,8 +965,7 @@ function renderMatches() {
         <div class="${aCls}">${logo(A)}<span class="tcol"><span class="tname${A.team.displayName === myNation() ? " egy" : ""}">${esc(A.team.displayName)}</span>${rankChip(A)}</span></div>
       </div>
       ${goalSummary}
-      <div class="mven"><span>🏟️ ${esc(c.venue ? c.venue.fullName : "")}</span><b>${esc(c.venue && c.venue.address ? (c.venue.address.city || "") : "")}</b>${vt ? `<span>🕒 ${vt} local kick-off</span>` : ""}</div>
-      <div class="cardmeta" id="cmeta${e.id}">${cardMetaHTML(e)}</div>
+      <div class="metarow"><div class="cardmeta" id="cmeta${e.id}">${cardMetaHTML(e)}</div><div class="mven"><span>🏟️ ${esc(c.venue ? c.venue.fullName : "")}</span><b>${esc(c.venue && c.venue.address ? (c.venue.address.city || "") : "")}</b>${vt ? `<span>🕒 ${vt} local kick-off</span>` : ""}</div></div>
       ${predStrip}
       ${detailHint}
       <div class="mdetail" id="det${e.id}"><div class="dnote">Loading line-ups…</div></div>
