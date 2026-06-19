@@ -280,7 +280,7 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 .pmeta{font-family:'Oswald';font-size:10px;letter-spacing:1.2px;color:var(--dim);display:flex;
  justify-content:space-between;margin-bottom:7px}
 .pmeta .res{color:var(--gold)}
-.pmeta .pts3{color:var(--green)} .pmeta .pts1{color:var(--cyan)} .pmeta .pts0{color:var(--dim)}
+.pmeta .pts3,.pmeta .pts10{color:var(--green)} .pmeta .pts1,.pmeta .pts4{color:var(--cyan)} .pmeta .pts0{color:var(--dim)}
 .lb{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:14px}
 .lb h3{font-family:'Oswald';font-weight:700;font-size:14px;letter-spacing:1.8px;color:var(--gold);margin-bottom:8px}
 .lbrow{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #1a2750;font-size:13px}
@@ -1819,7 +1819,7 @@ function predCard(e, started) {
         ptH + '<span class="psl">' + scoreInputs + '</span>' + ptA + '</div>' +
       '<div class="penpick" id="pp-' + e.id + '"' + (penMode ? ' style="display:block"' : '') + '><div class="pplbl">👇 WHO WINS ON PENALTIES?</div><div class="ppb">' + wbtn("home", H) + wbtn("away", A) + '</div></div>' +
       (started || done ? '' : '<button type="button" class="pentog" id="ptg-' + e.id + '" onclick="togglePens(\'' + e.id + '\',event)">' + (penMode ? "↩ Predict a scoreline instead" : "⚽ This match will go to penalties") + '</button>') +
-      (isFin ? '<div class="finnote">⭐ <b>FINAL:</b> 10 pts for the exact result · 4 pts for the winner</div>' : '');
+      (isFin ? '<div class="finnote">⭐ <b>FINAL:</b> 10 pts for the exact score · 4 pts for the winner</div>' : '');
   } else {
     body = '<div class="prow">' + ptH + scoreInputs + ptA + '</div>';
   }
@@ -1878,7 +1878,7 @@ async function submitPred(btn, ev) {
     const hEl = document.getElementById("ph-" + id), aEl = document.getElementById("pa-" + id);
     const h = (hEl.value || "").trim(), a = (aEl.value || "").trim();
     if (h === "" || a === "" || isNaN(+h) || isNaN(+a)) { reset("ENTER BOTH SCORES FIRST", 1800); return; }
-    if (koMatch && +h === +a) { reset('NO DRAWS — TICK "GOES TO PENALTIES"', 2600); return; }
+    if (koMatch && +h === +a) { reset("NO DRAWS — TAP THE PENALTIES BUTTON BELOW", 2600); return; }
     payload = { h: Math.max(0, Math.min(20, +h)), a: Math.max(0, Math.min(20, +a)) };
   }
   if (!cs_user) { openAuth("C", { ctx: "predict" }); reset("SIGN IN, THEN SUBMIT", 2400); return; }
@@ -1935,7 +1935,7 @@ const FINALE_HTML = `<div style="font-size:38px;line-height:1;margin-bottom:4px"
 <p>This is it — the final days of the World Cup, and the prediction championship is decided <b style="color:#fff">now</b>.</p>
 <div class="irow"><span class="ic">📊</span><div><b>Overall table is live</b> — the leaderboard now shows your total points across <b style="color:var(--gold)">every week</b> combined.</div></div>
 <div class="irow"><span class="ic">⚽</span><div><b>Last chance to score</b> — the 3rd-place play-off and the FINAL are open to predict.</div></div>
-<div class="irow"><span class="ic">⭐</span><div><b>The final is worth the most</b> — exact result scores <b style="color:var(--gold)">10 pts</b> and the correct winner scores <b style="color:var(--gold)">4 pts</b>.</div></div>
+<div class="irow"><span class="ic">⭐</span><div><b>The final is worth the most</b> — the exact score = <b style="color:var(--gold)">10 pts</b>, the correct winner = <b style="color:var(--gold)">4 pts</b>.</div></div>
 <div class="irow"><span class="ic">🥇</span><div><b>Winner takes all</b> — top the overall table at the final whistle to be crowned <b style="color:var(--gold)">Prediction Champion</b>.</div></div>
 <p style="margin-top:2px">Good luck — may the best predictor win! 🍀</p>
 <button class="igo" onclick="closeInfo()">LET'S GO ⚽</button>`;
