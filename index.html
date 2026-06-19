@@ -268,6 +268,10 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 .lbrow .sc2{font-family:'Oswald';font-weight:700;font-size:16px;color:var(--gold)}
 .lbrow .ex{font-size:10.5px;color:var(--dim);width:96px;text-align:right}
 .lbrow.me{background:#26190f;border-radius:8px;padding:6px 8px}
+.champbanner{background:rgba(255,192,46,.12);border:1px solid rgba(255,192,46,.5);border-radius:11px;padding:10px 13px;margin-bottom:10px;font-family:'Oswald';font-size:14px;color:var(--txt)}
+.champbanner .ct{color:var(--gold);font-weight:700;letter-spacing:.6px}
+.champbanner b{color:#fff;font-weight:700}
+.champbanner .cs{display:block;font-size:10px;font-weight:500;letter-spacing:.4px;color:var(--mut);margin-top:3px;text-transform:uppercase}
 .thirds{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-top:13px}
 .thirds h3{font-family:'Oswald';font-weight:700;font-size:14px;letter-spacing:1.8px;color:var(--gold);display:flex;align-items:center;justify-content:space-between;gap:8px}
 .thirds .sub{font-size:11px;color:var(--dim);margin:3px 0 8px}
@@ -1841,10 +1845,14 @@ async function loadLeaderboard(evs) {
         donePost.forEach(e => { const c = e.competitions[0]; const H = c.competitors.find(x => x.homeAway === "home"), A = c.competitors.find(x => x.homeAway === "away"); const p = (u.preds || {})[e.id]; if (!p || p.h === undefined) return; played++; const s = scorePred(p, H.score, A.score); pts += s; if (s === 3) exact++; });
         return { uid, name: u.name || "?", pts, exact, played };
       }).filter(r => r.played > 0).sort((a, b) => b.pts - a.pts || b.exact - a.exact);
+      const champ = allRows[0];
+      const remaining = evs.some(e => e.status && e.status.type && e.status.type.state !== "post");   // any match still to play
+      const champHtml = champ ? '<div class="champbanner"><span class="ct">' + (remaining ? "🏆 LEADING THE TABLE" : "🏆 OVERALL CHAMPION") + '</span> <b>' + esc(champ.name) + '</b> · ' + champ.pts + ' pts<span class="cs">' + (remaining ? "the final still decides the overall winner" : "World Cup 2026 Prediction Champion!") + '</span></div>' : '';
       const allHead = '<div style="font-family:Oswald;font-size:11px;letter-spacing:1px;color:var(--gold);margin-bottom:8px">ALL WEEKS · TOTAL POINTS</div>';
-      if ($("lbAllBody")) $("lbAllBody").innerHTML = allHead + (allRows.length
+      if ($("lbAllBody")) $("lbAllBody").innerHTML = champHtml + allHead + (allRows.length
         ? allRows.map((r, i) => '<div class="lbrow' + (r.uid === myId ? " me" : "") + '"><div class="rk">' + (i + 1) + '</div><div class="nm">' + esc(r.name) + '</div><div class="ex">' + r.exact + ' exact · ' + r.played + ' played</div><div class="sc2">' + r.pts + '</div></div>').join("")
         : '<div class="empty" style="padding:12px">No points yet.</div>');
+      const _aw = $("lbAllWrap"); if (_aw) _aw.classList.toggle("hide", fixedYMD(new Date()) < "20260718");   // reveal the overall total + champion for the finals weekend (18 Jul)
     } catch (_) {}
     const curWk = weekStartKey(new Date());
     const done = evs.filter(e => e.status.type.state === "post" && weekStartKey(new Date(e.date)) === curWk);
