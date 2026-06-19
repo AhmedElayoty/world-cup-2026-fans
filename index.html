@@ -250,6 +250,28 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
  color:#fff;font-family:'Oswald';font-weight:700;font-size:19px;text-align:center;outline:none}
 .pin:focus{border-color:var(--rust)}
 .pin:disabled{opacity:.55}
+.psl{display:inline-flex;gap:6px}
+.pkrow.penmode .psl{display:none}
+.pwin{display:none;align-items:center;gap:6px;flex:none}
+.pkrow.penmode .pwin{display:inline-flex}
+.pwin .wbtn{max-width:82px;background:var(--navy2);border:1.5px solid var(--line);color:var(--mut);font-family:'Oswald';font-weight:600;font-size:11px;letter-spacing:.2px;border-radius:9px;padding:8px 7px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pwin .wbtn.on{background:var(--rust);border-color:var(--rust2);color:#fff}
+.pwin .wbtn:disabled{opacity:.85;cursor:default}
+.pwin .pvs{font-style:normal;color:var(--dim);font-size:10px;font-family:'Oswald'}
+.pentog{display:block;width:100%;margin-top:8px;background:none;border:1px dashed var(--line);color:var(--mut);font-family:'Oswald';font-weight:600;font-size:10.5px;letter-spacing:.4px;border-radius:9px;padding:8px;cursor:pointer}
+.pentog:hover{color:var(--gold);border-color:var(--gold)}
+.finnote{margin-top:9px;font-size:11px;line-height:1.5;color:var(--gold);background:rgba(255,192,46,.08);border:1px solid rgba(255,192,46,.32);border-radius:9px;padding:8px 11px}
+.finnote b{color:#fff;font-weight:700}
+.infomodal{position:fixed;inset:0;background:rgba(4,8,22,.86);z-index:120;display:flex;align-items:center;justify-content:center;padding:18px}
+.infomodal .ibox{position:relative;background:var(--card);border:1px solid #2a3a6b;border-radius:20px;padding:24px 20px;max-width:340px;width:100%;text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.5);max-height:88vh;overflow-y:auto}
+.infomodal .modalx{position:absolute;top:10px;right:10px;width:30px;height:30px;min-width:30px;border-radius:50%;background:rgba(255,255,255,.08);border:none;color:var(--mut);font-size:18px;line-height:1;cursor:pointer;padding:0}
+.infomodal h2{font-family:'Oswald';font-weight:700;letter-spacing:1px;font-size:20px;color:var(--gold);margin:4px 0 6px}
+.infomodal>.ibox>p{color:var(--mut);font-size:13px;line-height:1.5;margin:0 0 14px}
+.infomodal .irow{display:flex;gap:10px;text-align:left;margin:11px 0;align-items:flex-start}
+.infomodal .irow .ic{font-size:18px;flex:none;width:20px;text-align:center}
+.infomodal .irow div{font-size:12.5px;color:#cdd8f5;line-height:1.45}
+.infomodal .irow b{color:#fff}
+.infomodal .igo{width:100%;margin-top:10px;background:var(--rust);border:none;color:#fff;font-family:'Oswald';font-weight:700;letter-spacing:1px;font-size:14px;padding:13px;border-radius:12px;cursor:pointer}
 .subbtn{margin-top:9px;width:100%;background:var(--rust);border:none;color:#fff;font-family:'Oswald';
  font-weight:600;letter-spacing:1.5px;font-size:12.5px;border-radius:10px;padding:10px;cursor:pointer}
 .subbtn:disabled{opacity:.7}
@@ -1017,13 +1039,14 @@ function renderMatches() {
     }
     const myp = myPreds[e.id];
     let predStrip = "";
-    if (myp && myp.h !== undefined) {
+    if (hasPred(myp)) {
       let pb = "";
       if (state === "post") {
-        const s = scorePred(myp, H.score, A.score);
-        pb = " · " + (s === 3 ? "EXACT! +3 PTS" : s === 1 ? "RESULT +1 PT" : "0 PTS");
+        const s = scorePred(myp, H, A, e), top = isFinalEvent(e) ? 10 : 3;
+        pb = " · " + (s === 0 ? "0 PTS" : (s === top ? (myp.pens ? "PENS CALLED! " : "EXACT! ") : "RESULT ") + "+" + s + " PT" + (s > 1 ? "S" : ""));
       }
-      predStrip = '<div class="mypred">YOUR PREDICTION: ' + myp.h + '\u2013' + myp.a + pb + '</div>';
+      const _ptxt = myp.pens ? esc((myp.w === "home" ? H : A).team.displayName) + " on pens" : myp.h + "–" + myp.a;
+      predStrip = '<div class="mypred">YOUR PREDICTION: ' + _ptxt + pb + '</div>';
     } else if (state === "pre" && new Date(e.date) - Date.now() > 1800000) {
       predStrip = '<div class="mypred hint" onclick="event.stopPropagation();showTab(&quot;P&quot;)">PREDICT THIS MATCH \u2192</div>';
     }
@@ -1703,7 +1726,7 @@ async function syncMyPreds() {
     const sv = (all[myId] && all[myId].preds) || {};
     if (!all[myId] && Object.keys(myPreds).length) return;  // transient/empty read — keep local cache, don't wipe
     const clean = {};
-    Object.entries(sv).forEach(([k, v]) => { clean[k] = { h: v.h, a: v.a, locked: true }; });
+    Object.entries(sv).forEach(([k, v]) => { clean[k] = v.pens ? { pens: 1, w: v.w, locked: true } : { h: v.h, a: v.a, locked: true }; });
     myPreds = clean;
     localStorage.setItem("cs_preds", JSON.stringify(myPreds));
   } catch (_) {}
@@ -1752,6 +1775,7 @@ async function renderPredict() {
     const guestBanner = !cs_user ? '<div class="guestbar">👀 You’re browsing as a guest — <button onclick="openAuth(\'C\',{ctx:\'predict\'})">Sign in</button> to make predictions &amp; climb the leaderboard.</div>' : "";
     $("predList").innerHTML = guestBanner + html;
     loadLeaderboard(evs);
+    predictPopups(koUp);   // one-time knockout-rules / finale briefing
   } catch (err) {
     $("predList").innerHTML = '<div class="empty">Could not load fixtures — check connection.</div>';
   }
@@ -1762,11 +1786,12 @@ function predCard(e, started) {
   const p = myPreds[e.id] || {};
   const done = p.locked === true;
   const ko = new Date(e.date);
+  const isKO = isKOEvent(e), isFin = isFinalEvent(e);
   let meta;
   if (e.status.type.state === "post") {
-    const pts = scorePred(p, H.score, A.score);
+    const pts = scorePred(p, H, A, e);
     meta = '<span class="res">FT ' + (H.score ?? "-") + '–' + (A.score ?? "-") + '</span>' +
-      '<span class="pts' + pts + '">' + (p.h !== undefined ? pts + " PTS" : "NO PREDICTION") + '</span>';
+      '<span class="pts' + pts + '">' + (hasPred(p) ? pts + " PTS" : "NO PREDICTION") + '</span>';
   } else {
     meta = '<span>' + fmt(ko, { weekday: "short", day: "2-digit", month: "short" }).toUpperCase() +
       ' · ' + fmt(ko, { hour: "2-digit", minute: "2-digit" }) + ' ' + tzAbbr() + '</span>' +
@@ -1775,30 +1800,65 @@ function predCard(e, started) {
   }
   const guest = !cs_user;
   const dis = (started || done || guest) ? "disabled" : "";
+  const ptH = '<div class="pt"><img src="' + (H.team.logo || "") + '" alt="" onerror="this.style.visibility=&#39;hidden&#39;"><span>' + esc(H.team.displayName) + '</span></div>';
+  const ptA = '<div class="pt r"><img src="' + (A.team.logo || "") + '" alt="" onerror="this.style.visibility=&#39;hidden&#39;"><span>' + esc(A.team.displayName) + '</span></div>';
+  const scoreInputs =
+    '<input class="pin" id="ph-' + e.id + '" type="number" min="0" max="20" inputmode="numeric" value="' + (p.h ?? "") + '" ' + dis + '>' +
+    '<input class="pin" id="pa-' + e.id + '" type="number" min="0" max="20" inputmode="numeric" value="' + (p.a ?? "") + '" ' + dis + '>';
   const action = started ? "" : guest
     ? '<button class="subbtn ghost" onclick="openAuth(\'C\',{ctx:\'predict\'})">🔒 SIGN IN TO PREDICT</button>'
     : done
     ? '<div class="subok">YOUR FINAL ANSWER — LOCKED IN</div>'
     : '<button class="subbtn" data-id="' + e.id + '" onclick="submitPred(this,event)">SUBMIT — ONE TIME ONLY</button>';
-  return '<div class="pcard' + ((started || done) ? " lock" : "") + '"><div class="pmeta">' + meta + '</div><div class="prow">' +
-    '<div class="pt"><img src="' + (H.team.logo || "") + '" alt="" onerror="this.style.visibility=&#39;hidden&#39;"><span>' + esc(H.team.displayName) + '</span></div>' +
-    '<input class="pin" id="ph-' + e.id + '" type="number" min="0" max="20" inputmode="numeric" value="' + (p.h ?? "") + '" ' + dis + '>' +
-    '<input class="pin" id="pa-' + e.id + '" type="number" min="0" max="20" inputmode="numeric" value="' + (p.a ?? "") + '" ' + dis + '>' +
-    '<div class="pt r"><img src="' + (A.team.logo || "") + '" alt="" onerror="this.style.visibility=&#39;hidden&#39;"><span>' + esc(A.team.displayName) + '</span></div></div>' +
-    action + '</div>';
+  let body;
+  if (isKO) {
+    const penMode = p.pens === 1 || p.pens === true, wSel = p.w || "";
+    const wbtn = (side, t) => '<button type="button" class="wbtn' + (wSel === side ? " on" : "") + '" data-w="' + side + '" ' + (dis ? "disabled" : "") + ' onclick="pickWinner(\'' + e.id + '\',\'' + side + '\',event)">' + esc(t.team.displayName) + '</button>';
+    body =
+      '<div class="prow pkrow' + (penMode ? " penmode" : "") + '" id="pcw-' + e.id + '" data-pen="' + (penMode ? "1" : "0") + '"' + (wSel ? ' data-w="' + wSel + '"' : '') + '>' +
+        ptH + '<span class="psl">' + scoreInputs + '</span>' +
+        '<span class="pwin">' + wbtn("home", H) + '<i class="pvs">v</i>' + wbtn("away", A) + '</span>' + ptA + '</div>' +
+      (started || done ? '' : '<button type="button" class="pentog" id="ptg-' + e.id + '" onclick="togglePens(\'' + e.id + '\',event)">' + (penMode ? "↩ Predict a scoreline instead" : "⚽ No winner in normal time? → goes to penalties") + '</button>') +
+      (isFin ? '<div class="finnote">⭐ <b>THE FINAL</b> — exact score (or the right penalty winner) scores <b>10 pts</b>; the correct winner scores <b>4 pts</b>.</div>' : '');
+  } else {
+    body = '<div class="prow">' + ptH + scoreInputs + ptA + '</div>';
+  }
+  return '<div class="pcard' + ((started || done) ? " lock" : "") + '"><div class="pmeta">' + meta + '</div>' + body + action + '</div>';
 }
-function scorePred(p, h, a) {
-  if (p.h === undefined || p.h === null || p.h === "" || h == null || a == null) return 0;
+const FINAL_AFTER = "2026-07-19T10:00:00Z";   // the World Cup FINAL (kick-off ~19 Jul 19:00 UTC) is the only match on/after this instant → 10/4 scoring. Threshold sits MID-GAP: the 3rd-place match is ~18 Jul 21:00 UTC, so even a multi-hour slip/rollover (~9h margin each side) can't misclassify bronze as the final. (When ESPN adds the final to the feed, re-confirm its date stays after this.)
+function isKOEvent(e) { return !!(e && e.season && e.season.type && e.season.type !== 13802); }   // group stage = season.type 13802; anything else = knockout
+function isFinalEvent(e) { try { return isKOEvent(e) && !!e.date && new Date(e.date) >= new Date(FINAL_AFTER); } catch (_) { return false; } }
+function hasPred(p) { return !!(p && (p.h !== undefined || p.pens)); }   // a prediction exists (scoreline OR penalties pick)
+// Knockout-aware scorer. Group: exact 3 / result 1. Knockout: exact-or-pens-call 3 / right winner 1. FINAL only: 10 / 4.
+function scorePred(p, H, A, e) {
+  if (!hasPred(p)) return 0;
+  const hs = H && H.score, as = A && A.score;
+  if (hs == null || as == null || hs === "" || as === "") return 0;   // not finished / no score
+  const h = +hs, a = +as;
+  const EXACT = isFinalEvent(e) ? 10 : 3, RESULT = isFinalEvent(e) ? 4 : 1;
+  if (isKOEvent(e)) {
+    const pens = (H.shootoutScore != null && A.shootoutScore != null && (+H.shootoutScore !== 0 || +A.shootoutScore !== 0));
+    const winner = pens ? (+H.shootoutScore > +A.shootoutScore ? "home" : "away")
+                        : (h > a ? "home" : a > h ? "away" : (H.winner ? "home" : A.winner ? "away" : null));
+    if (p.pens) {                                       // predicted: goes to penalties + a winner
+      if (pens && p.w === winner) return EXACT;         // correct: it went to pens AND right winner
+      if (p.w === winner) return RESULT;                // right winner, but it was decided in normal/extra time
+      return 0;
+    }
+    const pw = +p.h > +p.a ? "home" : +p.a > +p.h ? "away" : null;   // predicted a decisive scoreline
+    if (!pens && +p.h === h && +p.a === a) return EXACT;             // exact score AND no shootout
+    if (pw && pw === winner) return RESULT;                         // right winner
+    return 0;
+  }
+  // group stage — unchanged
   const ph = +p.h, pa = +(p.a ?? 0);
-  if (ph === +h && pa === +a) return 3;
-  if (Math.sign(ph - pa) === Math.sign((+h) - (+a))) return 1;
+  if (ph === h && pa === a) return 3;
+  if (Math.sign(ph - pa) === Math.sign(h - a)) return 1;
   return 0;
 }
 async function submitPred(btn, ev) {
   ev.stopPropagation();
   const id = btn.dataset.id;
-  const hEl = document.getElementById("ph-" + id), aEl = document.getElementById("pa-" + id);
-  const h = (hEl.value || "").trim(), a = (aEl.value || "").trim();
   const reset = (msg, ms) => { btn.textContent = msg; setTimeout(() => {
     btn.textContent = "SUBMIT — ONE TIME ONLY"; btn.disabled = false; }, ms); };
   const evObj = (seasonCache.events || []).find(x => x.id === id) || events.find(x => x.id === id);
@@ -1806,7 +1866,21 @@ async function submitPred(btn, ev) {
     btn.disabled = true; btn.textContent = "CLOSED — 30 MIN BEFORE KICK-OFF";
     setTimeout(renderPredict, 1200); return;
   }
-  if (h === "" || a === "" || isNaN(+h) || isNaN(+a)) { reset("ENTER BOTH SCORES FIRST", 1800); return; }
+  const koMatch = isKOEvent(evObj);
+  const row = document.getElementById("pcw-" + id);
+  const penMode = !!(koMatch && row && row.dataset.pen === "1");
+  let payload;
+  if (penMode) {
+    const w = row.dataset.w;
+    if (w !== "home" && w !== "away") { reset("PICK THE PENALTY WINNER", 2000); return; }
+    payload = { pens: 1, w };
+  } else {
+    const hEl = document.getElementById("ph-" + id), aEl = document.getElementById("pa-" + id);
+    const h = (hEl.value || "").trim(), a = (aEl.value || "").trim();
+    if (h === "" || a === "" || isNaN(+h) || isNaN(+a)) { reset("ENTER BOTH SCORES FIRST", 1800); return; }
+    if (koMatch && +h === +a) { reset('NO DRAWS — TICK "GOES TO PENALTIES"', 2600); return; }
+    payload = { h: Math.max(0, Math.min(20, +h)), a: Math.max(0, Math.min(20, +a)) };
+  }
   if (!cs_user) { openAuth("C", { ctx: "predict" }); reset("SIGN IN, THEN SUBMIT", 2400); return; }
   btn.disabled = true; btn.textContent = "SAVING…";
   let ok = false;
@@ -1817,7 +1891,7 @@ async function submitPred(btn, ev) {
       me.name = cs_user.username;
       me.preds = me.preds || {};
       if (!me.preds[id]) {
-        me.preds[id] = { h: Math.max(0, Math.min(20, +h)), a: Math.max(0, Math.min(20, +a)) };
+        me.preds[id] = payload;
         all[myId] = me;
         await writeKey(PRED_KEY, all);
       }
@@ -1825,7 +1899,7 @@ async function submitPred(btn, ev) {
       const chk = await readKey(PRED_KEY, {});
       const sv = chk[myId] && chk[myId].preds && chk[myId].preds[id];
       if (sv) {
-        myPreds[id] = { h: sv.h, a: sv.a, locked: true };
+        myPreds[id] = sv.pens ? { pens: 1, w: sv.w, locked: true } : { h: sv.h, a: sv.a, locked: true };
         localStorage.setItem("cs_preds", JSON.stringify(myPreds));
         ok = true;
       }
@@ -1833,6 +1907,55 @@ async function submitPred(btn, ev) {
   }
   if (ok) renderPredict();
   else { btn.disabled = false; btn.textContent = "FAILED — TAP TO RETRY"; }
+}
+function togglePens(id, ev) {   // knockout card: switch between scoreline mode and "goes to penalties + pick winner"
+  if (ev) ev.stopPropagation();
+  const row = document.getElementById("pcw-" + id); if (!row) return;
+  const on = row.classList.toggle("penmode");
+  row.dataset.pen = on ? "1" : "0";
+  const tg = document.getElementById("ptg-" + id);
+  if (tg) tg.textContent = on ? "↩ Predict a scoreline instead" : "⚽ No winner in normal time? → goes to penalties";
+}
+function pickWinner(id, w, ev) {   // knockout card: choose the penalty-shootout winner
+  if (ev) ev.stopPropagation();
+  const row = document.getElementById("pcw-" + id); if (!row) return;
+  row.dataset.w = w;
+  row.querySelectorAll(".wbtn").forEach(b => b.classList.toggle("on", b.dataset.w === w));
+}
+/* ---- one-time info popups on the Predict tab ---- */
+const KO_RULES_HTML = `<div style="font-size:38px;line-height:1;margin-bottom:4px">⚽</div>
+<h2>KNOCKOUTS ARE HERE</h2>
+<p>No more draws — every knockout match must have a winner. Here's how predicting works now:</p>
+<div class="irow"><span class="ic">①</span><div><b>Predict a scoreline</b> like normal (e.g. 2–1) — it just can't be a draw.</div></div>
+<div class="irow"><span class="ic">②</span><div>Think it'll be level? Tick <b>"⚽ goes to penalties"</b> and pick who wins the shootout.</div></div>
+<div class="irow"><span class="ic">🎯</span><div><b>3 pts</b> — exact score, OR you called penalties + the right winner.<br><b>1 pt</b> — right winner either way.</div></div>
+<div class="irow"><span class="ic">⭐</span><div>The <b>FINAL</b> is worth more — <b>10 pts</b> exact / <b>4 pts</b> for the winner.</div></div>
+<button class="igo" onclick="closeInfo()">GOT IT ⚽</button>`;
+const FINALE_HTML = `<div style="font-size:38px;line-height:1;margin-bottom:4px">🏆</div>
+<h2>GRAND FINALE</h2>
+<p>This is it — the final days of the World Cup, and the prediction championship is decided <b style="color:#fff">now</b>.</p>
+<div class="irow"><span class="ic">📊</span><div><b>Overall table is live</b> — the leaderboard now shows your total points across <b style="color:var(--gold)">every week</b> combined.</div></div>
+<div class="irow"><span class="ic">⚽</span><div><b>Last chance to score</b> — the 3rd-place play-off and the FINAL are open to predict.</div></div>
+<div class="irow"><span class="ic">🥇</span><div><b>Winner takes all</b> — top the overall table at the final whistle to be crowned <b style="color:var(--gold)">Prediction Champion</b>.</div></div>
+<p style="margin-top:2px">Good luck — may the best predictor win! 🍀</p>
+<button class="igo" onclick="closeInfo()">LET'S GO ⚽</button>`;
+function showInfo(html) {
+  closeInfo();
+  const ov = document.createElement("div"); ov.id = "infoModal"; ov.className = "infomodal";
+  ov.innerHTML = '<div class="ibox"><button class="modalx" aria-label="Close" onclick="closeInfo()">×</button>' + html + '</div>';
+  ov.addEventListener("click", ev => { if (ev.target === ov) closeInfo(); });
+  document.body.appendChild(ov);
+}
+function closeInfo() { const m = document.getElementById("infoModal"); if (m) m.remove(); }
+function predictPopups(koUp) {   // one-time per user, on opening the Predict tab
+  try {
+    if (fixedYMD(new Date()) >= "20260718" && !localStorage.getItem("cs_finale_seen")) {
+      localStorage.setItem("cs_finale_seen", "1"); showInfo(FINALE_HTML); return;
+    }
+    if (koUp && koUp.length && !localStorage.getItem("cs_ko_rules_seen")) {
+      localStorage.setItem("cs_ko_rules_seen", "1"); showInfo(KO_RULES_HTML);
+    }
+  } catch (_) {}
 }
 async function loadLeaderboard(evs) {
   try {
@@ -1842,7 +1965,7 @@ async function loadLeaderboard(evs) {
       const donePost = evs.filter(e => e.status.type.state === "post");
       const allRows = Object.entries(all).map(([uid, u]) => {
         let pts = 0, exact = 0, played = 0;
-        donePost.forEach(e => { const c = e.competitions[0]; const H = c.competitors.find(x => x.homeAway === "home"), A = c.competitors.find(x => x.homeAway === "away"); const p = (u.preds || {})[e.id]; if (!p || p.h === undefined) return; played++; const s = scorePred(p, H.score, A.score); pts += s; if (s === 3) exact++; });
+        donePost.forEach(e => { const c = e.competitions[0]; const H = c.competitors.find(x => x.homeAway === "home"), A = c.competitors.find(x => x.homeAway === "away"); const p = (u.preds || {})[e.id]; if (!hasPred(p)) return; played++; const s = scorePred(p, H, A, e); pts += s; if (s === 3 || s === 10) exact++; });
         return { uid, name: u.name || "?", pts, exact, played };
       }).filter(r => r.played > 0).sort((a, b) => b.pts - a.pts || b.exact - a.exact);
       const champ = allRows[0];
@@ -1867,11 +1990,11 @@ async function loadLeaderboard(evs) {
         const c = e.competitions[0];
         const H = c.competitors.find(x => x.homeAway === "home"), A = c.competitors.find(x => x.homeAway === "away");
         const p = (u.preds || {})[e.id];
-        if (!p || p.h === undefined) return;
+        if (!hasPred(p)) return;
         played++;
-        const s = scorePred(p, H.score, A.score);
+        const s = scorePred(p, H, A, e);
         pts += s;
-        if (s === 3) exact++;
+        if (s === 3 || s === 10) exact++;
       });
       return { uid, name: u.name || "?", pts, exact, played };
     }).sort((a, b) => b.pts - a.pts || b.exact - a.exact);
@@ -2386,9 +2509,9 @@ function weekScores(evsWeek, all) {
       const c = e.competitions[0];
       const H = c.competitors.find(x => x.homeAway === "home"), A = c.competitors.find(x => x.homeAway === "away");
       const p = (u.preds || {})[e.id];
-      if (!p || p.h === undefined) return;
-      const s = scorePred(p, H.score, A.score);
-      pts += s; if (s === 3) exact++;
+      if (!hasPred(p)) return;
+      const s = scorePred(p, H, A, e);
+      pts += s; if (s === 3 || s === 10) exact++;
     });
     return { uid, name: u.name || "?", pts, exact };
   }).filter(x => x.pts > 0).sort((a, b) => b.pts - a.pts || b.exact - a.exact);
