@@ -355,8 +355,16 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 .metarow>.mven{margin-left:auto}
 .dwrap{display:flex;align-items:flex-start;gap:8px}
 .dwrap>.dstrip{flex:1;min-width:0}
-#natFilter{flex:none;width:114px;height:55px;background:rgba(255,255,255,.06);color:var(--gold);border:1px solid var(--gold);border-radius:11px;font-family:'Oswald';font-weight:600;font-size:11.5px;letter-spacing:.4px;padding:0 10px;cursor:text}
-#natFilter::placeholder{color:var(--gold);opacity:.95}
+.natsearch{position:relative;flex:none}
+#natFilter{width:150px;height:55px;background:rgba(255,255,255,.06);color:var(--gold);border:1px solid var(--gold);border-radius:11px;font-family:'Oswald';font-weight:600;font-size:10px;letter-spacing:.3px;padding:0 9px;cursor:text}
+#natFilter::placeholder{color:var(--gold);opacity:.9}
+.natlist{position:absolute;top:calc(100% + 5px);left:50%;transform:translateX(-50%);width:190px;max-height:46vh;overflow-y:auto;background:var(--card);border:1px solid var(--gold);border-radius:12px;padding:5px;z-index:60;box-shadow:0 14px 34px rgba(0,0,0,.55)}
+.natlist::-webkit-scrollbar{width:0}
+.natitem{display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:8px;cursor:pointer}
+.natitem:hover,.natitem:active{background:rgba(255,255,255,.07)}
+.natitem img{width:22px;height:22px;object-fit:contain;flex:none}
+.natitem .nn{font-family:'Oswald';font-weight:600;font-size:13px;letter-spacing:.3px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.natempty{padding:9px;color:var(--mut);font-size:12px}
 .filterbanner{display:flex;align-items:center;gap:10px;background:rgba(25,200,255,.10);border:1px solid rgba(25,200,255,.45);border-radius:12px;padding:8px 10px 8px 13px}
 .filterbanner .ff{width:26px;height:26px;object-fit:contain;flex:none}
 .filterbanner .fmeta{display:flex;flex-direction:column;line-height:1.15;min-width:0}
@@ -613,7 +621,7 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 <main>
  <section id="paneM">
   <div id="heroBox"></div>
-  <div class="dwrap" id="dwrap"><div class="dstrip" id="dstrip"></div><input id="natFilter" list="natList" placeholder="🔎 Nation" autocomplete="off" onchange="setNationFilter(this.value)" aria-label="Filter matches by nation"><datalist id="natList"></datalist></div>
+  <div class="dwrap" id="dwrap"><div class="dstrip" id="dstrip"></div><div class="natsearch" id="natSearch"><input id="natFilter" type="text" placeholder="🔎 Search by nation" autocomplete="off" oninput="natSearchInput()" onfocus="natSearchInput()" onblur="natSearchClose()" onkeydown="natKey(event)" aria-label="Search matches by nation"><div class="natlist hide" id="natListBox" role="listbox"></div></div></div>
   <div class="filterbanner hide" id="filterBanner"></div>
   <div id="mlist"><div class="empty"><div class="big">⚽</div>Loading matches…</div></div>
  </section>
@@ -853,7 +861,7 @@ function pickDate(key, scroll) {
   loadMatches();
 }
 async function fillNatFilter() {
-  const dl = $("natList"); if (!dl || dl.children.length) return;
+  if (_natNames.length) return;
   let names = NATIONS_FALLBACK;
   try {
     const evs = await seasonEvents();
@@ -863,7 +871,27 @@ async function fillNatFilter() {
     if (s.size >= 32 && s.size <= 60) names = [...s].sort();
   } catch (_) {}
   _natNames = names;
-  dl.innerHTML = names.map(n => '<option value="' + esc(n) + '"></option>').join("");
+  try { await natLogos(); } catch (_) {}   // warm the existing nation→flag cache for the search list
+}
+// custom search combobox — type to narrow the list (no native datalist; that popped the full list + crashed mobile)
+function natSearchInput() {
+  const q = ($("natFilter").value || "").trim().toLowerCase();
+  const box = $("natListBox"); if (!box) return;
+  const matches = _natNames.filter(n => !q || n.toLowerCase().indexOf(q) !== -1);
+  box.innerHTML = matches.length
+    ? matches.map(n => { const lg = (_natLogos && _natLogos[n]) || "";
+        return '<div class="natitem" role="option" data-n="' + esc(n) + '" onmousedown="event.preventDefault()" onclick="chooseNation(this.dataset.n)">' +
+          (lg ? '<img src="' + esc(lg) + '" alt="" onerror="this.style.visibility=\'hidden\'">' : '') +
+          '<span class="nn">' + esc(n) + '</span></div>'; }).join("")
+    : '<div class="natempty">No nation matches that.</div>';
+  box.classList.remove("hide");
+}
+function natSearchClose() { setTimeout(() => { const b = $("natListBox"); if (b) b.classList.add("hide"); }, 150); }   // delay so an item click registers first
+function chooseNation(n) { const inp = $("natFilter"); if (inp) { inp.value = n; inp.blur(); } const b = $("natListBox"); if (b) b.classList.add("hide"); setNationFilter(n); }
+function natKey(e) {
+  if (e.key === "Escape") { const b = $("natListBox"); if (b) b.classList.add("hide"); e.target.blur(); }
+  else if (e.key === "Enter") { const q = (e.target.value || "").trim().toLowerCase(); if (!q) return;
+    const m = _natNames.find(n => n.toLowerCase() === q) || _natNames.find(n => n.toLowerCase().indexOf(q) !== -1); if (m) chooseNation(m); }
 }
 async function setNationFilter(raw) {
   const v = (raw || "").trim();
@@ -887,6 +915,7 @@ async function setNationFilter(raw) {
 function clearNationFilter() {
   nationFilter = ""; _natMatches = [];
   const sel = $("natFilter"); if (sel) sel.value = "";
+  const lb = $("natListBox"); if (lb) lb.classList.add("hide");
   $("filterBanner").className = "filterbanner hide";
   $("dwrap").classList.remove("hide");
   openId = null;
