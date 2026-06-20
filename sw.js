@@ -2,7 +2,7 @@
    NETWORK-FIRST for the app shell (HTML) so a new deploy ALWAYS shows when online;
    cache is only a fallback for offline. Live data (ESPN/textdb/etc.) never cached.
    Static assets (icons/logo/manifest) cache-first. */
-const CACHE = "wcfans-v4";
+const CACHE = "wcfans-v5";
 const SHELL = ["./", "./index.html", "./manifest.json", "./logo.png", "./trophy.png", "./icon-192-2.png", "./icon-512-2.png", "./icon-180-2.png", "./share-card.png"];
 
 self.addEventListener("install", e => {
@@ -18,11 +18,15 @@ self.addEventListener("fetch", e => {
   let url; try { url = new URL(req.url); } catch (_) { return; }
   // never touch live data / third-party APIs — let them hit the network normally
   if (/espn\.com|textdb\.online|flagcdn\.com|geojs\.io|ipapi\.co|googleapis\.com|gstatic\.com/.test(url.host)) return;
-  // app shell (navigation / index.html) -> network-first, cache fallback offline
+  // app shell (navigation / index.html) -> network-first, cache fallback offline.
+  // Only the REAL app shell (root or index.html) is stored under the index key. Other pages
+  // (e.g. demo.html) are network-first but must NEVER be cached as the app's offline entry,
+  // otherwise opening demo.html would poison the installed app's offline slot.
   if (req.mode === "navigate" || url.pathname === "/" || url.pathname.endsWith("/") || url.pathname.endsWith("index.html")) {
+    const isShell = url.pathname === "/" || url.pathname.endsWith("/") || url.pathname.endsWith("index.html");
     e.respondWith(
-      fetch(req).then(r => { const cp = r.clone(); caches.open(CACHE).then(c => c.put("./index.html", cp)); return r; })
-                .catch(() => caches.match("./index.html").then(r => r || caches.match("./")))
+      fetch(req).then(r => { if (isShell) { const cp = r.clone(); caches.open(CACHE).then(c => c.put("./index.html", cp)); } return r; })
+                .catch(() => caches.match(isShell ? "./index.html" : req).then(r => r || caches.match("./index.html")))
     );
     return;
   }
