@@ -9,25 +9,28 @@
 <meta name="theme-color" content="#0a1230">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="World Cup 2026">
+<meta name="apple-mobile-web-app-title" content="WCup Fans 2026">
+<meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-180.png">
-<title>World Cup 2026 — Live</title>
-<meta name="description" content="World Cup Fans: live World Cup 2026 scores, fixtures in your timezone, a prediction league, the knockout bracket and fan chat. Play along!">
+<title>WCup Fans 2026 — World Cup Live</title>
+<meta name="description" content="WCup Fans 2026 · نتائج كأس العالم المباشرة، مواعيد بتوقيتك، توقّعات ودردشة الجماهير · Live World Cup scores, your-timezone fixtures, predictions & fan chat.">
 <link rel="canonical" href="https://ahmedelayoty.github.io/world-cup-2026-fans/">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="World Cup Fans">
-<meta property="og:title" content="World Cup Fans · World Cup 2026 Live">
-<meta property="og:description" content="Live scores, fixtures in your timezone, a prediction league, the knockout bracket and fan chat. Play along!">
+<meta property="og:site_name" content="WCup Fans 2026">
+<meta property="og:title" content="WCup Fans 2026 · كأس العالم مباشر">
+<meta property="og:description" content="نتائج مباشرة · مواعيد بتوقيتك · توقّعات · دردشة الجماهير  |  Live scores, your-timezone fixtures, predictions & fan chat.">
 <meta property="og:url" content="https://ahmedelayoty.github.io/world-cup-2026-fans/">
-<meta property="og:image" content="https://ahmedelayoty.github.io/world-cup-2026-fans/share-card.png">
+<meta property="og:image" content="https://ahmedelayoty.github.io/world-cup-2026-fans/share-card.png?v=2">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
+<meta property="og:locale" content="ar_AE">
+<meta property="og:locale:alternate" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="World Cup Fans · World Cup 2026 Live">
-<meta name="twitter:description" content="Live scores, fixtures in your timezone, a prediction league, the knockout bracket and fan chat. Play along!">
-<meta name="twitter:image" content="https://ahmedelayoty.github.io/world-cup-2026-fans/share-card.png">
+<meta name="twitter:title" content="WCup Fans 2026 · كأس العالم مباشر">
+<meta name="twitter:description" content="نتائج مباشرة · مواعيد بتوقيتك · توقّعات · دردشة الجماهير  |  Live scores, predictions & fan chat.">
+<meta name="twitter:image" content="https://ahmedelayoty.github.io/world-cup-2026-fans/share-card.png?v=2">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -74,6 +77,10 @@ html[dir="rtl"] .gsum2 .gcol.r{text-align:left}
 html[dir="rtl"] .gt th,html[dir="rtl"] .gt td{text-align:right}
 html[dir="rtl"] .mven{align-items:flex-start;text-align:left;direction:ltr}
 html[dir="rtl"] .metarow>.mven{margin-left:0;margin-right:auto}
+#installBar{position:fixed;left:0;right:0;bottom:0;z-index:130;display:none;align-items:center;gap:10px;background:rgba(10,14,33,.97);backdrop-filter:blur(8px);border-top:1px solid var(--gold);padding:10px 14px;padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+#installBar .ibtxt{flex:1;color:var(--txt);font-family:'Oswald';font-weight:600;font-size:13px;letter-spacing:.3px}
+#installBar .ibgo{background:var(--gold);color:#16110a;border:none;font-family:'Oswald';font-weight:700;font-size:13px;letter-spacing:.5px;padding:9px 18px;border-radius:10px;cursor:pointer;white-space:nowrap}
+#installBar .ibx{background:none;border:none;color:var(--mut);font-size:20px;cursor:pointer;padding:0 4px;line-height:1}
 .hright{margin-left:auto;text-align:right}
 .uaeclock{font-family:'Oswald';font-weight:600;font-size:17px;letter-spacing:.5px}
 .constate{display:flex;align-items:center;gap:5px;justify-content:flex-end;font-family:'Oswald';
@@ -722,6 +729,7 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
  </section>
  <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API</footer>
 </main>
+<div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
 
 <div id="nameModal" class="hide">
@@ -945,7 +953,9 @@ Object.assign(AR, {
   "🔒 SIGN IN TO PREDICT":"🔒 سجّل الدخول للتوقّع","YOUR FINAL ANSWER — LOCKED IN":"إجابتك النهائية · مؤكَّدة","FINAL:":"النهائي:","10 pts for the exact score · 4 pts for the winner":"10 نقاط للنتيجة الصحيحة · 4 نقاط للفائز","SIGN IN TO PREDICT":"سجّل الدخول للتوقّع",
   "ALL WEEKS · TOTAL POINTS":"كل الأسابيع · مجموع النقاط","👀 You’re browsing as a guest —":"👀 أنت تتصفّح كضيف ·","to make predictions & climb the leaderboard.":"لإجراء التوقّعات وتصدّر الترتيب.",
   "Curaçao":"كوراساو","Congo DR":"الكونغو الديمقراطية","Bosnia-Herzegovina":"البوسنة والهرسك","Cabo Verde":"الرأس الأخضر","Côte d'Ivoire":"ساحل العاج",
-  "LOCKED / FINISHED":"مغلقة / منتهية","✓ CONFIRMED":"✓ مؤكَّد","BEST 3RD-PLACED RACE":"سباق أفضل ثالث","IN":"متأهّل","8 of the 12 third-placed teams also reach the Round of 32":"يتأهّل 8 من المنتخبات الـ12 صاحبة المركز الثالث إلى دور الـ32"
+  "LOCKED / FINISHED":"مغلقة / منتهية","✓ CONFIRMED":"✓ مؤكَّد","BEST 3RD-PLACED RACE":"سباق أفضل ثالث","IN":"متأهّل","8 of the 12 third-placed teams also reach the Round of 32":"يتأهّل 8 من المنتخبات الـ12 صاحبة المركز الثالث إلى دور الـ32",
+  "SHARE THIS MATCH DETAILS":"شارك تفاصيل المباراة","Line-ups not announced yet — usually ~1 hour before kick-off.":"لم تُعلَن التشكيلات بعد، عادةً قبل ساعة من انطلاق المباراة.","ATT":"الحضور","Couldn't load line-ups":"تعذّر تحميل التشكيلات","VS":"ضد",
+  "📲 Install to phone":"📲 ثبّت على هاتفك","Install to phone":"ثبّت على هاتفك"
 });
 // multi-word phrases for substring replacement inside composite nodes (longest first; safe, no single short words)
 const AR_PHRASES = Object.keys(AR).filter(k => /\s/.test(k) && /[A-Za-z]/.test(k)).sort((a,b)=>b.length-a.length);
@@ -2202,6 +2212,47 @@ function postFunFactBots() {   // once per day → 2 chat posts (Arabic + Englis
     ]).catch(() => {});
   } catch (_) {}
 }
+/* ================= INSTALL TO PHONE (PWA) ================= */
+let _installPrompt = null;
+function isStandaloneApp(){ try { return (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true; } catch(_) { return false; } }
+function isIOSDevice(){ return /iphone|ipad|ipod/i.test(navigator.userAgent || "") || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); }
+function hideInstallBar(){ const b = $("installBar"); if(b) b.style.display = "none"; }
+function dismissInstall(){ try { localStorage.setItem("cs_install_dismiss", "1"); } catch(_) {} hideInstallBar(); }
+function maybeShowInstall(){
+  const bar = $("installBar"); if(!bar) return;
+  if(isStandaloneApp()){ bar.style.display = "none"; return; }                 // already installed / on home screen → never show
+  let dismissed = false; try { dismissed = localStorage.getItem("cs_install_dismiss") === "1"; } catch(_) {}
+  if(dismissed){ bar.style.display = "none"; return; }
+  if(_installPrompt || isIOSDevice()){
+    const ar = (typeof LANG !== "undefined" && LANG === "ar");
+    bar.querySelector(".ibtxt").textContent = ar ? "📲 ثبّت WCup Fans على هاتفك" : "📲 Install WCup Fans on your phone";
+    bar.querySelector(".ibgo").textContent = ar ? "تثبيت" : "Install";
+    bar.style.display = "flex";
+  }
+}
+function installApp(){
+  if(_installPrompt){ const p = _installPrompt; _installPrompt = null; try { p.prompt(); } catch(_) {} hideInstallBar(); return; }   // Android/desktop one-tap
+  showInfo(installInstructionsHtml());                                          // iOS / others → clear visual steps
+}
+function installInstructionsHtml(){
+  const ar = (typeof LANG !== "undefined" && LANG === "ar"), ios = isIOSDevice();
+  const share = '<svg viewBox="0 0 24 24" width="18" height="18" style="vertical-align:-3px"><path fill="#19c8ff" d="M12 2.6l3.7 3.7-1.4 1.4L13 5.8V15h-2V5.8L9.7 7.7 8.3 6.3 12 2.6zM5 10h3.5v2H6.5v7h11v-7H15.5v-2H19a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z"/></svg>';
+  let steps;
+  if(ios){
+    steps = '<div class="irow"><span class="ic">①</span><div>' + (ar ? "افتح الموقع في متصفّح <b>Safari</b>." : "Open the site in <b>Safari</b>.") + '</div></div>' +
+      '<div class="irow"><span class="ic">②</span><div>' + (ar ? "اضغط زر المشاركة " : "Tap the Share button ") + share + (ar ? " بالأسفل." : " at the bottom.") + '</div></div>' +
+      '<div class="irow"><span class="ic">③</span><div>' + (ar ? 'اختر <b>«إضافة إلى الشاشة الرئيسية»</b>.' : 'Choose <b>"Add to Home Screen"</b>.') + '</div></div>' +
+      '<div class="irow"><span class="ic">④</span><div>' + (ar ? 'اضغط <b>«إضافة»</b> وسيظهر التطبيق على شاشتك.' : 'Tap <b>"Add"</b> and the app appears on your home screen.') + '</div></div>';
+  } else {
+    steps = '<div class="irow"><span class="ic">①</span><div>' + (ar ? "افتح قائمة المتصفّح (⋮)." : "Open the browser menu (⋮).") + '</div></div>' +
+      '<div class="irow"><span class="ic">②</span><div>' + (ar ? 'اختر <b>«تثبيت التطبيق»</b> أو <b>«إضافة إلى الشاشة الرئيسية»</b>.' : 'Choose <b>"Install app"</b> or <b>"Add to Home screen"</b>.') + '</div></div>';
+  }
+  return '<div style="font-size:34px;line-height:1;margin-bottom:2px">📲</div><h2>' + (ar ? "ثبّت WCup Fans على هاتفك" : "Install WCup Fans") + '</h2>' +
+    '<p>' + (ar ? "أيقونة على شاشتك تفتح التطبيق مباشرةً، دون كتابة الرابط." : "An icon on your home screen that opens the app directly, no typing the URL.") + '</p>' +
+    steps + '<button class="igo" onclick="closeInfo()">' + (ar ? "تمام" : "Got it") + '</button>';
+}
+addEventListener("beforeinstallprompt", e => { e.preventDefault(); _installPrompt = e; maybeShowInstall(); });
+addEventListener("appinstalled", () => { _installPrompt = null; hideInstallBar(); });
 function predictPopups(koUp) {   // one-time per user, on opening the Predict tab
   try {
     if (fixedYMD(new Date()) >= "20260718" && !localStorage.getItem("cs_finale_seen")) {
@@ -3470,6 +3521,8 @@ if (cs_user) {
 newWeekPopup();   // signed-in users → one-time "next week's predictions are open" nudge during the early-open window
 applyLangInit();   // EN default; if AR saved → RTL + translate the UI and keep translating re-renders
 postFunFactBots();   // daily: 2 chat posts (AR + EN) of today's On This Day facts (dedup by id → once/day)
+if ("serviceWorker" in navigator) { addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {})); }   // offline + installable
+maybeShowInstall();   // "Install to phone" bar (hidden if already installed / on home screen)
 renderHero();
 setInterval(renderHero, 300000);
 announceChampion();
