@@ -1,8 +1,8 @@
-/* WCup Fans 2026 — service worker.
+/* WCup 2026 Fans · service worker.
    NETWORK-FIRST for the app shell (HTML) so a new deploy ALWAYS shows when online;
    cache is only a fallback for offline. Live data (ESPN/textdb/etc.) never cached.
    Static assets (icons/logo/manifest) cache-first. */
-const CACHE = "wcfans-v2";
+const CACHE = "wcfans-v3";
 const SHELL = ["./", "./index.html", "./manifest.json", "./logo.png", "./trophy.png", "./icon-192.png", "./icon-512.png", "./icon-180.png", "./share-card.png"];
 
 self.addEventListener("install", e => {
