@@ -1940,7 +1940,8 @@ function countdown(d) {
   const mm = Math.floor(s / 60);
   if (typeof LANG !== "undefined" && LANG === "ar") {
     const dW = dd === 1 ? "يوم" : (dd === 2 ? "يومان" : (dd <= 10 ? "أيام" : "يوماً"));
-    return (dd ? dd + " " + dW + " " : "") + hh + " س " + mm + " د";
+    // dir=rtl + per-pair <bdi> so it reads days→hours→minutes R-to-L (the .cd box is forced ltr for scores)
+    return '<span dir="rtl">' + (dd ? '<bdi>' + dd + " " + dW + "</bdi> " : "") + '<bdi>' + hh + " س</bdi> <bdi>" + mm + " د</bdi></span>";
   }
   return (dd ? dd + "D " : "") + String(hh).padStart(2, "0") + "H " + String(mm).padStart(2, "0") + "M";
 }
