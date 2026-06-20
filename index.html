@@ -9,11 +9,11 @@
 <meta name="theme-color" content="#0a1230">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="WCup 2026 Fans">
+<meta name="apple-mobile-web-app-title" content="WCup2026">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" href="icon-192.png?v=3">
-<link rel="apple-touch-icon" href="icon-180.png?v=3">
+<link rel="icon" type="image/png" href="icon-192-2.png">
+<link rel="apple-touch-icon" href="icon-180-2.png">
 <title>WCup Fans 2026 · World Cup Live</title>
 <meta name="description" content="WCup Fans 2026 · نتائج كأس العالم المباشرة، مواعيد بتوقيتك، توقّعات ودردشة الجماهير · Live World Cup scores, your-timezone fixtures, predictions & fan chat.">
 <link rel="canonical" href="https://ahmedelayoty.github.io/world-cup-2026-fans/">
@@ -2267,7 +2267,7 @@ function maybeShowInstall(){
   if(dismissed){ bar.style.display = "none"; return; }
   if(_installPrompt || isIOSDevice()){
     const ar = (typeof LANG !== "undefined" && LANG === "ar");
-    bar.querySelector(".ibtxt").textContent = ar ? "📲 ثبّت WCup 2026 Fans على هاتفك" : "📲 Install WCup 2026 Fans on your phone";
+    bar.querySelector(".ibtxt").textContent = ar ? "📲 ثبّت WCup2026 على هاتفك" : "📲 Install WCup2026 on your phone";
     bar.querySelector(".ibgo").textContent = ar ? "تثبيت" : "Install";
     bar.style.display = "flex";
   }
@@ -2284,14 +2284,15 @@ function installInstructionsHtml(){
     steps = '<div class="irow"><span class="ic">①</span><div>' + bi("افتح الموقع في Safari واضغط زر المشاركة " + share, "In Safari, tap the Share button " + share) + '</div></div>' +
       '<div class="irow"><span class="ic">②</span><div>' + bi('اختر «إضافة إلى الشاشة الرئيسية» ثم «إضافة».', 'Choose "Add to Home Screen", then "Add".') + '</div></div>';
   } else {
-    steps = '<div class="irow"><span class="ic">①</span><div>' + bi('اضغط «تثبيت الآن» بالأسفل.', 'Tap "Install now" below.') + '</div></div>' +
+    steps = '<div class="irow"><span class="ic">🌐</span><div>' + bi('للأندرويد: افتح الموقع في تطبيق جوجل كروم (يعمل بشكل أفضل من المتصفّحات الأخرى).', 'On Android: open the site in the Google Chrome app (works best, better than other browsers).') + '</div></div>' +
+      '<div class="irow"><span class="ic">①</span><div>' + bi('اضغط «تثبيت الآن» بالأسفل.', 'Tap "Install now" below.') + '</div></div>' +
       '<div class="irow"><span class="ic">⚠️</span><div>' + bi('قد يُظهر أندرويد تنبيهاً أنّ التطبيق «غير آمن». هذا طبيعي لأنه موقع وِيب وليس تطبيقاً من المتجر.', 'Android may warn it is "not a safe app". That is normal for a website app.') + '</div></div>' +
       '<div class="irow"><span class="ic">②</span><div>' + bi('اضغط «مزيد من التفاصيل» (More details) ثم «التثبيت على أي حال» (Install anyway).', 'Tap "More details", then "Install anyway".') + '</div></div>';
   }
   const btn = (!ios && canPrompt)
     ? '<button class="igo" onclick="doInstallPrompt()">' + (ar ? "تثبيت الآن · Install now" : "Install now · تثبيت الآن") + '</button>'
     : '<button class="igo" onclick="closeInfo()">' + (ar ? "تمام · Got it" : "Got it · تمام") + '</button>';
-  return '<div style="font-size:34px;line-height:1;margin-bottom:2px">📲</div><h2>' + (ar ? "ثبّت WCup 2026 Fans" : "Install WCup 2026 Fans") + '</h2>' +
+  return '<div style="font-size:34px;line-height:1;margin-bottom:2px">📲</div><h2>' + (ar ? "ثبّت WCup2026" : "Install WCup2026") + '</h2>' +
     '<p>' + bi("أيقونة على شاشتك تفتح التطبيق مباشرةً، دون كتابة الرابط.", "An icon on your home screen that opens the app directly.") + '</p>' +
     steps + btn;
 }
