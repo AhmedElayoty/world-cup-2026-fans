@@ -160,6 +160,8 @@ main{flex:1;padding:14px 14px calc(20px + env(safe-area-inset-bottom));overflow-
 .mcard.open .mhint{display:none}
 .team:not(.away) img{box-shadow:-3px 0 0 0 var(--rust2)}
 .team.away img{box-shadow:3px 0 0 0 var(--cyan)}
+html[dir="rtl"] .team:not(.away) img{box-shadow:3px 0 0 0 var(--rust2)}
+html[dir="rtl"] .team.away img{box-shadow:-3px 0 0 0 var(--cyan)}
 .team.lose{opacity:.48}
 .score{font-variant-numeric:tabular-nums}
 .score.islive{color:#ff6b81}
@@ -719,7 +721,7 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
  <section id="paneG" class="hide">
   <div class="sttoggle"><button id="gvT" class="on" onclick="setGroupsView('T')">GROUPS</button><button id="gvB" onclick="setGroupsView('B')">KNOCKOUTS</button></div>
   <div id="gPaneTables">
-   <div class="brhint">Knockout bracket inside &#8593; &#8212; fills in as groups finish</div>
+   <div class="brhint">Knockout bracket inside &#8593; &#183; fills in as groups finish</div>
    <div class="secrow"><span class="sect">GROUP STANDINGS</span>
     <span style="margin-left:auto;font-size:10px;color:var(--dim);font-family:'Oswald';letter-spacing:1px">&#9679; LIVE &#183; UPDATES EVERY 20s</span></div>
    <div class="ggrid" id="ggrid"><div class="empty">Loading standings…</div></div>
@@ -1000,7 +1002,15 @@ AR_RX.push(
   [/(\d)(?:ST|ND|RD|TH) IN GROUP ([A-L]) · DIRECT R32 SPOT/g,(m,n,g)=>"المركز "+(n==="1"?"الأول":"الثاني")+" في المجموعة "+g+" · تأهّل مباشر لدور الـ32"],
   [/TOP HALF → Semi-final 1/g,"النصف العلوي ← نصف النهائي 1"],[/BOTTOM HALF → Semi-final 2/g,"النصف السفلي ← نصف النهائي 2"],
   [/EXACT!/g,"مظبوط تماماً!"],[/PENS CALLED!/g,"ركلات الترجيح صحيحة!"],[/\bRESULT /g,"فائز صحيح "],[/(\d+) pts\b/g,"$1 نقطة"],
-  [/Group ([A-L])\b/g,"المجموعة $1"],[/\bGD (-?\d+)/g,"الفارق $1"],[/PROCESSING (\d+)\/(\d+)/g,"جارٍ المعالجة $1/$2"]
+  [/Group ([A-L])\b/g,"المجموعة $1"],[/\bGD ([+-]?\d+)/g,"الفارق $1"],[/PROCESSING (\d+)\/(\d+)/g,"جارٍ المعالجة $1/$2"]
+);
+AR_RX.push(   // ★ my-nation tracker + best-3rd race box (Groups tab)
+  [/4TH IN GROUP ([A-L]) · MUST CLIMB/g, "المركز الرابع في المجموعة $1 · يجب التقدّم"],
+  [/3RD IN GROUP · #(\d+) OF 12 THIRDS · CURRENTLY INSIDE THE BEST 8 · THROUGH/g, "المركز الثالث في المجموعة · رقم $1 من 12 ثالثاً · حالياً ضمن أفضل 8 · متأهّل"],
+  [/3RD IN GROUP · #(\d+) OF 12 THIRDS · CURRENTLY OUTSIDE THE BEST 8 · OUT/g, "المركز الثالث في المجموعة · رقم $1 من 12 ثالثاً · حالياً خارج أفضل 8 · مُقصى"],
+  [/BEST 3RD-PLACED RACE/g, "سباق أفضل مركز ثالث"],
+  [/8 of the 12 third-placed teams also reach the Round of 32/g, "يتأهّل 8 من أصحاب المركز الثالث الـ12 أيضاً إلى دور الـ32"],
+  [/· fills in once results start/g, "· يكتمل عند بدء النتائج"]
 );
 function tAR(s){
   if(!s) return s; const k = s.trim(); if(!k || !/[A-Za-z]/.test(k)) return s;
@@ -1502,8 +1512,8 @@ function renderThirds(groups) {
   // the thirds race depends on every group → live while ANY group is provisional, confirmed once all settle
   const anyLive = groups.some(g => g._liveMatch || (g._played && !g._inSync));
   const t3badge = !played ? "" : (anyLive
-    ? '<span class="gstat live" title="Live · still changes as group results come in"><span class="dotp"></span>LIVE</span>'
-    : '<span class="gstat ok" title="All group results confirmed against the official tables">&#10003; CONFIRMED</span>');
+    ? '<span class="gstat live" title="Live · still changes as group results come in"><span class="dotp"></span>' + (LANG === "ar" ? "مباشر" : "LIVE") + '</span>'
+    : '<span class="gstat ok" title="All group results confirmed against the official tables">&#10003; ' + (LANG === "ar" ? "مؤكَّد" : "CONFIRMED") + '</span>');
   $("thirdsBox").innerHTML = '<div class="thirds"><h3>BEST 3RD-PLACED RACE' + t3badge + '</h3>' +
     '<div class="sub">8 of the 12 third-placed teams also reach the Round of 32' +
     (played ? "" : " · fills in once results start") + '</div>' +
@@ -1512,7 +1522,7 @@ function renderThirds(groups) {
       '<div class="nm">' + esc(t.r.team.displayName) +
       ' <span style="color:var(--dim);font-size:10.5px">(' + t.g + ')</span></div>' +
       '<div class="st">' + (t.s.points || 0) + ' PTS · GD ' + (t.s.pointDifferential > 0 ? "+" : "") + (t.s.pointDifferential || 0) + '</div>' +
-      '<div class="ok">' + (i < 8 ? "IN" : "OUT") + '</div></div>').join("") +
+      '<div class="ok">' + (i < 8 ? (LANG === "ar" ? "داخل" : "IN") : (LANG === "ar" ? "خارج" : "OUT")) + '</div></div>').join("") +
     (egyLine ? '<div class="egystat">' + egyLine + '</div>' : "") + '</div>';
 }
 
