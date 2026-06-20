@@ -1,20 +1,20 @@
 {
- "name": "WCup 2026 Fans",
- "short_name": "WCup 2026 Fans",
- "description": "WCup 2026 Fans: live World Cup scores, fixtures in your timezone, predictions, knockout bracket and fan chat.",
+ "name": "WCup2026",
+ "short_name": "WCup2026",
+ "description": "WCup Fans 2026: live World Cup scores, fixtures in your timezone, predictions, knockout bracket and fan chat.",
  "start_url": ".",
  "display": "standalone",
  "background_color": "#0a1230",
  "theme_color": "#0a1230",
  "icons": [
   {
-   "src": "icon-192.png",
+   "src": "icon-192-2.png",
    "sizes": "192x192",
    "type": "image/png",
    "purpose": "any maskable"
   },
   {
-   "src": "icon-512.png",
+   "src": "icon-512-2.png",
    "sizes": "512x512",
    "type": "image/png",
    "purpose": "any maskable"
