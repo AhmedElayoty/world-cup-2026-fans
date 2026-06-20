@@ -682,7 +682,7 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
   <div id="brkBox"></div>
   <div class="lb hide" id="lbAllWrap"><h3>&#127942; OVERALL &mdash; ALL WEEKS</h3>
   <div class="brknote">Total points across the whole tournament &mdash; <b>highest wins on finals day</b></div><div id="lbAllBody"><div class="empty">Loading…</div></div></div>
-  <div class="lb"><h3 style="display:flex;align-items:center;gap:8px">&#127942; THIS WEEK<button class="otdkey" onclick="openOnThisDay()">&#128197; ON THIS DAY</button></h3>
+  <div class="lb"><h3 style="display:flex;align-items:center;gap:8px">&#127942; THIS WEEK<button class="otdkey" onclick="openOnThisDay()">&#128197; TODAY'S FUN FACTS &#8594;</button></h3>
   <div class="brknote">&#127942; Weekly top predictor is crowned the <b>Prediction Champion</b></div><div id="lbBody"><div class="empty">Loading…</div></div></div>
   <div class="secrow"><span class="sect">YOUR PREDICTIONS</span></div>
   <div class="scorekey"><span class="sklbl">HOW POINTS WORK</span><span class="skpill gold"><b>3 PTS</b> EXACT SCORE</span><span class="skpill cyan"><b>1 PT</b> RIGHT RESULT</span></div>
@@ -859,6 +859,36 @@ function setTZ(v) {
   updateTzLabel(); reRenderTimes();
 }
 function updateFmtTog() { const seg = $("fmtTog"); if (!seg) return; const cur = HOUR12 ? "1" : "0"; seg.querySelectorAll(".fseg").forEach(b => b.classList.toggle("on", b.dataset.h12 === cur)); }
+/* ================= LANGUAGE (English default · Arabic with RTL) ================= */
+let LANG = (function(){ try { return localStorage.getItem("cs_lang") === "ar" ? "ar" : "en"; } catch(_) { return "en"; } })();
+const AR = {
+  "MATCHES":"المباريات","GROUPS":"المجموعات","STATS":"الإحصائيات","PREDICT":"التوقّعات","CHAT":"الدردشة","KNOCKOUTS":"الأدوار الإقصائية",
+  "PLAYERS":"اللاعبون","TEAMS":"المنتخبات","Tournament facts":"حقائق البطولة",
+  "GOALS":"الأهداف","MATCHES PLAYED":"المباريات المُقامة","YELLOW":"بطاقات صفراء","RED":"بطاقات حمراء",
+  "PENALTIES":"ركلات الجزاء","OWN GOALS":"أهداف عكسية","CLEAN SHEETS":"شِباك نظيفة","BIGGEST WIN":"أكبر فوز",
+  "GOLDEN BOOT":"الحذاء الذهبي","ASSISTS":"صناعة الأهداف","SAVES":"التصدّيات","MOST BOOKED":"الأكثر إنذاراً","BEST ATTACK":"أفضل هجوم","BEST DEFENCE":"أفضل دفاع","MOST CARDS":"الأكثر بطاقات",
+  "Top scorers":"الهدّافون","Fewest conceded":"الأقل استقبالاً للأهداف","Goals scored":"الأهداف المسجّلة",
+  "THIS WEEK":"هذا الأسبوع","GROUP STANDINGS":"ترتيب المجموعات","YOUR PREDICTIONS":"توقّعاتك","HOW POINTS WORK":"كيف تُحتسب النقاط","EXACT SCORE":"النتيجة الصحيحة","RIGHT RESULT":"الفائز الصحيح","LOCKED / FINISHED":"مغلقة / منتهية",
+  "Prediction Champion":"برنس التوقّعات","Prediction Champions":"برانسة التوقّعات",
+  "PREDICT THIS MATCH →":"توقّع هذه المباراة →","SUBMIT — ONE TIME ONLY":"تأكيد، مرة واحدة فقط",
+  "NEXT WEEK'S PREDICTIONS":"توقّعات الأسبوع القادم","PREDICT NOW ⚽":"توقّع الآن ⚽","NICE ⚽":"تمام ⚽","GOT IT ⚽":"حسناً ⚽","LET'S GO ⚽":"يلا بينا ⚽",
+  "📅 TODAY'S FUN FACTS →":"📅 طرائف اليوم ←","ON THIS DAY":"في مثل هذا اليوم","TODAY'S FUN FACTS":"طرائف اليوم",
+  "Loading…":"جارٍ التحميل…","Loading...":"جارٍ التحميل...","🔎 Search by nation":"🔎 ابحث باسم المنتخب",
+  "🏆 Weekly top predictor is crowned the":"🏆 يُتوَّج صاحب أعلى التوقّعات أسبوعياً ليكون"
+};
+const AR_TEAMS = {
+  "Argentina":"الأرجنتين","France":"فرنسا","Spain":"إسبانيا","England":"إنجلترا","Brazil":"البرازيل","Morocco":"المغرب","Portugal":"البرتغال","Netherlands":"هولندا","Germany":"ألمانيا","Belgium":"بلجيكا","Colombia":"كولومبيا","Mexico":"المكسيك","Croatia":"كرواتيا","United States":"الولايات المتحدة","Senegal":"السنغال","Japan":"اليابان","Uruguay":"أوروغواي","Switzerland":"سويسرا","Austria":"النمسا","South Korea":"كوريا الجنوبية","Australia":"أستراليا","Iran":"إيران","Türkiye":"تركيا","Turkey":"تركيا","Norway":"النرويج","Ecuador":"الإكوادور","Egypt":"مصر","Ivory Coast":"ساحل العاج","Algeria":"الجزائر","Canada":"كندا","Sweden":"السويد","Scotland":"اسكتلندا","Panama":"بنما","Paraguay":"باراغواي","DR Congo":"الكونغو الديمقراطية","Czechia":"التشيك","Qatar":"قطر","Tunisia":"تونس","Uzbekistan":"أوزبكستان","Saudi Arabia":"السعودية","Iraq":"العراق","South Africa":"جنوب أفريقيا","Bosnia and Herzegovina":"البوسنة والهرسك","Cape Verde":"الرأس الأخضر","Ghana":"غانا","Jordan":"الأردن","New Zealand":"نيوزيلندا","Curacao":"كوراساو","Haiti":"هايتي",
+  "West Germany":"ألمانيا الغربية","Germany FR":"ألمانيا الغربية","Yugoslavia":"يوغوسلافيا","Zaire":"زائير","Czechoslovakia":"تشيكوسلوفاكيا","Soviet Union":"الاتحاد السوفيتي","North Korea":"كوريا الشمالية","Trinidad and Tobago":"ترينيداد وتوباغو","El Salvador":"السلفادور","Serbia and Montenegro":"صربيا والجبل الأسود","Serbia":"صربيا","Bolivia":"بوليفيا","Peru":"بيرو","Chile":"تشيلي","Romania":"رومانيا","Cuba":"كوبا","Wales":"ويلز","Bulgaria":"بلغاريا","Russia":"روسيا","Cameroon":"الكاميرون","Costa Rica":"كوستاريكا","Honduras":"هندوراس","Greece":"اليونان","Denmark":"الدنمارك","Poland":"بولندا","Italy":"إيطاليا","Nigeria":"نيجيريا"
+};
+Object.assign(AR, AR_TEAMS);
+const AR_RX = [ [/(\d+)\s+exact\b/g, "$1 صحيحة"], [/(\d+)\s+played\b/g, "$1 مباراة"], [/\bpts\b/g, "نقطة"] ];
+function tAR(s){ if(!s) return s; const k = s.trim(); if(!k) return s; if(AR[k] !== undefined) return s.replace(k, AR[k]); let out = s, ch = false; for(const [rx,rep] of AR_RX){ const n = out.replace(rx,rep); if(n !== out){ out = n; ch = true; } } return ch ? out : s; }
+function _tNode(n){ const v = n.nodeValue; if(!v || !v.trim()) return; const t = tAR(v); if(t !== v) n.nodeValue = t; }
+function translateTree(root){ if(!root) return; if(root.nodeType === 3){ _tNode(root); return; } if(root.nodeType !== 1) return; const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null); const ns = []; let n; while(n = w.nextNode()) ns.push(n); ns.forEach(_tNode); if(root.querySelectorAll) root.querySelectorAll("[placeholder]").forEach(el => { const p = el.getAttribute("placeholder"); const t = tAR(p); if(t !== p) el.setAttribute("placeholder", t); }); }
+let _arObs = null;
+function applyLangInit(){ updateLangTog(); if(LANG !== "ar") return; document.documentElement.setAttribute("dir","rtl"); if(document.body) document.body.classList.add("ar"); translateTree(document.body); if(!_arObs){ _arObs = new MutationObserver(ms => { for(const m of ms){ if(m.type === "characterData"){ _tNode(m.target); } else if(m.addedNodes){ m.addedNodes.forEach(nd => translateTree(nd)); } } }); _arObs.observe(document.body, { childList:true, subtree:true, characterData:true }); } }
+function setLang(v){ try { localStorage.setItem("cs_lang", v === "ar" ? "ar" : "en"); } catch(_) {} location.reload(); }
+function updateLangTog(){ const seg = $("langTog"); if(!seg) return; seg.querySelectorAll(".fseg").forEach(b => b.classList.toggle("on", b.dataset.lang === LANG)); }
 function setHour12(v) { if (HOUR12 === v) return; HOUR12 = v; try { localStorage.setItem("cs_h12", v ? "1" : "0"); } catch (_) {} updateFmtTog(); reRenderTimes(); }
 
 /* ================= TABS ================= */
@@ -3270,6 +3300,7 @@ if (cs_user) {
   syncMyPreds().then(() => { if (events.length) renderMatches(); });
 }
 newWeekPopup();   // signed-in users → one-time "next week's predictions are open" nudge during the early-open window
+applyLangInit();   // EN default; if AR saved → RTL + translate the UI and keep translating re-renders
 renderHero();
 setInterval(renderHero, 300000);
 announceChampion();
