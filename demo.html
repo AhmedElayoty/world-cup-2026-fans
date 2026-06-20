@@ -50,7 +50,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:
 /* header */
 .topbar{position:-webkit-sticky;position:sticky;top:0;z-index:50;background:rgba(8,13,33,.97);
  backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
-header{padding:11px 16px 13px}
+header{padding:0}
 .brand{display:flex;align-items:center;gap:10px}
 .bmid{flex:1;min-width:0}
 .crest{width:34px;height:46px;border-radius:9px;background:#fff;flex:none;
@@ -59,22 +59,18 @@ header{padding:11px 16px 13px}
 .bname{font-family:'Oswald';font-weight:700;font-size:21px;letter-spacing:1px;line-height:1}
 .bname b{color:var(--rust2);font-weight:700}
 .bsub{font-family:'Oswald';font-weight:500;font-size:11px;letter-spacing:1.5px;color:var(--mut);margin-top:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-#tzSel{background:rgba(255,255,255,.08);color:#fff;border:1px solid var(--gold);border-radius:8px;font-family:'Oswald';font-weight:600;font-size:12px;letter-spacing:.5px;padding:7px 9px;cursor:pointer}
-#tzSel option,#tzSel optgroup{background:#0d1838;color:#eef2ff}
-#tzOff{color:var(--gold);font-family:'Oswald';font-weight:600;letter-spacing:1px}
+#tzSel option,#tzSel optgroup{background:var(--card);color:#eef2ff}
 .fmtseg{display:inline-flex;border:1px solid var(--gold);border-radius:6px;overflow:hidden;margin-left:6px;vertical-align:middle;box-shadow:0 0 0 2px rgba(212,175,55,.12)}
 .fmtseg .fseg{background:transparent;color:var(--gold);border:none;font-family:'Oswald';font-weight:700;font-size:11.5px;letter-spacing:.6px;padding:8px 12px;cursor:pointer;line-height:1.4;transition:background .15s,color .15s}
 .fmtseg .fseg+.fseg{border-left:1px solid var(--gold)}
 .fmtseg .fseg.on{background:var(--gold);color:#16110a}
 .fmtseg .fseg:not(.on):hover{background:rgba(212,175,55,.18)}
-/* sign in / sign out pill (header controls row) */
-.authtog{display:inline-flex;align-items:center}
-.authbtn{display:inline-flex;align-items:center;gap:5px;font-family:'Oswald';font-weight:700;font-size:11.5px;letter-spacing:.6px;padding:8px 13px;border-radius:8px;cursor:pointer;line-height:1.4;border:1px solid var(--gold);background:rgba(255,192,46,.13);color:var(--gold)}
-.authbtn.out{border-color:var(--line);background:rgba(255,255,255,.05);color:var(--mut)}
-.authbtn:active{filter:brightness(1.25)}
+/* (header controls redesigned · see APP BAR block below) */
 /* compact LIVE NOW summary (top of Matches) */
 .livesum{background:linear-gradient(180deg,rgba(255,59,92,.10),var(--card2));border:1px solid rgba(255,59,92,.42);border-radius:14px;padding:9px 10px 10px;margin-bottom:12px}
 .lshead{display:flex;align-items:center;gap:7px;font-family:'Oswald';font-weight:700;font-size:11px;letter-spacing:2px;color:var(--red);margin-bottom:8px}
+.lscount{margin-inline-start:auto;font-size:10px;font-weight:600;letter-spacing:.5px;color:var(--mut)}
+.lschev{flex:0 0 auto;color:var(--dim);font-size:20px;font-weight:700;line-height:1;margin-inline-start:2px}
 .lspulse{width:8px;height:8px;border-radius:50%;background:var(--red);animation:lspulse 1.4s infinite}
 @keyframes lspulse{0%{box-shadow:0 0 0 0 rgba(255,59,92,.55)}70%{box-shadow:0 0 0 7px rgba(255,59,92,0)}100%{box-shadow:0 0 0 0 rgba(255,59,92,0)}}
 .lsrow{display:flex;align-items:center;gap:10px;width:100%;background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:10px;padding:8px 11px;cursor:pointer;color:var(--txt);font-family:'Oswald';font-weight:600}
@@ -294,13 +290,13 @@ html[dir="rtl"] .team.away img{box-shadow:-3px 0 0 0 var(--cyan)}
 .skpill.cyan b{color:var(--cyan)}
 footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px;letter-spacing:1.6px;color:#3d4a72}
 .hero{background:linear-gradient(150deg,#0a2e1d,#0c3a24);border:1px solid var(--green);border-radius:16px;
- padding:13px 15px;margin-bottom:12px;cursor:pointer}
-.hero .hl{font-family:'Oswald';font-size:10.5px;letter-spacing:1.6px;color:#6dffb5;display:flex;justify-content:space-between}
-.hero .hm{display:flex;align-items:center;gap:10px;margin-top:8px}
-.hero .hpick{margin-top:8px;font-family:'Oswald';font-weight:500;font-size:13px;color:#cfeede;letter-spacing:.3px;line-height:1.45}
-.hero .hm img{width:30px;height:30px;object-fit:contain}
-.hero .ht1{font-family:'Oswald';font-weight:600;font-size:17px;flex:1}
-.hero .cd{font-family:'Oswald';font-weight:700;font-size:21px;color:#6dffb5;letter-spacing:1px;text-align:right}
+ padding:9px 13px;margin-bottom:11px;cursor:pointer}
+.hero .hl{font-family:'Oswald';font-size:10px;letter-spacing:1.5px;color:#6dffb5;display:flex;justify-content:space-between}
+.hero .hm{display:flex;align-items:center;gap:9px;margin-top:6px}
+.hero .hpick{margin-top:5px;font-family:'Oswald';font-weight:500;font-size:12px;color:#cfeede;letter-spacing:.3px;line-height:1.4}
+.hero .hm img{width:26px;height:26px;object-fit:contain}
+.hero .ht1{font-family:'Oswald';font-weight:600;font-size:15px;flex:1}
+.hero .cd{font-family:'Oswald';font-weight:700;font-size:18px;color:#6dffb5;letter-spacing:1px;text-align:right}
 .hero .cd small{display:block;font-size:9.5px;font-weight:500;letter-spacing:1.5px;color:#9fd8bb}
 .pcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 13px;margin-bottom:10px}
 .pcard.lock{opacity:.78}
@@ -686,26 +682,86 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 .brdl.alt{background:none;border:1.5px solid var(--gold);color:var(--gold)}
 .brdl:disabled{opacity:.6}
 .brdl:active{opacity:.85}
+/* ====================== APP BAR (redesigned header) ====================== */
+.appbar{position:relative}
+.appbar__inner{position:relative;max-width:760px;margin:0 auto;min-height:52px;padding:8px 12px;display:flex;align-items:center;gap:10px}
+.brand{display:flex;align-items:center;gap:9px;text-decoration:none;min-width:0;margin-inline-end:auto}
+.brand__crest{flex:0 0 auto;width:30px;height:38px;border-radius:8px;background:#fff;display:grid;place-items:center;box-shadow:0 1px 3px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.6)}
+.brand__crest img{display:block;width:auto;height:30px;max-width:24px;object-fit:contain}
+.brand__name{font-family:'Oswald',sans-serif;font-weight:700;font-size:18px;line-height:1;letter-spacing:.5px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand__name b{color:var(--rust2);font-weight:700}
+.cluster{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.tzchip{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 9px;border-radius:9px;cursor:pointer;white-space:nowrap;background:var(--card2);border:1px solid var(--line);color:var(--txt);transition:background .15s,border-color .15s}
+.tzchip:active{transform:scale(.97)}
+.tzchip:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.tzchip__ic{color:var(--cyan);flex:0 0 auto}
+.tzchip__code{font-family:'Oswald',sans-serif;font-weight:700;font-size:12.5px;letter-spacing:.4px}
+.tzchip__off{font-family:'Inter',sans-serif;font-weight:700;font-size:10.5px;letter-spacing:.3px;color:var(--gold);background:rgba(255,192,46,.12);border-radius:5px;padding:2px 5px}
+.tzchip__car{color:var(--dim);flex:0 0 auto;transition:transform .15s}
+.tzchip[aria-expanded="true"] .tzchip__car{transform:rotate(180deg)}
+.iconbtn{position:relative;width:36px;height:36px;flex:0 0 auto;display:grid;place-items:center;border-radius:9px;background:var(--card2);border:1px solid var(--line);color:var(--mut);cursor:pointer;transition:.15s}
+.iconbtn:active{transform:scale(.96)}
+.iconbtn:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.iconbtn--install{color:var(--gold);border-color:rgba(255,192,46,.35);background:rgba(255,192,46,.08)}
+.authbtn{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 12px;border-radius:9px;cursor:pointer;white-space:nowrap;font-family:'Oswald',sans-serif;font-weight:600;font-size:12.5px;letter-spacing:.4px;color:var(--navy);background:var(--gold);border:1px solid transparent;transition:.15s}
+.authbtn:active{transform:scale(.97)}
+.authbtn:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.authbtn.is-out{color:var(--txt);background:transparent;border-color:var(--line)}
+.authbtn__ico{flex:0 0 auto}
+.seg{display:inline-flex;background:var(--card2);border:1px solid var(--line);border-radius:9px;padding:2px;height:34px;align-items:center;gap:2px}
+.seg__btn{appearance:none;border:0;background:transparent;cursor:pointer;font-family:'Oswald',sans-serif;font-weight:600;font-size:12px;letter-spacing:.4px;color:var(--mut);min-width:46px;padding:0 12px;height:28px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;transition:.15s}
+.seg__btn--ar{font-family:'Inter',sans-serif}
+.seg__btn.is-on{background:var(--rust);color:#fff;box-shadow:0 1px 2px rgba(0,0,0,.35)}
+.seg__btn:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
+.sheet{position:absolute;top:calc(100% - 4px);inset-inline-end:12px;z-index:60;width:262px;padding:10px;border-radius:14px;background:var(--card);border:1px solid var(--line);box-shadow:0 14px 34px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:9px}
+.sheet[hidden]{display:none}
+.sheet::before{content:"";position:absolute;top:-6px;inset-inline-end:64px;width:11px;height:11px;background:var(--card);border-left:1px solid var(--line);border-top:1px solid var(--line);transform:rotate(45deg)}
+.sheet__row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.sheet__lab{font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;color:var(--mut);white-space:nowrap}
+.sheet__ctrl{flex:1 1 auto;min-width:0}
+.tzsel{width:100%;height:34px;padding:0 28px 0 10px;border-radius:9px;background:var(--card2);border:1px solid var(--line);color:var(--txt);font-family:'Inter',sans-serif;font-size:12.5px;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6' fill='none' stroke='%238fa2d8' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.tzsel option{background:var(--card);color:var(--txt)}
+.connbar{max-width:760px;margin:0 auto;height:18px;padding:0 14px;display:flex;align-items:center;gap:6px;background:var(--card2);border-bottom:1px solid var(--line)}
+.condot{width:6px;height:6px;border-radius:50%;background:var(--green);flex:0 0 auto;animation:condotPulse 2s infinite}
+.condot.is-off{background:var(--dim);animation:none}
+.condot.is-wait{background:var(--gold);animation:condotPulse 1.2s infinite}
+.contxt{font-family:'Inter',sans-serif;font-size:10px;font-weight:600;letter-spacing:.5px;color:var(--dim);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.clock{margin-inline-start:auto;font-family:'Oswald',sans-serif;font-weight:600;font-size:11.5px;letter-spacing:.5px;color:var(--mut);font-variant-numeric:tabular-nums}
+@keyframes condotPulse{0%{box-shadow:0 0 0 0 rgba(0,210,106,.5)}70%{box-shadow:0 0 0 5px rgba(0,210,106,0)}100%{box-shadow:0 0 0 0 rgba(0,210,106,0)}}
+@media (max-width:500px){.tzchip__off{display:none}.appbar__inner{gap:8px}.cluster{gap:6px}}
+@media (max-width:360px){.appbar__inner{padding:8px 10px}.brand__name{font-size:16px}.tzchip__code{display:none}}
+@media (max-width:330px){.authbtn__txt{display:none}.authbtn{padding:0 10px}}
+html[dir="rtl"] .appbar__inner{direction:rtl}
+html[dir="rtl"] .connbar{direction:rtl}
+html[dir="rtl"] .clock,html[dir="rtl"] .tzchip__off{direction:ltr;unicode-bidi:isolate}
+html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px center;text-align:right}
 </style>
-<script>window.__DEMO_CHAT="capriole_wc26_room_demo";</script><style>#demoRibbon{position:fixed;left:8px;bottom:8px;z-index:99999;background:#e05a2b;color:#fff;font:700 11px Oswald,system-ui,sans-serif;letter-spacing:1.5px;padding:5px 11px;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.55);opacity:.93}</style></head>
+<script>window.__DEMO_CHAT="capriole_wc26_room_demo";</script><style>#demoRibbon{position:fixed;left:8px;bottom:8px;z-index:99999;background:#e05a2b;color:#fff;font:700 11px Oswald;letter-spacing:1.5px;padding:5px 11px;border-radius:8px;opacity:.93}</style></head>
 <body>
 <div class="wrap">
 <div class="topbar">
-<header>
- <div class="brand">
-  <div class="crest" onclick="goHome()" style="cursor:pointer" title="Home · today's matches"><img src="logo.png" alt="World Cup 2026"></div>
-  <div class="bmid">
-   <div class="bname" onclick="goHome()" style="cursor:pointer" title="Home · today's matches">WORLD CUP <b>2026</b></div>
-   <div class="bsub">ALL TIMES <select id="tzSel" onchange="setTZ(this.value)" aria-label="Time zone"></select><span id="tzOff"></span><span id="fmtTog" class="fmtseg" role="group" aria-label="Time format" title="Tap to switch between AM·PM and 24-hour clock"><button type="button" class="fseg" data-h12="1" onclick="setHour12(true)">AM·PM</button><button type="button" class="fseg" data-h12="0" onclick="setHour12(false)">24H</button></span><span id="langTog" class="fmtseg" role="group" aria-label="Language" title="English / العربية"><button type="button" class="fseg lseg" data-lang="en" onclick="setLang('en')">EN</button><button type="button" class="fseg lseg" data-lang="ar" onclick="setLang('ar')">عربي</button></span><span id="authTog" class="authtog"></span></div>
+<header class="appbar">
+ <div class="appbar__inner">
+  <div class="brand" onclick="goHome()" style="cursor:pointer" title="Home · today's matches">
+   <span class="brand__crest" aria-hidden="true"><img src="logo.png" alt="World Cup 2026" width="22" height="30"></span>
+   <span class="brand__name">WORLD CUP <b>2026</b></span>
   </div>
-  <div class="hright">
-   <button type="button" id="instIco" class="instico" onclick="installApp()" aria-label="Install app" title="Install app" style="display:none"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg></button>
-   <div class="hr-meta">
-    <div class="uaeclock" id="clock">--:--</div>
-    <div class="constate"><span class="dot" id="condot"></span><span id="contxt">CONNECTING</span></div>
-   </div>
+  <div class="cluster">
+   <button class="tzchip" id="setBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="setSheet" aria-label="Time zone and display settings" onclick="toggleSettings(event)">
+    <svg class="tzchip__ic" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <span class="tzchip__code" id="tzCode">UAE</span><span class="tzchip__off" id="tzOff">UTC+4</span>
+    <svg class="tzchip__car" viewBox="0 0 24 24" width="11" height="11" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+   </button>
+   <button class="iconbtn iconbtn--install" id="instIco" type="button" onclick="installApp()" aria-label="Install app" title="Install app" style="display:none"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3v10m0 0l-4-4m4 4l4-4M5 19h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+   <button class="authbtn" id="authTog" type="button" onclick="openAuth('L')"><svg class="authbtn__ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span class="authbtn__txt">Sign in</span></button>
+  </div>
+  <div class="sheet" id="setSheet" role="dialog" aria-label="Display settings" hidden>
+   <div class="sheet__row"><label class="sheet__lab" for="tzSel">Time zone</label><div class="sheet__ctrl"><select class="tzsel" id="tzSel" onchange="setTZ(this.value)" aria-label="Time zone"></select></div></div>
+   <div class="sheet__row"><span class="sheet__lab" id="fmtLab">Time format</span><div class="seg" id="fmtTog" role="radiogroup" aria-labelledby="fmtLab"><button class="seg__btn is-on" type="button" data-h12="1" onclick="setHour12(true)">AM·PM</button><button class="seg__btn" type="button" data-h12="0" onclick="setHour12(false)">24H</button></div></div>
+   <div class="sheet__row"><span class="sheet__lab" id="langLab">Language</span><div class="seg" id="langTog" role="radiogroup" aria-labelledby="langLab"><button class="seg__btn is-on" type="button" data-lang="en" onclick="setLang('en')">EN</button><button class="seg__btn seg__btn--ar" type="button" data-lang="ar" onclick="setLang('ar')">عربي</button></div></div>
   </div>
  </div>
+ <div class="connbar"><span class="condot" id="condot" aria-hidden="true"></span><span class="contxt" id="contxt">CONNECTING</span><time class="clock" id="clock" aria-label="Local time">--:--</time></div>
 </header>
 <nav>
  <button id="tabM" class="on" onclick="showTab('M')">MATCHES</button>
@@ -866,7 +922,7 @@ const uaeYMD = d => {
 };
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 function setCon(ok, msg) {
-  $("condot").className = "dot " + (ok === null ? "" : ok ? "ok" : "bad");
+  $("condot").className = "condot " + (ok === null ? "is-wait" : ok ? "" : "is-off");
   $("contxt").textContent = msg;
 }
 async function getJSON(url) {
@@ -899,7 +955,7 @@ const ZONES = [
 function tzAbbr() { for (const g of ZONES) for (const z of g[1]) if (z[0] === TZ) return (LANG==="ar" && typeof AR_TZABBR!=="undefined" && AR_TZABBR[z[2]]) ? AR_TZABBR[z[2]] : z[2]; return LANG==="ar" ? "الإمارات" : "UAE"; }
 function tzOffset(tz) { try { const p = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "shortOffset" }).formatToParts(new Date()).find(x => x.type === "timeZoneName"); return p ? p.value.replace("GMT", "UTC") : ""; } catch (_) { return ""; } }
 function fillTZ() { const s = $("tzSel"); if (!s || s.options.length) return; s.innerHTML = ZONES.map(g => '<optgroup label="' + ((LANG==="ar" && typeof AR_GROUPS!=="undefined" && AR_GROUPS[g[0]]) ? AR_GROUPS[g[0]] : g[0]) + '">' + g[1].map(z => '<option value="' + z[0] + '"' + (z[0] === TZ ? " selected" : "") + '>' + z[1] + '</option>').join("") + '</optgroup>').join(""); updateTzLabel(); }
-function updateTzLabel() { const o = $("tzOff"); if (o) { const off = tzOffset(TZ); o.textContent = off ? " · " + off : ""; } }
+function updateTzLabel() { const c = $("tzCode"); if (c) c.textContent = tzAbbr(); const o = $("tzOff"); if (o) o.textContent = tzOffset(TZ) || ""; }
 function reRenderTimes() {
   buildStrip(); renderHero();
   if (!$("paneM").classList.contains("hide")) renderMatches();   // refresh card kick-off + stadium-local times on TZ/format change
@@ -912,7 +968,7 @@ function setTZ(v) {
   const s = $("tzSel"); if (s) s.value = v;
   updateTzLabel(); reRenderTimes();
 }
-function updateFmtTog() { const seg = $("fmtTog"); if (!seg) return; const cur = HOUR12 ? "1" : "0"; seg.querySelectorAll(".fseg").forEach(b => b.classList.toggle("on", b.dataset.h12 === cur)); }
+function updateFmtTog() { const seg = $("fmtTog"); if (!seg) return; const cur = HOUR12 ? "1" : "0"; seg.querySelectorAll(".seg__btn").forEach(b => { const on = b.dataset.h12 === cur; b.classList.toggle("is-on", on); b.setAttribute("aria-checked", on ? "true" : "false"); }); }
 /* ================= LANGUAGE (English default · Arabic with full RTL) ================= */
 let LANG = (function(){ try { const s = localStorage.getItem("cs_lang"); if (s === "ar" || s === "en") return s; const sys = (((navigator.languages && navigator.languages[0]) || navigator.language || "")).toLowerCase(); return sys.indexOf("ar") === 0 ? "ar" : "en"; } catch(_) { return "en"; } })();
 const AR = {
@@ -977,7 +1033,7 @@ Object.assign(AR, {
   "🏆 Weekly top predictor is crowned the":"🏆 يُتوَّج صاحب أعلى التوقّعات أسبوعياً ليكون","CHAMPION OF THE WEEK!":"بطل الأسبوع!","topped last week":"تصدّر الأسبوع الماضي","🏆 OVERALL · ALL WEEKS":"🏆 الإجمالي · كل الأسابيع","Total points across the whole tournament":"مجموع النقاط طوال البطولة","highest wins on finals day":"الأعلى يفوز يوم النهائي",
   "Sign in to make predictions, earn points & climb the leaderboard · browsing stays free.":"سجّل الدخول لإجراء التوقّعات وجمع النقاط وتصدّر الترتيب · التصفّح يبقى مجانياً.","Sign in to post in the team chat · reading is always free.":"سجّل الدخول للكتابة في دردشة الفريق · القراءة مجانية دائماً.",
   "AM·PM":"ص·م","24H":"24 س",
-  "⤢ OPEN FULL TREE":"⤢ عرض الشجرة كاملة","⬇ DOWNLOAD (PNG)":"⬇ تنزيل (PNG)","3rd place":"المركز الثالث","Winner":"الفائز","To be played":"لم تُلعب بعد","Awaiting":"بانتظار النتيجة","AET / Pens":"تمديد / ترجيح","THIRD-PLACE PLAY-OFF":"مباراة المركز الثالث",
+  "⤢ OPEN FULL TREE":"⤢ عرض المخطّط كاملاً","⬇ DOWNLOAD (PNG)":"⬇ تنزيل (PNG)","3rd place":"المركز الثالث","Winner":"الفائز","To be played":"لم تُلعب بعد","Awaiting":"بانتظار النتيجة","AET / Pens":"تمديد / ترجيح","THIRD-PLACE PLAY-OFF":"مباراة المركز الثالث",
   "TOP 2 · DIRECT R32":"الأول والثاني · تأهّل مباشر لدور الـ32","3RD · BEST-THIRD RACE":"الثالث · سباق أفضل ثالث","4TH · OUT":"الرابع · خارج",
   "ROUND OF 32":"دور الـ32","ROUND OF 16":"دور الـ16","QUARTER-FINALS":"ربع النهائي","SEMI-FINALS":"نصف النهائي","QUARTER-FINAL":"ربع النهائي","SEMI-FINAL":"نصف النهائي","FINAL":"النهائي","R32":"دور الـ32","R16":"دور الـ16","QF":"ربع النهائي","SF":"نصف النهائي",
   "GROUPS":"المجموعات","Loading standings…":"جارٍ تحميل الترتيب…",
@@ -993,13 +1049,14 @@ Object.assign(AR, {
   "📲 Install to phone":"📲 ثبّت على هاتفك","Install to phone":"ثبّت على هاتفك"
 });
 // multi-word phrases for substring replacement inside composite nodes (longest first; safe, no single short words)
+Object.assign(AR, {"Time zone":"المنطقة الزمنية","Time format":"صيغة الوقت","Language":"اللغة"});
 const AR_PHRASES = Object.keys(AR).filter(k => /\s/.test(k) && /[A-Za-z]/.test(k)).sort((a,b)=>b.length-a.length);
 // dynamic / numeric templates
 const AR_RX = [
   [/LIVE FEED · UPDATED (\d+)([SM]) AGO/g, (m,n,u)=>"البث المباشر · حُدِّث قبل "+n+(u==="S"?" ث":" د")],
   [/UPDATED (\d+)([SM]) AGO/g, (m,n,u)=>"حُدِّث قبل "+n+(u==="S"?" ث":" د")],
   [/● LIVE · UPDATES EVERY (\d+)s/gi, (m,n)=>"● مباشر · تحديث كل "+n+" ثانية"],
-  [/Knockout bracket inside ↑ · fills in as groups finish/g, "شجرة الأدوار الإقصائية بالأعلى ↑ · تكتمل مع انتهاء المجموعات"],
+  [/Knockout bracket inside ↑ · fills in as groups finish/g, "مخطّط الأدوار الإقصائية بالأعلى ↑ · تكتمل مع انتهاء المجموعات"],
   [/^FIFA #(\d+)$/g, "فيفا #$1"],
   [/(\d+) exact\b/g, "$1 صحيحة"],
   [/(\d+) played\b/g, "$1 لعِبت"],
@@ -1060,7 +1117,7 @@ function applyLangInit(){
   if(!_arObs){ _arObs = new MutationObserver(ms => { for(const m of ms){ if(m.type === "characterData"){ _tNode(m.target); } else if(m.addedNodes){ m.addedNodes.forEach(nd => translateTree(nd)); } } }); _arObs.observe(document.body, { childList:true, subtree:true, characterData:true }); }
 }
 function setLang(v){ try { localStorage.setItem("cs_lang", v === "ar" ? "ar" : "en"); } catch(_) {} location.reload(); }
-function updateLangTog(){ const seg = $("langTog"); if(!seg) return; seg.querySelectorAll(".fseg").forEach(b => b.classList.toggle("on", b.dataset.lang === LANG)); }
+function updateLangTog(){ const seg = $("langTog"); if(!seg) return; seg.querySelectorAll(".seg__btn").forEach(b => { const on = b.dataset.lang === LANG; b.classList.toggle("is-on", on); b.setAttribute("aria-checked", on ? "true" : "false"); }); }
 function setHour12(v) { if (HOUR12 === v) return; HOUR12 = v; try { localStorage.setItem("cs_h12", v ? "1" : "0"); } catch (_) {} updateFmtTog(); reRenderTimes(); }
 
 /* ================= TABS ================= */
@@ -1401,9 +1458,11 @@ function renderLiveSummary() {
       '<span class="lsside lshome">' + fl(H) + '<span class="lsteam">' + ab(H) + '</span></span>' +
       '<span class="lsmid"><span class="lsmin">' + clk + '</span><span class="lsscore">' + (H.score != null ? H.score : 0) + ' – ' + (A.score != null ? A.score : 0) + '</span></span>' +
       '<span class="lsside lsaway"><span class="lsteam">' + ab(A) + '</span>' + fl(A) + '</span>' +
+      '<span class="lschev" aria-hidden="true">' + (LANG === "ar" ? "‹" : "›") + '</span>' +
       '</button>';
   }).join("");
-  box.innerHTML = '<div class="lshead"><span class="lspulse"></span>' + (LANG === "ar" ? "مباشر الآن" : "LIVE NOW") + '</div>' + rows;
+  const n = live.length, cnt = LANG === "ar" ? (n + " مباشرة") : (n + (n === 1 ? " match" : " matches"));
+  box.innerHTML = '<div class="lshead"><span class="lspulse"></span><span class="lshead__t">' + (LANG === "ar" ? "مباشر الآن" : "LIVE NOW") + '</span><span class="lscount">' + cnt + '</span></div>' + rows;
   box.style.display = "";
 }
 function goLive(id) {   // tap a live-summary row → open + scroll to that match's full card
@@ -1411,13 +1470,19 @@ function goLive(id) {   // tap a live-summary row → open + scroll to that matc
   const el = document.getElementById("mc" + id);
   if (el) { if (openId !== id) toggleM(id); setTimeout(function () { const x = document.getElementById("mc" + id); if (x) x.scrollIntoView({ behavior: "smooth", block: "center" }); }, 80); }
 }
-function updateAuthTog() {   // header pill: Sign in (logged out → opens login/create) / Sign out (logged in)
-  const el = $("authTog"); if (!el) return;
+function updateAuthTog() {   // header auth button: Sign in (logged out → login/create) / Sign out (logged in)
+  const b = $("authTog"); if (!b) return;
   const ar = (typeof LANG !== "undefined" && LANG === "ar");
-  el.innerHTML = cs_user
-    ? '<button type="button" class="authbtn out" onclick="signOut()">' + (ar ? "تسجيل الخروج" : "Sign out") + '</button>'
-    : '<button type="button" class="authbtn" onclick="openAuth(\'L\')">' + (ar ? "تسجيل الدخول" : "Sign in") + '</button>';
+  b.classList.toggle("is-out", !!cs_user);
+  b.onclick = cs_user ? signOut : function(){ openAuth("L"); };
+  const t = b.querySelector(".authbtn__txt");
+  if (t) t.textContent = cs_user ? (ar ? "تسجيل الخروج" : "Sign out") : (ar ? "تسجيل الدخول" : "Sign in");
 }
+// settings sheet (timezone / format / language) opened from the TZ chip
+function toggleSettings(e){ if(e) e.stopPropagation(); const sh=$("setSheet"); if(!sh) return; if(sh.hasAttribute("hidden")){ sh.removeAttribute("hidden"); const b=$("setBtn"); if(b) b.setAttribute("aria-expanded","true"); } else closeSettings(); }
+function closeSettings(){ const sh=$("setSheet"); if(sh && !sh.hasAttribute("hidden")){ sh.setAttribute("hidden",""); const b=$("setBtn"); if(b) b.setAttribute("aria-expanded","false"); } }
+addEventListener("click", e => { const sh=$("setSheet"); if(sh && !sh.hasAttribute("hidden") && e.target && e.target.closest && !e.target.closest("#setSheet") && !e.target.closest("#setBtn")) closeSettings(); });
+addEventListener("keydown", e => { if(e.key === "Escape") closeSettings(); });
 // Official FIFA Men's World Ranking snapshot · as of 18 Jun 2026 · keyed by ESPN 3-letter team code (matched by code,
 // not name, so IR Iran/Iran, Cabo Verde/Cape Verde etc. can't mis-map). Static: FIFA doesn't update mid-tournament;
 // refresh these 48 values when FIFA publishes a new ranking. Non-WC teams + bracket placeholders aren't in the map → no chip.
@@ -1969,9 +2034,8 @@ async function renderHero() {
     drawHero();
   } catch (_) { $("heroBox").innerHTML = ""; }
 }
-function heroBtns() {   // CHANGE + SIGN OUT, kept together on one right-aligned line (own row → never wraps)
-  return '<div class="herobtns" onclick="event.stopPropagation()"><span class="heroChange" onclick="openNation(event)">CHANGE NATION ⚙</span>' +
-    (cs_user ? '<span class="heroChange so" onclick="signOut()">SIGN OUT</span>' : '') + '</div>';
+function heroBtns() {   // CHANGE NATION only · sign out now lives in the header
+  return '<div class="herobtns" onclick="event.stopPropagation()"><span class="heroChange" onclick="openNation(event)">CHANGE NATION ⚙</span></div>';
 }
 function drawHero() {
   if (!myNation()) {   // no nation chosen yet → prompt in the green card instead of defaulting to Egypt
