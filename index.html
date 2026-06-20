@@ -2281,8 +2281,9 @@ function installInstructionsHtml(){
   const bi = (a, e) => '<span style="display:block' + (ar ? ';direction:rtl' : '') + '">' + (ar ? a : e) + '</span><span style="display:block;font-size:11px;color:var(--mut)' + (ar ? '' : ';direction:rtl') + '">' + (ar ? e : a) + '</span>';
   let steps;
   if(ios){
-    steps = '<div class="irow"><span class="ic">①</span><div>' + bi("افتح الموقع في Safari واضغط زر المشاركة " + share, "In Safari, tap the Share button " + share) + '</div></div>' +
-      '<div class="irow"><span class="ic">②</span><div>' + bi('اختر «إضافة إلى الشاشة الرئيسية» ثم «إضافة».', 'Choose "Add to Home Screen", then "Add".') + '</div></div>';
+    steps = '<div class="irow"><span class="ic">①</span><div>' + bi("في Safari، اضغط زر المشاركة بالأسفل " + share, "In Safari, tap the Share button " + share) + '</div></div>' +
+      '<div class="irow"><span class="ic">②</span><div>' + bi('مرّر للأسفل (أو اضغط «المزيد» More) واختر «إضافة إلى الشاشة الرئيسية» (Add to Home Screen).', 'Scroll down (or tap "More") and choose "Add to Home Screen".') + '</div></div>' +
+      '<div class="irow"><span class="ic">③</span><div>' + bi('اترك خيار «فتح كتطبيق ويب» (Open as Web App) مُفعّلاً ✓ ثم اضغط «إضافة».', 'Keep "Open as Web App" turned ON ✓, then tap "Add".') + '</div></div>';
   } else {
     steps = '<div class="irow"><span class="ic">🌐</span><div>' + bi('للأندرويد: افتح الموقع في تطبيق جوجل كروم (يعمل بشكل أفضل من المتصفّحات الأخرى).', 'On Android: open the site in the Google Chrome app (works best, better than other browsers).') + '</div></div>' +
       '<div class="irow"><span class="ic">①</span><div>' + bi('اضغط «تثبيت الآن» بالأسفل.', 'Tap "Install now" below.') + '</div></div>' +
