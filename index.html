@@ -1045,6 +1045,36 @@ function showTab(t) {
   else if (statsTimer) { clearInterval(statsTimer); statsTimer = null; }
 }
 
+// Swipe left/right across the content to move between tabs. Direction mirrors in RTL (Arabic).
+// Ignores gestures that begin inside a horizontally-scrollable element (date strip, wide tables/bracket).
+(function () {
+  const main = document.querySelector("main"); if (!main) return;
+  const ORDER = ["M", "G", "S", "P", "C"];
+  let sx = 0, sy = 0, st = 0, on = false;
+  function scrollableX(el) {
+    while (el && el !== main) {
+      if (el.scrollWidth - el.clientWidth > 8) { const o = getComputedStyle(el).overflowX; if (o === "auto" || o === "scroll") return true; }
+      el = el.parentElement;
+    }
+    return false;
+  }
+  main.addEventListener("touchstart", e => {
+    if (e.touches.length !== 1 || scrollableX(e.target)) { on = false; return; }
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY; st = Date.now(); on = true;
+  }, { passive: true });
+  main.addEventListener("touchend", e => {
+    if (!on) return; on = false;
+    const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.7 || Date.now() - st > 700) return;   // deliberate horizontal flick only
+    let dir = dx < 0 ? 1 : -1;                                              // swipe left → next tab
+    if (document.documentElement.getAttribute("dir") === "rtl") dir = -dir; // mirror for Arabic
+    const cur = ORDER.findIndex(x => $("tab" + x).classList.contains("on"));
+    const ni = (cur < 0 ? 0 : cur) + dir;
+    if (ni < 0 || ni >= ORDER.length) return;                              // no wrap-around at the ends
+    showTab(ORDER[ni]);
+  }, { passive: true });
+})();
+
 async function goHome() {
   showTab("M");
   const k = (await liveDayKey()) || uaeYMD(new Date());   // a live match wins over the calendar day
