@@ -2230,26 +2230,28 @@ function maybeShowInstall(){
     bar.style.display = "flex";
   }
 }
-function installApp(){
-  if(_installPrompt){ const p = _installPrompt; _installPrompt = null; try { p.prompt(); } catch(_) {} hideInstallBar(); return; }   // Android/desktop one-tap
-  showInfo(installInstructionsHtml());                                          // iOS / others → clear visual steps
-}
+function doInstallPrompt(){ const p = _installPrompt; if(p){ _installPrompt = null; try { p.prompt(); } catch(_) {} } closeInfo(); hideInstallBar(); }
+function installApp(){ showInfo(installInstructionsHtml()); }
 function installInstructionsHtml(){
-  const ar = (typeof LANG !== "undefined" && LANG === "ar"), ios = isIOSDevice();
-  const share = '<svg viewBox="0 0 24 24" width="18" height="18" style="vertical-align:-3px"><path fill="#19c8ff" d="M12 2.6l3.7 3.7-1.4 1.4L13 5.8V15h-2V5.8L9.7 7.7 8.3 6.3 12 2.6zM5 10h3.5v2H6.5v7h11v-7H15.5v-2H19a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z"/></svg>';
+  const ar = (typeof LANG !== "undefined" && LANG === "ar");
+  const canPrompt = !!_installPrompt, ios = isIOSDevice() && !canPrompt;
+  const share = '<svg viewBox="0 0 24 24" width="16" height="16" style="vertical-align:-3px"><path fill="#19c8ff" d="M12 2.6l3.7 3.7-1.4 1.4L13 5.8V15h-2V5.8L9.7 7.7 8.3 6.3 12 2.6zM5 10h3.5v2H6.5v7h11v-7H15.5v-2H19a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z"/></svg>';
+  const bi = (a, e) => '<span style="display:block' + (ar ? ';direction:rtl' : '') + '">' + (ar ? a : e) + '</span><span style="display:block;font-size:11px;color:var(--mut)' + (ar ? '' : ';direction:rtl') + '">' + (ar ? e : a) + '</span>';
   let steps;
   if(ios){
-    steps = '<div class="irow"><span class="ic">①</span><div>' + (ar ? "افتح الموقع في متصفّح <b>Safari</b>." : "Open the site in <b>Safari</b>.") + '</div></div>' +
-      '<div class="irow"><span class="ic">②</span><div>' + (ar ? "اضغط زر المشاركة " : "Tap the Share button ") + share + (ar ? " بالأسفل." : " at the bottom.") + '</div></div>' +
-      '<div class="irow"><span class="ic">③</span><div>' + (ar ? 'اختر <b>«إضافة إلى الشاشة الرئيسية»</b>.' : 'Choose <b>"Add to Home Screen"</b>.') + '</div></div>' +
-      '<div class="irow"><span class="ic">④</span><div>' + (ar ? 'اضغط <b>«إضافة»</b> وسيظهر التطبيق على شاشتك.' : 'Tap <b>"Add"</b> and the app appears on your home screen.') + '</div></div>';
+    steps = '<div class="irow"><span class="ic">①</span><div>' + bi("افتح الموقع في Safari واضغط زر المشاركة " + share, "In Safari, tap the Share button " + share) + '</div></div>' +
+      '<div class="irow"><span class="ic">②</span><div>' + bi('اختر «إضافة إلى الشاشة الرئيسية» ثم «إضافة».', 'Choose "Add to Home Screen", then "Add".') + '</div></div>';
   } else {
-    steps = '<div class="irow"><span class="ic">①</span><div>' + (ar ? "افتح قائمة المتصفّح (⋮)." : "Open the browser menu (⋮).") + '</div></div>' +
-      '<div class="irow"><span class="ic">②</span><div>' + (ar ? 'اختر <b>«تثبيت التطبيق»</b> أو <b>«إضافة إلى الشاشة الرئيسية»</b>.' : 'Choose <b>"Install app"</b> or <b>"Add to Home screen"</b>.') + '</div></div>';
+    steps = '<div class="irow"><span class="ic">①</span><div>' + bi('اضغط «تثبيت الآن» بالأسفل.', 'Tap "Install now" below.') + '</div></div>' +
+      '<div class="irow"><span class="ic">⚠️</span><div>' + bi('قد يُظهر أندرويد تنبيهاً أنّ التطبيق «غير آمن» — هذا طبيعي لأنه موقع وِيب وليس تطبيقاً من المتجر.', 'Android may warn it is "not a safe app" — that is normal for a website app.') + '</div></div>' +
+      '<div class="irow"><span class="ic">②</span><div>' + bi('اضغط «مزيد من التفاصيل» (More details) ثم «التثبيت على أي حال» (Install anyway).', 'Tap "More details", then "Install anyway".') + '</div></div>';
   }
-  return '<div style="font-size:34px;line-height:1;margin-bottom:2px">📲</div><h2>' + (ar ? "ثبّت WCup Fans على هاتفك" : "Install WCup Fans") + '</h2>' +
-    '<p>' + (ar ? "أيقونة على شاشتك تفتح التطبيق مباشرةً، دون كتابة الرابط." : "An icon on your home screen that opens the app directly, no typing the URL.") + '</p>' +
-    steps + '<button class="igo" onclick="closeInfo()">' + (ar ? "تمام" : "Got it") + '</button>';
+  const btn = (!ios && canPrompt)
+    ? '<button class="igo" onclick="doInstallPrompt()">' + (ar ? "تثبيت الآن · Install now" : "Install now · تثبيت الآن") + '</button>'
+    : '<button class="igo" onclick="closeInfo()">' + (ar ? "تمام · Got it" : "Got it · تمام") + '</button>';
+  return '<div style="font-size:34px;line-height:1;margin-bottom:2px">📲</div><h2>' + (ar ? "ثبّت WCup Fans 2026" : "Install WCup Fans 2026") + '</h2>' +
+    '<p>' + bi("أيقونة على شاشتك تفتح التطبيق مباشرةً، دون كتابة الرابط.", "An icon on your home screen that opens the app directly.") + '</p>' +
+    steps + btn;
 }
 addEventListener("beforeinstallprompt", e => { e.preventDefault(); _installPrompt = e; maybeShowInstall(); });
 addEventListener("appinstalled", () => { _installPrompt = null; hideInstallBar(); });
