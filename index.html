@@ -860,7 +860,7 @@ function setTZ(v) {
 }
 function updateFmtTog() { const seg = $("fmtTog"); if (!seg) return; const cur = HOUR12 ? "1" : "0"; seg.querySelectorAll(".fseg").forEach(b => b.classList.toggle("on", b.dataset.h12 === cur)); }
 /* ================= LANGUAGE (English default · Arabic with RTL) ================= */
-let LANG = (function(){ try { return localStorage.getItem("cs_lang") === "ar" ? "ar" : "en"; } catch(_) { return "en"; } })();
+let LANG = "en";   /* Arabic temporarily OFF in production while the full translation is built; engine stays dormant */
 const AR = {
   "MATCHES":"المباريات","GROUPS":"المجموعات","STATS":"الإحصائيات","PREDICT":"التوقّعات","CHAT":"الدردشة","KNOCKOUTS":"الأدوار الإقصائية",
   "PLAYERS":"اللاعبون","TEAMS":"المنتخبات","Tournament facts":"حقائق البطولة",
