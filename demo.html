@@ -77,14 +77,17 @@ header{padding:11px 16px 13px}
 .lshead{display:flex;align-items:center;gap:7px;font-family:'Oswald';font-weight:700;font-size:11px;letter-spacing:2px;color:var(--red);margin-bottom:8px}
 .lspulse{width:8px;height:8px;border-radius:50%;background:var(--red);animation:lspulse 1.4s infinite}
 @keyframes lspulse{0%{box-shadow:0 0 0 0 rgba(255,59,92,.55)}70%{box-shadow:0 0 0 7px rgba(255,59,92,0)}100%{box-shadow:0 0 0 0 rgba(255,59,92,0)}}
-.lsrow{display:flex;align-items:center;gap:9px;width:100%;text-align:start;background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:10px;padding:9px 11px;cursor:pointer;color:var(--txt);font-family:'Oswald';font-weight:600}
+.lsrow{display:flex;align-items:center;gap:10px;width:100%;background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:10px;padding:8px 11px;cursor:pointer;color:var(--txt);font-family:'Oswald';font-weight:600}
 .lsrow+.lsrow{margin-top:6px}
 .lsrow:active{background:rgba(255,255,255,.08)}
-.lsrow img{width:22px;height:22px;object-fit:contain;flex:none}
-.lsteam{font-size:14px;letter-spacing:.4px;white-space:nowrap}
-.lsscore{font-family:'Oswald';font-weight:700;font-size:17px;color:#fff;direction:ltr;padding:0 2px;white-space:nowrap}
-.lsmin{margin-left:auto;color:var(--red);font-size:12.5px;font-weight:700;white-space:nowrap}
-html[dir="rtl"] .lsmin{margin-left:0;margin-right:auto}
+.lsside{display:flex;align-items:center;gap:7px;flex:1;min-width:0}
+.lshome{justify-content:flex-end}
+.lsaway{justify-content:flex-start}
+.lsside img{width:22px;height:22px;object-fit:contain;flex:none}
+.lsteam{font-size:14px;letter-spacing:.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lsmid{display:flex;flex-direction:column;align-items:center;line-height:1;flex:none}
+.lsmin{color:var(--red);font-size:11px;font-weight:700;margin-bottom:3px;white-space:nowrap;letter-spacing:.5px}
+.lsscore{font-family:'Oswald';font-weight:700;font-size:17px;color:#fff;direction:ltr;white-space:nowrap}
 /* Arabic / RTL */
 html[dir="rtl"] body{text-align:right}
 html[dir="rtl"] .fmtseg{direction:ltr}
@@ -1395,10 +1398,10 @@ function renderLiveSummary() {
     const H = c.competitors.find(x => x.homeAway === "home"), A = c.competitors.find(x => x.homeAway === "away");
     const clk = esc(e.status.displayClock || (LANG === "ar" ? "مباشر" : "LIVE"));
     return '<button type="button" class="lsrow" onclick="goLive(\'' + e.id + '\')">' +
-      fl(H) + '<span class="lsteam">' + ab(H) + '</span>' +
-      '<span class="lsscore">' + (H.score != null ? H.score : 0) + ' – ' + (A.score != null ? A.score : 0) + '</span>' +
-      '<span class="lsteam">' + ab(A) + '</span>' + fl(A) +
-      '<span class="lsmin">' + clk + '</span></button>';
+      '<span class="lsside lshome">' + fl(H) + '<span class="lsteam">' + ab(H) + '</span></span>' +
+      '<span class="lsmid"><span class="lsmin">' + clk + '</span><span class="lsscore">' + (H.score != null ? H.score : 0) + ' – ' + (A.score != null ? A.score : 0) + '</span></span>' +
+      '<span class="lsside lsaway"><span class="lsteam">' + ab(A) + '</span>' + fl(A) + '</span>' +
+      '</button>';
   }).join("");
   box.innerHTML = '<div class="lshead"><span class="lspulse"></span>' + (LANG === "ar" ? "مباشر الآن" : "LIVE NOW") + '</div>' + rows;
   box.style.display = "";
