@@ -3136,8 +3136,12 @@ async function postRoom(newMsgs) {
   // read-merge-write with verify+retry · if a concurrent writer clobbered us, re-merge so no message is lost
   let last = [];
   for (let t = 0; t < 3; t++) {
-    let msgs = [];
-    try { msgs = await readRoom(); } catch (_) {}
+    let msgs = null;
+    try { msgs = await readRoom(); } catch (_) { msgs = null; }
+    // SAFETY GUARD: a live room is never empty (it always holds the seed message). An empty or failed
+    // read means a network hiccup — refuse to write, or we would overwrite the entire room with just
+    // these few messages. This is exactly how the room got wiped once; never let it happen again.
+    if (!Array.isArray(msgs) || msgs.length === 0) { await new Promise(r => setTimeout(r, 350 + Math.random() * 400)); continue; }
     const existing = new Set(msgs.map(m => m.id));
     if (newMsgs.every(m => existing.has(m.id))) return msgs;   // already present
     msgs.push(...newMsgs.filter(m => !existing.has(m.id)));
@@ -3555,6 +3559,9 @@ async function trackVisit() {
     }
     if (!geo) geo = { c: "Unknown", cc: "" };
     const a = await readKey(STATS_KEY, {});
+    // SAFETY GUARD: established analytics is never an empty object — an empty read = a network hiccup.
+    // Refuse to write so a flaky read can't clobber the whole visitor history down to one row.
+    if (!a || typeof a !== "object" || Object.keys(a).length === 0) return;
     a.v = a.v || {};
     const r = a.v[vid] || { c: geo.c, cc: geo.cc, f: now, n: 0 };
     r.c = geo.c; r.cc = geo.cc; r.l = now;
