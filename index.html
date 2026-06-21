@@ -897,7 +897,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.06</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.07</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -944,10 +944,10 @@ const STATS_KEY = "capriole_wc26_analytics";   // internal visitor counter (aggr
 const SEASON_RANGE = "20260611-20260719";
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.06";
+const APP_VERSION = "2.07";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-21-v206";
+const FORCE_RELOAD = "2026-06-21-v207";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -2913,12 +2913,13 @@ async function loadRatings(ev) {
   if (!ev.status || ev.status.type.state !== "post") return null;   // full-time only
   const _failed = (prev && prev.failed) || 0;   // carry the retry count across attempts
   _ratings[id] = { loading: true, byId: {}, failed: _failed };
-  // 8s timeout + abort per request → a stalled ESPN call fails FAST instead of hanging the whole compute forever (the old bug)
-  const gj = u => { const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 8000); return fetch(String(u).replace(/^http:/, "https:"), { signal: ctl.signal }).then(r => r.json()).finally(() => clearTimeout(to)); };
+  // per-request 7s timeout + a MASTER timeout (below) so loadRatings ALWAYS resolves and can never hang on "Analyzing…"
+  const withTO = (p, ms) => { let _t; const to = new Promise((_, rej) => { _t = setTimeout(() => rej(new Error("timeout")), ms); }); return Promise.race([p, to]).finally(() => clearTimeout(_t)); };
+  const gj = u => { const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 7000); return fetch(String(u).replace(/^http:/, "https:"), { signal: ctl.signal }).then(r => r.json()).finally(() => clearTimeout(to)); };
   let byId = {}, motm = null, fromShared = false;
-  try {
-    // 1) shared global cache · if anyone already computed this match, reuse it (no recompute for everyone else)
-    try { const sh = await readKey("capriole_wc26_rt2_" + id, null); if (sh && sh.byId && Object.keys(sh.byId).length) { byId = sh.byId; motm = sh.motm; fromShared = true; } } catch (_) {}
+  const run = async () => {
+    // 1) shared global cache · reuse if anyone already computed this match · TIMED so a stalled textdb read can't hang it (this was the remaining hang)
+    try { const sh = await withTO(readKey("capriole_wc26_rt2_" + id, null), 7000); if (sh && sh.byId && Object.keys(sh.byId).length) { byId = sh.byId; motm = sh.motm; fromShared = true; } } catch (_) {}
     if (!fromShared) {                                    // 2) nobody has → compute it from the core feed
       // build a positions/names map from the summary FIRST · the core roster entry's position is a bare $ref (empty),
       // so without this defenders get mis-classified as midfielders (rated on shots/passes instead of tackles).
@@ -2946,7 +2947,8 @@ async function loadRatings(ev) {
       }));
       Object.keys(byId).forEach(pid => { const x = byId[pid]; if (x.name && (!motm || x.rating > motm.rating)) motm = { pid, name: x.name, team: x.team, rating: x.rating, m: x.m, c: x.c }; });
     }
-  } catch (e) {}
+  };
+  try { await withTO(run(), 15000); } catch (e) {}   // MASTER timeout · any hang/slow path falls through to ready-or-retry, never stuck
   if (Object.keys(byId).length) {
     _ratings[id] = { ready: true, byId, motm };
     // publish to the shared store ONLY for a complete compute · motm set only when names resolved (summary was loaded).
@@ -3987,6 +3989,11 @@ async function geoLookup() {
 }
 async function trackVisit() {
   try {
+    // ACCURACY GUARDS: count ONLY real visits to the two production sites.
+    if (navigator.webdriver) return;                                  // skip automation / headless (screenshot renders, bots)
+    const _h = location.hostname, _p = location.pathname;
+    const _isProd = _h === "ahmedelayoty.github.io" && (_p.indexOf("/capriole-sports/") === 0 || _p.indexOf("/world-cup-2026-fans/") === 0);
+    if (!_isProd) return;                                             // never count the demo, localhost, file://, or previews
     let vid = localStorage.getItem("cs_vid");
     if (!vid) { vid = "v" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); localStorage.setItem("cs_vid", vid); }
     const now = Date.now();
