@@ -815,7 +815,6 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <div class="sheet__row"><span class="sheet__lab" id="langLab">Language</span><div class="seg" id="langTog" role="radiogroup" aria-labelledby="langLab"><button class="seg__btn is-on" type="button" data-lang="en" onclick="setLang('en')">EN</button><button class="seg__btn seg__btn--ar" type="button" data-lang="ar" onclick="setLang('ar')">عربي</button></div></div>
   </div>
  </div>
- <div class="connbar"><span class="condot" id="condot" aria-hidden="true"></span><span class="contxt" id="contxt">CONNECTING</span><span class="conr"><span class="cz" id="tzCode">UAE</span><span class="cz cz--off" id="tzOff">UTC+4</span><time class="clock" id="clock" aria-label="Local time">--:--</time></span></div>
 </header>
 <nav>
  <button id="tabM" class="on" onclick="showTab('M')">MATCHES</button>
@@ -824,6 +823,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
  <button id="tabP" onclick="showTab('P')">PREDICT</button>
  <button id="tabC" onclick="showTab('C')">CHAT<span class="navbadge" id="chatBadge"></span></button>
 </nav>
+<div class="connbar"><span class="condot" id="condot" aria-hidden="true"></span><span class="contxt" id="contxt">CONNECTING</span><span class="conr"><span class="cz" id="tzCode">UAE</span><span class="cz cz--off" id="tzOff">UTC+4</span><time class="clock" id="clock" aria-label="Local time">--:--</time></span></div>
 </div>
 <main>
  <section id="paneM">
@@ -923,7 +923,7 @@ const CHAT_WRITE = "https://api.textdb.online/update/";
 const APP_VERSION = "2.05";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-21-v205b";
+const FORCE_RELOAD = "2026-06-21-v205c";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
