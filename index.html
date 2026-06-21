@@ -50,22 +50,42 @@ body{font-family:'Inter',system-ui,sans-serif;background:
 /* header */
 .topbar{position:-webkit-sticky;position:sticky;top:0;z-index:50;background:rgba(8,13,33,.97);
  backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
-header{padding:10px 16px}
+header{padding:0}
 .brand{display:flex;align-items:center;gap:10px}
+.bmid{flex:1;min-width:0}
 .crest{width:34px;height:46px;border-radius:9px;background:#fff;flex:none;
  display:flex;align-items:center;justify-content:center;padding:3px 4px;box-shadow:0 1px 4px rgba(0,0,0,.4)}
 .crest img{height:100%;width:auto;max-width:100%;object-fit:contain;display:block}
 .bname{font-family:'Oswald';font-weight:700;font-size:21px;letter-spacing:1px;line-height:1}
 .bname b{color:var(--rust2);font-weight:700}
-.bsub{font-family:'Oswald';font-weight:500;font-size:10.5px;letter-spacing:2px;color:var(--mut);margin-top:3px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
-#tzSel{background:rgba(255,255,255,.08);color:#fff;border:1px solid var(--gold);border-radius:6px;font-family:'Oswald';font-weight:600;font-size:10.5px;letter-spacing:.8px;padding:2px 6px;cursor:pointer}
-#tzSel option,#tzSel optgroup{background:#0d1838;color:#eef2ff}
-#tzOff{color:var(--gold);font-family:'Oswald';font-weight:600;letter-spacing:1px}
+.bsub{font-family:'Oswald';font-weight:500;font-size:11px;letter-spacing:1.5px;color:var(--mut);margin-top:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+#tzSel option,#tzSel optgroup{background:var(--card);color:#eef2ff}
 .fmtseg{display:inline-flex;border:1px solid var(--gold);border-radius:6px;overflow:hidden;margin-left:6px;vertical-align:middle;box-shadow:0 0 0 2px rgba(212,175,55,.12)}
-.fmtseg .fseg{background:transparent;color:var(--gold);border:none;font-family:'Oswald';font-weight:700;font-size:10px;letter-spacing:.6px;padding:3px 9px;cursor:pointer;line-height:1.5;transition:background .15s,color .15s}
+.fmtseg .fseg{background:transparent;color:var(--gold);border:none;font-family:'Oswald';font-weight:700;font-size:11.5px;letter-spacing:.6px;padding:8px 12px;cursor:pointer;line-height:1.4;transition:background .15s,color .15s}
 .fmtseg .fseg+.fseg{border-left:1px solid var(--gold)}
 .fmtseg .fseg.on{background:var(--gold);color:#16110a}
 .fmtseg .fseg:not(.on):hover{background:rgba(212,175,55,.18)}
+/* (header controls redesigned · see APP BAR block below) */
+/* compact LIVE NOW summary (top of Matches) */
+.livesum{background:var(--navy2);border:1px solid var(--red);border-radius:14px;overflow:hidden;margin-bottom:12px}
+.lshead{display:flex;align-items:center;gap:7px;font-family:'Oswald';font-weight:700;font-size:11px;letter-spacing:2px;color:var(--red);padding:9px 13px;background:linear-gradient(90deg,rgba(255,59,92,.16),transparent);border-bottom:1px solid rgba(255,59,92,.30)}
+.lscount{margin-inline-start:auto;font-size:10px;font-weight:600;letter-spacing:.5px;color:var(--mut)}
+.lschev{flex:0 0 auto;color:var(--mut);font-size:20px;font-weight:700;line-height:1;margin-inline-start:2px}
+html[dir="rtl"] .lschev{display:inline-block;transform:scaleX(-1)}
+.lspulse{width:8px;height:8px;border-radius:50%;background:var(--red);animation:lspulse 1.4s infinite}
+@keyframes lspulse{0%{box-shadow:0 0 0 0 rgba(255,59,92,.55)}70%{box-shadow:0 0 0 7px rgba(255,59,92,0)}100%{box-shadow:0 0 0 0 rgba(255,59,92,0)}}
+.lsrow{position:relative;display:flex;align-items:center;gap:10px;width:100%;background:var(--card2);border:0;border-top:1px solid var(--line);padding:11px 13px 11px 16px;cursor:pointer;color:var(--txt);font-family:'Oswald';font-weight:600;text-align:start}
+.lshead + .lsrow{border-top:0}
+.lsrow::before{content:"";position:absolute;inset-block:0;inset-inline-start:0;width:3px;background:var(--red);opacity:.9}
+.lsrow:active{background:#16224e}
+.lsside{display:flex;align-items:center;gap:7px;flex:1;min-width:0}
+.lshome{justify-content:flex-end}
+.lsaway{justify-content:flex-start}
+.lsside img{width:22px;height:22px;object-fit:contain;flex:none}
+.lsteam{font-size:14px;letter-spacing:.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lsmid{display:flex;flex-direction:column;align-items:center;line-height:1;flex:none}
+.lsmin{color:var(--red);font-size:11px;font-weight:700;margin-bottom:3px;white-space:nowrap;letter-spacing:.5px}
+.lsscore{font-family:'Oswald';font-weight:700;font-size:17px;color:#fff;direction:ltr;white-space:nowrap}
 /* Arabic / RTL */
 html[dir="rtl"] body{text-align:right}
 html[dir="rtl"] .fmtseg{direction:ltr}
@@ -272,13 +292,13 @@ html[dir="rtl"] .team.away img{box-shadow:-3px 0 0 0 var(--cyan)}
 .skpill.cyan b{color:var(--cyan)}
 footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px;letter-spacing:1.6px;color:#3d4a72}
 .hero{background:linear-gradient(150deg,#0a2e1d,#0c3a24);border:1px solid var(--green);border-radius:16px;
- padding:13px 15px;margin-bottom:12px;cursor:pointer}
-.hero .hl{font-family:'Oswald';font-size:10.5px;letter-spacing:1.6px;color:#6dffb5;display:flex;justify-content:space-between}
-.hero .hm{display:flex;align-items:center;gap:10px;margin-top:8px}
-.hero .hpick{margin-top:8px;font-family:'Oswald';font-weight:500;font-size:13px;color:#cfeede;letter-spacing:.3px;line-height:1.45}
-.hero .hm img{width:30px;height:30px;object-fit:contain}
-.hero .ht1{font-family:'Oswald';font-weight:600;font-size:17px;flex:1}
-.hero .cd{font-family:'Oswald';font-weight:700;font-size:21px;color:#6dffb5;letter-spacing:1px;text-align:right}
+ padding:9px 13px;margin-bottom:12px;cursor:pointer}
+.hero .hl{font-family:'Oswald';font-size:10px;letter-spacing:1.5px;color:#6dffb5;display:flex;justify-content:space-between}
+.hero .hm{display:flex;align-items:center;gap:9px;margin-top:6px}
+.hero .hpick{margin-top:5px;font-family:'Oswald';font-weight:500;font-size:12px;color:#cfeede;letter-spacing:.3px;line-height:1.4}
+.hero .hm img{width:26px;height:26px;object-fit:contain}
+.hero .ht1{font-family:'Oswald';font-weight:600;font-size:15px;flex:1}
+.hero .cd{font-family:'Oswald';font-weight:700;font-size:18px;color:#6dffb5;letter-spacing:1px;text-align:right}
 .hero .cd small{display:block;font-size:9.5px;font-weight:500;letter-spacing:1.5px;color:#9fd8bb}
 .pcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 13px;margin-bottom:10px}
 .pcard.lock{opacity:.78}
@@ -313,6 +333,10 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 .infomodal .irow div{font-size:12.5px;color:#cdd8f5;line-height:1.45}
 .infomodal .irow b{color:#fff}
 .infomodal .igo{width:100%;margin-top:10px;background:var(--rust);border:none;color:#fff;font-family:'Oswald';font-weight:700;letter-spacing:1px;font-size:14px;padding:13px;border-radius:12px;cursor:pointer}
+.infomodal .cfrow{display:flex;gap:10px;margin-top:8px}
+.infomodal .cfrow button{flex:1;font-family:'Oswald';font-weight:700;letter-spacing:.8px;font-size:13.5px;padding:13px;border-radius:12px;cursor:pointer}
+.infomodal .cfno{background:var(--navy2);border:1px solid var(--line);color:var(--txt)}
+.infomodal .cfyes{background:var(--rust);border:1px solid var(--rust2);color:#fff}
 .subbtn{margin-top:9px;width:100%;background:var(--rust);border:none;color:#fff;font-family:'Oswald';
  font-weight:600;letter-spacing:1.5px;font-size:12.5px;border-radius:10px;padding:10px;cursor:pointer}
 .subbtn:disabled{opacity:.7}
@@ -373,6 +397,10 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 #nameModal select{width:100%;background:var(--navy2);border:1px solid var(--line);border-radius:12px;
  color:var(--txt);font-size:15px;padding:12px 14px;outline:none;text-align:center;margin-bottom:12px;
  -webkit-appearance:none;appearance:none}
+#nameModal .aunatbtn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--navy2);border:1px solid var(--line);border-radius:12px;color:var(--txt);font-family:'Oswald';font-weight:600;font-size:15px;padding:12px 14px;margin-bottom:12px;cursor:pointer;text-align:start}
+#nameModal .aunatbtn.empty{color:var(--mut)}
+#nameModal .aunatbtn:hover{border-color:var(--rust2)}
+.aunatbtn__car{flex:none;color:var(--mut)}
 .authtabs{display:flex;gap:8px;margin-bottom:14px}
 #nameModal .authtabs button{flex:1;background:var(--navy2);border:1px solid var(--line);color:var(--mut);
  font-family:'Oswald';letter-spacing:1px;font-size:12px;padding:9px;border-radius:10px;cursor:pointer;width:auto}
@@ -427,16 +455,39 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 .metarow>.mven{margin-left:auto}
 .dwrap{display:flex;align-items:flex-start;gap:8px}
 .dwrap>.dstrip{flex:1;min-width:0}
-.natsearch{position:relative;flex:none}
-#natFilter{width:150px;height:55px;background:rgba(255,255,255,.06);color:var(--gold);border:1px solid var(--gold);border-radius:11px;font-family:'Oswald';font-weight:600;font-size:10px;letter-spacing:.3px;padding:0 9px;cursor:text}
+.natsearch{position:relative;margin:0 0 12px}
+#natFilter{width:100%;height:42px;background:rgba(255,192,46,.06);color:var(--gold);border:1px solid var(--gold);border-radius:11px;font-family:'Oswald';font-weight:600;font-size:12px;letter-spacing:.4px;padding:0 14px;cursor:text}
+#natFilter::placeholder{color:var(--gold);opacity:.85}
 #natFilter::placeholder{color:var(--gold);opacity:.9}
-.natlist{position:absolute;top:calc(100% + 5px);left:50%;transform:translateX(-50%);width:190px;max-height:46vh;overflow-y:auto;background:var(--card);border:1px solid var(--gold);border-radius:12px;padding:5px;z-index:60;box-shadow:0 14px 34px rgba(0,0,0,.55)}
+.natlist{position:absolute;top:calc(100% + 5px);left:0;right:0;width:auto;max-height:46vh;overflow-y:auto;background:var(--card);border:1px solid var(--gold);border-radius:12px;padding:0 5px 5px;z-index:60;box-shadow:0 14px 34px rgba(0,0,0,.55)}
 .natlist::-webkit-scrollbar{width:0}
 .natitem{display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:8px;cursor:pointer}
 .natitem:hover,.natitem:active{background:rgba(255,255,255,.07)}
 .natitem img{width:22px;height:22px;object-fit:contain;flex:none}
 .natitem .nn{font-family:'Oswald';font-weight:600;font-size:13px;letter-spacing:.3px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .natempty{padding:9px;color:var(--mut);font-size:12px}
+/* clear-(×) shown on the search bar once a nation is chosen */
+.natclear{display:none;position:absolute;top:50%;transform:translateY(-50%);inset-inline-end:8px;width:26px;height:26px;border-radius:50%;border:1px solid var(--gold);background:rgba(255,192,46,.16);color:var(--gold);font-size:17px;font-weight:700;line-height:1;align-items:center;justify-content:center;cursor:pointer;padding:0;z-index:3}
+.natclear:hover,.natclear:active{background:rgba(255,192,46,.28)}
+.natsearch.chosen .natclear{display:inline-flex}
+.natsearch.chosen #natFilter{padding-inline-end:44px}
+/* dismiss header inside the open list (× to bail without choosing) */
+.natlhead{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 -5px 5px;padding:8px 9px;background:var(--card);border-bottom:1px solid var(--line);z-index:2}
+.natltt{font-family:'Oswald';font-weight:600;font-size:10px;letter-spacing:1.4px;color:var(--mut)}
+.natlx{flex:none;width:24px;height:24px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.07);color:var(--txt);font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.natlx:hover,.natlx:active{background:rgba(255,255,255,.14)}
+/* follow-a-nation picker overlay (green card) · same row look as the search list */
+.natpick{position:fixed;inset:0;background:rgba(4,8,22,.86);z-index:130;display:flex;align-items:center;justify-content:center;padding:18px}
+.natpick.hide{display:none}
+.natpick__box{position:relative;background:var(--card);border:1px solid #2a3a6b;border-radius:20px;padding:22px 16px 14px;max-width:360px;width:100%;max-height:84vh;display:flex;flex-direction:column;box-shadow:0 18px 50px rgba(0,0,0,.5)}
+.natpick__x{position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.08);border:none;color:var(--mut);font-size:18px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+.natpick h2{font-family:'Oswald';font-weight:700;letter-spacing:1px;font-size:19px;color:var(--gold);margin:0 0 12px;padding-inline-end:34px}
+#natPickIn{width:100%;height:42px;background:var(--navy2);border:1px solid var(--line);border-radius:11px;color:var(--txt);font-family:'Oswald';font-weight:600;font-size:13px;letter-spacing:.3px;padding:0 14px;margin-bottom:10px;box-sizing:border-box}
+#natPickIn::placeholder{color:var(--mut)}
+.natpick__list{overflow-y:auto;min-height:80px;flex:1}
+.natpick__list::-webkit-scrollbar{width:0}
+.natitem.cur{background:rgba(0,210,106,.12)}
+.natitem .natcur{margin-inline-start:auto;color:var(--green);font-weight:700;flex:none}
 .filterbanner{display:flex;align-items:center;gap:10px;background:rgba(25,200,255,.10);border:1px solid rgba(25,200,255,.45);border-radius:12px;padding:8px 10px 8px 13px}
 .filterbanner .ff{width:26px;height:26px;object-fit:contain;flex:none}
 .filterbanner .fmeta{display:flex;flex-direction:column;line-height:1.15;min-width:0}
@@ -664,26 +715,107 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 .brdl.alt{background:none;border:1.5px solid var(--gold);color:var(--gold)}
 .brdl:disabled{opacity:.6}
 .brdl:active{opacity:.85}
+/* ====================== APP BAR (redesigned header) ====================== */
+.appbar{position:relative}
+.appbar__inner{position:relative;max-width:760px;margin:0 auto;min-height:52px;padding:8px 12px;display:flex;align-items:center;gap:10px}
+.brand{display:flex;align-items:center;gap:9px;text-decoration:none;flex:0 0 auto;min-inline-size:max-content;margin-inline-end:auto}
+.brand__crest{flex:0 0 auto;width:30px;height:38px;border-radius:8px;background:#fff;display:grid;place-items:center;box-shadow:0 1px 3px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.6)}
+.brand__crest img{display:block;width:auto;height:30px;max-width:24px;object-fit:contain}
+.brand__name{font-family:'Oswald',sans-serif;font-weight:700;font-size:18px;line-height:1;letter-spacing:.5px;color:var(--txt);white-space:nowrap}
+.brand__name b{color:var(--rust2);font-weight:700}
+.cluster{display:flex;align-items:center;gap:8px;flex-shrink:1;min-width:0;justify-content:flex-end}
+.tzchip{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 9px;border-radius:9px;cursor:pointer;white-space:nowrap;background:var(--card2);border:1px solid var(--line);color:var(--txt);transition:background .15s,border-color .15s}
+.tzchip:active{transform:scale(.97)}
+.tzchip:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.tzchip__ic{color:var(--cyan);flex:0 0 auto}
+.tzchip__code{font-family:'Oswald',sans-serif;font-weight:700;font-size:12.5px;letter-spacing:.4px}
+.tzchip__off{font-family:'Inter',sans-serif;font-weight:700;font-size:10.5px;letter-spacing:.3px;color:var(--gold);background:rgba(255,192,46,.12);border-radius:5px;padding:2px 5px}
+.tzchip__car{color:var(--dim);flex:0 0 auto;transition:transform .15s}
+.tzchip[aria-expanded="true"] .tzchip__car{transform:rotate(180deg)}
+.iconbtn{position:relative;width:36px;height:36px;flex:0 0 auto;display:grid;place-items:center;border-radius:9px;background:var(--card2);border:1px solid var(--line);color:var(--mut);cursor:pointer;transition:.15s}
+.iconbtn:active{transform:scale(.96)}
+.iconbtn:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.iconbtn--install{color:var(--gold);border-color:rgba(255,192,46,.35);background:rgba(255,192,46,.08)}
+.authbtn{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 12px;border-radius:9px;cursor:pointer;white-space:nowrap;font-family:'Oswald',sans-serif;font-weight:600;font-size:12.5px;letter-spacing:.4px;color:var(--navy);background:var(--gold);border:1px solid transparent;transition:.15s}
+.authbtn:active{transform:scale(.97)}
+.authbtn:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.authbtn.is-out{color:var(--txt);background:transparent;border-color:var(--line)}
+.authbtn__ico{flex:0 0 auto}
+.seg{display:inline-flex;background:var(--card2);border:1px solid var(--line);border-radius:9px;padding:2px;height:34px;align-items:center;gap:2px}
+.seg__btn{appearance:none;border:0;background:transparent;cursor:pointer;font-family:'Oswald',sans-serif;font-weight:600;font-size:12px;letter-spacing:.4px;color:var(--mut);min-width:46px;padding:0 12px;height:28px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;transition:.15s}
+.seg__btn--ar{font-family:'Inter',sans-serif}
+.seg__btn.is-on{background:var(--rust);color:#fff;box-shadow:0 1px 2px rgba(0,0,0,.35)}
+.seg__btn:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
+.sheet{position:absolute;top:calc(100% - 4px);inset-inline-end:12px;z-index:60;width:262px;padding:10px;border-radius:14px;background:var(--card);border:1px solid var(--line);box-shadow:0 14px 34px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:9px}
+.sheet[hidden]{display:none}
+.sheet__top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:-1px 0 2px;padding-bottom:9px;border-bottom:1px solid var(--line)}
+.sheet__ttl{font-family:'Oswald';font-weight:700;font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--mut)}
+.sheet__x{flex:none;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.08);border:none;color:var(--txt);font-size:17px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+.sheet__x:hover,.sheet__x:active{background:rgba(255,255,255,.16)}
+.sheet__install{display:none}
+.sheet.is-installable .sheet__install{display:flex;align-items:center;gap:10px;width:100%;text-align:start;padding:11px;margin-bottom:9px;background:var(--card2);border:1px solid var(--gold);border-radius:12px;cursor:pointer;color:var(--txt)}
+.sheet__install:active{filter:brightness(1.15)}
+.sheet__install-ic{flex:0 0 auto;width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:rgba(255,192,46,.14);color:var(--gold);border-radius:10px}
+.sheet__install-txt{display:flex;flex-direction:column;gap:2px;min-width:0;text-align:start}
+.sheet__install-title{font-family:'Oswald',sans-serif;font-weight:600;font-size:14px;letter-spacing:.2px}
+.sheet__install-sub{font-size:11px;color:var(--mut);line-height:1.3}
+.sheet__install-caret{margin-inline-start:auto;color:var(--mut);flex:0 0 auto}
+html[dir="rtl"] .sheet__install-caret{transform:scaleX(-1)}
+.sheet::before{content:"";position:absolute;top:-6px;inset-inline-end:64px;width:11px;height:11px;background:var(--card);border-left:1px solid var(--line);border-top:1px solid var(--line);transform:rotate(45deg)}
+.sheet__row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.sheet__lab{font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;color:var(--mut);white-space:nowrap}
+.sheet__ctrl{flex:1 1 auto;min-width:0}
+.tzsel{width:100%;height:34px;padding:0 28px 0 10px;border-radius:9px;background:var(--card2);border:1px solid var(--line);color:var(--txt);font-family:'Inter',sans-serif;font-size:12.5px;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6' fill='none' stroke='%238fa2d8' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.tzsel option{background:var(--card);color:var(--txt)}
+.connbar{max-width:760px;margin:0 auto;height:18px;padding:0 14px;display:flex;align-items:center;gap:6px;background:var(--card2);border-bottom:1px solid var(--line)}
+.condot{width:6px;height:6px;border-radius:50%;background:var(--green);flex:0 0 auto;animation:condotPulse 2s infinite}
+.condot.is-off{background:var(--dim);animation:none}
+.condot.is-wait{background:var(--gold);animation:condotPulse 1.2s infinite}
+.contxt{font-family:'Inter',sans-serif;font-size:10px;font-weight:600;letter-spacing:.5px;color:var(--dim);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conr{margin-inline-start:auto;display:flex;align-items:center;gap:7px;flex:0 0 auto}
+.cz{font-family:'Oswald',sans-serif;font-weight:600;font-size:10px;letter-spacing:.5px;color:var(--mut);text-transform:uppercase}
+.cz--off{color:var(--gold);font-weight:700;text-transform:none}
+.tzchip__lab{font-family:'Oswald',sans-serif;font-weight:600;font-size:12.5px;letter-spacing:.4px}
+.clock{font-family:'Oswald',sans-serif;font-weight:600;font-size:11.5px;letter-spacing:.5px;color:var(--txt);font-variant-numeric:tabular-nums}
+@keyframes condotPulse{0%{box-shadow:0 0 0 0 rgba(0,210,106,.5)}70%{box-shadow:0 0 0 5px rgba(0,210,106,0)}100%{box-shadow:0 0 0 0 rgba(0,210,106,0)}}
+/* trailing buttons collapse to 36px icon squares on narrow phones; labels reveal as room allows */
+/* Settings collapses to an icon on narrow phones; Sign in/out ALWAYS keeps its label (so it can't be mistapped) */
+.tzchip{width:36px;padding:0;justify-content:center}
+.tzchip__lab,.tzchip__car{display:none}
+@media (min-width:420px){.appbar__inner{gap:10px}.tzchip{width:auto;padding:0 9px}.tzchip__car{display:inline}}
+@media (min-width:480px){.tzchip__lab{display:inline}}
+html[dir="rtl"] .appbar__inner{direction:rtl}
+html[dir="rtl"] .connbar{direction:rtl}
+html[dir="rtl"] .clock,html[dir="rtl"] .cz{direction:ltr;unicode-bidi:isolate}
+html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px center;text-align:right}
 </style>
 </head>
 <body>
 <div class="wrap">
 <div class="topbar">
-<header>
- <div class="brand">
-  <div class="crest" onclick="goHome()" style="cursor:pointer" title="Home · today's matches"><img src="logo.png" alt="World Cup 2026"></div>
-  <div>
-   <div class="bname" onclick="goHome()" style="cursor:pointer" title="Home · today's matches">WORLD CUP <b>2026</b></div>
-   <div class="bsub">ALL TIMES <select id="tzSel" onchange="setTZ(this.value)" aria-label="Time zone"></select><span id="tzOff"></span><span id="fmtTog" class="fmtseg" role="group" aria-label="Time format" title="Tap to switch between AM·PM and 24-hour clock"><button type="button" class="fseg" data-h12="1" onclick="setHour12(true)">AM·PM</button><button type="button" class="fseg" data-h12="0" onclick="setHour12(false)">24H</button></span><span id="langTog" class="fmtseg" role="group" aria-label="Language" title="English / العربية"><button type="button" class="fseg lseg" data-lang="en" onclick="setLang('en')">EN</button><button type="button" class="fseg lseg" data-lang="ar" onclick="setLang('ar')">عربي</button></span></div>
+<header class="appbar">
+ <div class="appbar__inner">
+  <div class="brand" onclick="goHome()" style="cursor:pointer" title="Home · today's matches">
+   <span class="brand__crest" aria-hidden="true"><img src="logo.png" alt="World Cup 2026" width="22" height="30"></span>
+   <span class="brand__name">WORLD CUP <b>2026</b></span>
   </div>
-  <div class="hright">
-   <button type="button" id="instIco" class="instico" onclick="installApp()" aria-label="Install app" title="Install app" style="display:none"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg></button>
-   <div class="hr-meta">
-    <div class="uaeclock" id="clock">--:--</div>
-    <div class="constate"><span class="dot" id="condot"></span><span id="contxt">CONNECTING</span></div>
-   </div>
+  <div class="cluster">
+   <button class="tzchip" id="setBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="setSheet" aria-label="Settings" onclick="toggleSettings(event)">
+    <svg class="tzchip__ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+    <span class="tzchip__lab">Settings</span>
+    <svg class="tzchip__car" viewBox="0 0 24 24" width="11" height="11" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+   </button>
+   <button class="authbtn" id="authTog" type="button" onclick="openAuth('L')"><svg class="authbtn__ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span class="authbtn__txt">Sign in</span></button>
+  </div>
+  <div class="sheet" id="setSheet" role="dialog" aria-label="Display settings" hidden>
+   <div class="sheet__top"><span class="sheet__ttl">Settings</span><button type="button" class="sheet__x" onclick="closeSettings()" aria-label="Close settings">&#215;</button></div>
+   <button type="button" class="sheet__install" id="installRow" onclick="installApp()" aria-label="Install app"><span class="sheet__install-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 3v10m0 0l-4-4m4 4l4-4M5 19h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="sheet__install-txt"><span class="sheet__install-title">Install app</span><span class="sheet__install-sub">Add to your home screen</span></span><svg class="sheet__install-caret" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+   <div class="sheet__row"><label class="sheet__lab" for="tzSel">Time zone</label><div class="sheet__ctrl"><select class="tzsel" id="tzSel" onchange="setTZ(this.value)" aria-label="Time zone"></select></div></div>
+   <div class="sheet__row"><span class="sheet__lab" id="fmtLab">Time format</span><div class="seg" id="fmtTog" role="radiogroup" aria-labelledby="fmtLab"><button class="seg__btn is-on" type="button" data-h12="1" onclick="setHour12(true)">AM·PM</button><button class="seg__btn" type="button" data-h12="0" onclick="setHour12(false)">24H</button></div></div>
+   <div class="sheet__row"><span class="sheet__lab" id="langLab">Language</span><div class="seg" id="langTog" role="radiogroup" aria-labelledby="langLab"><button class="seg__btn is-on" type="button" data-lang="en" onclick="setLang('en')">EN</button><button class="seg__btn seg__btn--ar" type="button" data-lang="ar" onclick="setLang('ar')">عربي</button></div></div>
   </div>
  </div>
+ <div class="connbar"><span class="condot" id="condot" aria-hidden="true"></span><span class="contxt" id="contxt">CONNECTING</span><span class="conr"><span class="cz" id="tzCode">UAE</span><span class="cz cz--off" id="tzOff">UTC+4</span><time class="clock" id="clock" aria-label="Local time">--:--</time></span></div>
 </header>
 <nav>
  <button id="tabM" class="on" onclick="showTab('M')">MATCHES</button>
@@ -695,8 +827,10 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 </div>
 <main>
  <section id="paneM">
+  <div id="liveSummary"></div>
   <div id="heroBox"></div>
-  <div class="dwrap" id="dwrap"><div class="dstrip" id="dstrip"></div><div class="natsearch" id="natSearch"><input id="natFilter" type="text" placeholder="🔎 Search by nation" autocomplete="off" oninput="natSearchInput()" onfocus="natSearchInput()" onblur="natSearchClose()" onkeydown="natKey(event)" aria-label="Search matches by nation"><div class="natlist hide" id="natListBox" role="listbox"></div></div></div>
+  <div class="dwrap" id="dwrap"><div class="dstrip" id="dstrip"></div></div>
+  <div class="natsearch" id="natSearch"><input id="natFilter" type="text" readonly inputmode="search" placeholder="🔎 Choose a nation to view its scheduled matches" autocomplete="off" onclick="natTap(event)" oninput="natSearchInput()" onkeydown="natKey(event)" aria-label="Choose a nation to view its scheduled matches"><button type="button" class="natclear" id="natClear" aria-label="Clear selected nation" onmousedown="event.preventDefault()" onclick="clearNationFilter()">&#215;</button><div class="natlist hide" id="natListBox" role="listbox"></div></div>
   <div class="filterbanner hide" id="filterBanner"></div>
   <div id="mlist"><div class="empty"><div class="big">⚽</div>Loading matches…</div></div>
  </section>
@@ -739,7 +873,7 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API</footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.05</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -755,12 +889,22 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
   </div>
   <input id="auUser" maxlength="15" placeholder="Username · letters, numbers, _" autocomplete="username">
   <input id="auPass" type="password" maxlength="30" placeholder="Password" autocomplete="current-password">
-  <select id="auNation"><option value="">Choose your nation…</option></select>
+  <button type="button" id="auNationBtn" class="aunatbtn" onclick="openAuthNation(event)"><span id="auNationLab">Choose your nation…</span><svg class="aunatbtn__car" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <input type="hidden" id="auNation" value="">
   <div id="authErr"></div>
   <label class="authrem" id="authRemRow"><span>Remember me on this device</span><input type="checkbox" id="auRem" checked></label>
   <button id="authBtn" onclick="authSubmit()">LET'S GO ⚽</button>
   <button id="authSkip" class="authskip" onclick="authSkip()">Not now · just browsing 👀</button>
   <div class="authnote">Log in once per device · that's it. Forgot your password? Ask Ahmed to reset it.</div>
+ </div>
+</div>
+
+<div id="natPick" class="natpick hide" role="dialog" aria-label="Choose your nation">
+ <div class="natpick__box">
+  <button class="natpick__x" onclick="closeNatPicker()" aria-label="Close">&#215;</button>
+  <h2 id="natPickTitle">CHOOSE YOUR NATION</h2>
+  <input id="natPickIn" type="text" inputmode="search" placeholder="🔎 Search nations" autocomplete="off" oninput="natPickRender()">
+  <div id="natPickList" class="natpick__list" role="listbox"></div>
  </div>
 </div>
 
@@ -776,6 +920,10 @@ const STATS_KEY = "capriole_wc26_analytics";   // internal visitor counter (aggr
 const SEASON_RANGE = "20260611-20260719";
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
+const APP_VERSION = "2.05";
+// One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
+// Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
+const FORCE_RELOAD = "2026-06-21-v205";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -843,7 +991,7 @@ const uaeYMD = d => {
 };
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 function setCon(ok, msg) {
-  $("condot").className = "dot " + (ok === null ? "" : ok ? "ok" : "bad");
+  $("condot").className = "condot " + (ok === null ? "is-wait" : ok ? "" : "is-off");
   $("contxt").textContent = msg;
 }
 async function getJSON(url) {
@@ -876,7 +1024,7 @@ const ZONES = [
 function tzAbbr() { for (const g of ZONES) for (const z of g[1]) if (z[0] === TZ) return (LANG==="ar" && typeof AR_TZABBR!=="undefined" && AR_TZABBR[z[2]]) ? AR_TZABBR[z[2]] : z[2]; return LANG==="ar" ? "الإمارات" : "UAE"; }
 function tzOffset(tz) { try { const p = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "shortOffset" }).formatToParts(new Date()).find(x => x.type === "timeZoneName"); return p ? p.value.replace("GMT", "UTC") : ""; } catch (_) { return ""; } }
 function fillTZ() { const s = $("tzSel"); if (!s || s.options.length) return; s.innerHTML = ZONES.map(g => '<optgroup label="' + ((LANG==="ar" && typeof AR_GROUPS!=="undefined" && AR_GROUPS[g[0]]) ? AR_GROUPS[g[0]] : g[0]) + '">' + g[1].map(z => '<option value="' + z[0] + '"' + (z[0] === TZ ? " selected" : "") + '>' + z[1] + '</option>').join("") + '</optgroup>').join(""); updateTzLabel(); }
-function updateTzLabel() { const o = $("tzOff"); if (o) { const off = tzOffset(TZ); o.textContent = off ? " · " + off : ""; } }
+function updateTzLabel() { const c = $("tzCode"); if (c) c.textContent = tzAbbr(); const o = $("tzOff"); if (o) o.textContent = tzOffset(TZ) || ""; }
 function reRenderTimes() {
   buildStrip(); renderHero();
   if (!$("paneM").classList.contains("hide")) renderMatches();   // refresh card kick-off + stadium-local times on TZ/format change
@@ -889,7 +1037,7 @@ function setTZ(v) {
   const s = $("tzSel"); if (s) s.value = v;
   updateTzLabel(); reRenderTimes();
 }
-function updateFmtTog() { const seg = $("fmtTog"); if (!seg) return; const cur = HOUR12 ? "1" : "0"; seg.querySelectorAll(".fseg").forEach(b => b.classList.toggle("on", b.dataset.h12 === cur)); }
+function updateFmtTog() { const seg = $("fmtTog"); if (!seg) return; const cur = HOUR12 ? "1" : "0"; seg.querySelectorAll(".seg__btn").forEach(b => { const on = b.dataset.h12 === cur; b.classList.toggle("is-on", on); b.setAttribute("aria-checked", on ? "true" : "false"); }); }
 /* ================= LANGUAGE (English default · Arabic with full RTL) ================= */
 let LANG = (function(){ try { const s = localStorage.getItem("cs_lang"); if (s === "ar" || s === "en") return s; const sys = (((navigator.languages && navigator.languages[0]) || navigator.language || "")).toLowerCase(); return sys.indexOf("ar") === 0 ? "ar" : "en"; } catch(_) { return "en"; } })();
 const AR = {
@@ -954,7 +1102,7 @@ Object.assign(AR, {
   "🏆 Weekly top predictor is crowned the":"🏆 يُتوَّج صاحب أعلى التوقّعات أسبوعياً ليكون","CHAMPION OF THE WEEK!":"بطل الأسبوع!","topped last week":"تصدّر الأسبوع الماضي","🏆 OVERALL · ALL WEEKS":"🏆 الإجمالي · كل الأسابيع","Total points across the whole tournament":"مجموع النقاط طوال البطولة","highest wins on finals day":"الأعلى يفوز يوم النهائي",
   "Sign in to make predictions, earn points & climb the leaderboard · browsing stays free.":"سجّل الدخول لإجراء التوقّعات وجمع النقاط وتصدّر الترتيب · التصفّح يبقى مجانياً.","Sign in to post in the team chat · reading is always free.":"سجّل الدخول للكتابة في دردشة الفريق · القراءة مجانية دائماً.",
   "AM·PM":"ص·م","24H":"24 س",
-  "⤢ OPEN FULL TREE":"⤢ عرض الشجرة كاملة","⬇ DOWNLOAD (PNG)":"⬇ تنزيل (PNG)","3rd place":"المركز الثالث","Winner":"الفائز","To be played":"لم تُلعب بعد","Awaiting":"بانتظار النتيجة","AET / Pens":"تمديد / ترجيح","THIRD-PLACE PLAY-OFF":"مباراة المركز الثالث",
+  "⤢ OPEN FULL TREE":"⤢ عرض المخطّط كاملاً","⬇ DOWNLOAD (PNG)":"⬇ تنزيل (PNG)","3rd place":"المركز الثالث","Winner":"الفائز","To be played":"لم تُلعب بعد","Awaiting":"بانتظار النتيجة","AET / Pens":"تمديد / ترجيح","THIRD-PLACE PLAY-OFF":"مباراة المركز الثالث",
   "TOP 2 · DIRECT R32":"الأول والثاني · تأهّل مباشر لدور الـ32","3RD · BEST-THIRD RACE":"الثالث · سباق أفضل ثالث","4TH · OUT":"الرابع · خارج",
   "ROUND OF 32":"دور الـ32","ROUND OF 16":"دور الـ16","QUARTER-FINALS":"ربع النهائي","SEMI-FINALS":"نصف النهائي","QUARTER-FINAL":"ربع النهائي","SEMI-FINAL":"نصف النهائي","FINAL":"النهائي","R32":"دور الـ32","R16":"دور الـ16","QF":"ربع النهائي","SF":"نصف النهائي",
   "GROUPS":"المجموعات","Loading standings…":"جارٍ تحميل الترتيب…",
@@ -970,13 +1118,15 @@ Object.assign(AR, {
   "📲 Install to phone":"📲 ثبّت على هاتفك","Install to phone":"ثبّت على هاتفك"
 });
 // multi-word phrases for substring replacement inside composite nodes (longest first; safe, no single short words)
+Object.assign(AR, {"Time zone":"المنطقة الزمنية","Time format":"صيغة الوقت","Language":"اللغة","Settings":"الإعدادات","Install app":"تثبيت التطبيق","Add to your home screen":"أضِفه إلى شاشتك الرئيسية"});
+Object.assign(AR, {"NEXT MATCH":"المباراة القادمة","NO UPCOMING MATCH":"لا مباراة قادمة","LIVE NOW":"مباشر الآن","TO KICK-OFF":"حتى الانطلاق","LIVE":"مباشر","CHOOSE A NATION":"اختر منتخباً","Choose a nation":"اختر منتخباً","Tap to follow your team · your next match, live highlights & their road to the final":"اضغط لمتابعة منتخبك · مباراته القادمة وأبرز اللقطات وطريقه إلى النهائي","Choose a nation to view its scheduled matches":"اختر منتخباً لعرض مبارياته المجدولة"});
 const AR_PHRASES = Object.keys(AR).filter(k => /\s/.test(k) && /[A-Za-z]/.test(k)).sort((a,b)=>b.length-a.length);
 // dynamic / numeric templates
 const AR_RX = [
   [/LIVE FEED · UPDATED (\d+)([SM]) AGO/g, (m,n,u)=>"البث المباشر · حُدِّث قبل "+n+(u==="S"?" ث":" د")],
   [/UPDATED (\d+)([SM]) AGO/g, (m,n,u)=>"حُدِّث قبل "+n+(u==="S"?" ث":" د")],
   [/● LIVE · UPDATES EVERY (\d+)s/gi, (m,n)=>"● مباشر · تحديث كل "+n+" ثانية"],
-  [/Knockout bracket inside ↑ · fills in as groups finish/g, "شجرة الأدوار الإقصائية بالأعلى ↑ · تكتمل مع انتهاء المجموعات"],
+  [/Knockout bracket inside ↑ · fills in as groups finish/g, "مخطّط الأدوار الإقصائية بالأعلى ↑ · تكتمل مع انتهاء المجموعات"],
   [/^FIFA #(\d+)$/g, "فيفا #$1"],
   [/(\d+) exact\b/g, "$1 صحيحة"],
   [/(\d+) played\b/g, "$1 لعِبت"],
@@ -990,6 +1140,8 @@ const AR_RX = [
   [/SHOW TOP (\d+)/g, "عرض أفضل $1"],
   [/FULL[ -]TIME/g, "انتهت المباراة"],
   [/HALF[ -]TIME/g, "نهاية الشوط الأول"],
+  [/●\s*PENALTY SHOOTOUT/g, "● ركلات الترجيح"],
+  [/●\s*LIVE\b/g, "● مباشر"],
   [/\bPENS\b/g, "ركلات ترجيح"],
   [/\bAET\b/g, "بعد التمديد"],
   [/\bFT\b/g, "انتهت"]
@@ -1037,7 +1189,7 @@ function applyLangInit(){
   if(!_arObs){ _arObs = new MutationObserver(ms => { for(const m of ms){ if(m.type === "characterData"){ _tNode(m.target); } else if(m.addedNodes){ m.addedNodes.forEach(nd => translateTree(nd)); } } }); _arObs.observe(document.body, { childList:true, subtree:true, characterData:true }); }
 }
 function setLang(v){ try { localStorage.setItem("cs_lang", v === "ar" ? "ar" : "en"); } catch(_) {} location.reload(); }
-function updateLangTog(){ const seg = $("langTog"); if(!seg) return; seg.querySelectorAll(".fseg").forEach(b => b.classList.toggle("on", b.dataset.lang === LANG)); }
+function updateLangTog(){ const seg = $("langTog"); if(!seg) return; seg.querySelectorAll(".seg__btn").forEach(b => { const on = b.dataset.lang === LANG; b.classList.toggle("is-on", on); b.setAttribute("aria-checked", on ? "true" : "false"); }); }
 function setHour12(v) { if (HOUR12 === v) return; HOUR12 = v; try { localStorage.setItem("cs_h12", v ? "1" : "0"); } catch (_) {} updateFmtTog(); reRenderTimes(); }
 
 /* ================= TABS ================= */
@@ -1148,32 +1300,60 @@ async function fillNatFilter() {
   _natNames = names;
   try { await natLogos(); } catch (_) {}   // warm the existing nation→flag cache for the search list
 }
-// custom search combobox · type to narrow the list (no native datalist; that popped the full list + crashed mobile)
+// custom search combobox · open to everyone. 1st tap drops the list (no keyboard);
+// 2nd tap turns on typing. `readonly` is the off-switch for the mobile keyboard.
+function natOpen() { const b = $("natListBox"); return !!(b && !b.classList.contains("hide")); }
+function natReset() { const inp = $("natFilter"); if (inp) { inp.setAttribute("readonly", ""); inp.blur(); } }   // re-arm "1st tap = list", drop keyboard
+function updateNatLock() {   // nation search is open to everyone · just keep the placeholder language-correct
+  const inp = $("natFilter"); if (!inp) return;
+  const ar = (typeof LANG !== "undefined" && LANG === "ar");
+  inp.placeholder = ar ? "🔎 اختر منتخباً لعرض مبارياته المجدولة" : "🔎 Choose a nation to view its scheduled matches";
+}
+function natTap(e) {
+  if (e) e.stopPropagation();
+  const inp = $("natFilter");
+  if (!natOpen()) { natSearchInput(); return; }                  // 1st tap: drop the list, keyboard stays down
+  if (inp && inp.hasAttribute("readonly")) {                     // 2nd tap: enable typing → keyboard
+    inp.removeAttribute("readonly");
+    inp.blur(); inp.focus();                                     // sync blur+focus on the now-editable field opens the keyboard
+    try { inp.setSelectionRange(0, (inp.value || "").length); } catch (_) {}   // select-all so the first keystroke replaces
+  }
+}
 function natSearchInput() {
-  const q = ($("natFilter").value || "").trim().toLowerCase();
-  const box = $("natListBox"); if (!box) return;
+  const inp = $("natFilter"); const box = $("natListBox"); if (!box) return;
+  const typing = inp && !inp.hasAttribute("readonly");           // browse mode (readonly) shows ALL · typing filters
+  const q = typing ? (inp.value || "").trim().toLowerCase() : "";
   const matches = _natNames.filter(n => !q || n.toLowerCase().indexOf(q) !== -1);
-  box.innerHTML = matches.length
+  const head = '<div class="natlhead"><span class="natltt">' + (LANG === "ar" ? "اختر منتخباً" : "CHOOSE A NATION") + '</span>' +
+    '<button type="button" class="natlx" aria-label="Close list" onmousedown="event.preventDefault()" onclick="natListClose(event)">&#215;</button></div>';
+  box.innerHTML = head + (matches.length
     ? matches.map(n => { const lg = (_natLogos && _natLogos[n]) || "";
         return '<div class="natitem" role="option" data-n="' + esc(n) + '" onmousedown="event.preventDefault()" onclick="chooseNation(this.dataset.n)">' +
           (lg ? '<img src="' + esc(lg) + '" alt="" onerror="this.style.visibility=\'hidden\'">' : '') +
           '<span class="nn">' + esc(n) + '</span></div>'; }).join("")
-    : '<div class="natempty">No nation matches that.</div>';
+    : '<div class="natempty">' + (LANG === "ar" ? "لا يوجد منتخب مطابق." : "No nation matches that.") + '</div>');
   box.classList.remove("hide");
 }
-function natSearchClose() { setTimeout(() => { const b = $("natListBox"); if (b) b.classList.add("hide"); }, 150); }   // delay so an item click registers first
-function chooseNation(n) { const inp = $("natFilter"); if (inp) { inp.value = n; inp.blur(); } const b = $("natListBox"); if (b) b.classList.add("hide"); setNationFilter(n); }
+function natListClose(e) { if (e) e.stopPropagation(); const b = $("natListBox"); if (b) b.classList.add("hide"); natReset(); }   // dismiss without choosing
+function chooseNation(n) { const inp = $("natFilter"); if (inp) inp.value = (typeof LANG !== "undefined" && LANG === "ar") ? tAR(n) : n;   /* display the name in the active language · the English `n` still drives the filter */ const b = $("natListBox"); if (b) b.classList.add("hide"); natReset(); setNationFilter(n); }
 function natKey(e) {
-  if (e.key === "Escape") { const b = $("natListBox"); if (b) b.classList.add("hide"); e.target.blur(); }
+  if (e.key === "Escape") { const b = $("natListBox"); if (b) b.classList.add("hide"); natReset(); }
   else if (e.key === "Enter") { const q = (e.target.value || "").trim().toLowerCase(); if (!q) return;
     const m = _natNames.find(n => n.toLowerCase() === q) || _natNames.find(n => n.toLowerCase().indexOf(q) !== -1); if (m) chooseNation(m); }
 }
+// tap anywhere outside the search → close the list and re-arm
+addEventListener("click", e => {
+  if (!natOpen()) return;
+  if (e.target && e.target.closest && e.target.closest("#natSearch")) return;   // inside → items/buttons handle it
+  $("natListBox").classList.add("hide"); natReset();
+});
 async function setNationFilter(raw) {
   const v = (raw || "").trim();
   if (!v) return clearNationFilter();
   const name = _natNames.find(n => n.toLowerCase() === v.toLowerCase());   // resolve typed text to a real nation
   if (!name) return;   // partial / unrecognised text · wait for a valid pick from the list
   nationFilter = name;
+  const _ns = $("natSearch"); if (_ns) _ns.classList.add("chosen");   // reveals the clear-(×) on the bar
   let evs = []; try { evs = await seasonEvents(); } catch (_) {}
   _natMatches = evs.filter(e => (e.competitions[0].competitors || []).some(c => c.team && c.team.displayName === nationFilter))
                    .sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -1182,14 +1362,18 @@ async function setNationFilter(raw) {
   $("dwrap").classList.add("hide");
   const fb = $("filterBanner");
   fb.className = "filterbanner" + (nationFilter === myNation() ? " me" : "");
+  const _ar = (typeof LANG !== "undefined" && LANG === "ar");
+  const _cnt = _ar ? (_natMatches.length + " " + (_natMatches.length === 1 ? "مباراة" : "مباريات"))
+                   : (_natMatches.length + " match" + (_natMatches.length === 1 ? "" : "es"));
   fb.innerHTML = (logoUrl ? '<img class="ff" src="' + esc(logoUrl) + '" alt="" onerror="this.style.display=\'none\'">' : '') +
-    '<div class="fmeta"><span class="fn">' + esc(nationFilter) + '</span><span class="fc">' + _natMatches.length + ' match' + (_natMatches.length === 1 ? '' : 'es') + '</span></div>' +
-    '<button class="fbx" onclick="clearNationFilter()" aria-label="Clear nation filter">× Clear</button>';
+    '<div class="fmeta"><span class="fn">' + esc(_ar ? tAR(nationFilter) : nationFilter) + '</span><span class="fc">' + _cnt + '</span></div>';
+    /* clear lives on the search bar (the × there) · no separate Clear button needed */
   renderMatches();
 }
 function clearNationFilter() {
   nationFilter = ""; _natMatches = [];
   const sel = $("natFilter"); if (sel) sel.value = "";
+  const _ns = $("natSearch"); if (_ns) _ns.classList.remove("chosen");
   const lb = $("natListBox"); if (lb) lb.classList.add("hide");
   $("filterBanner").className = "filterbanner hide";
   $("dwrap").classList.remove("hide");
@@ -1289,7 +1473,7 @@ function renderMatches() {
     if (hasPred(myp)) {
       let pb = "";
       if (state === "post") {
-        const s = scorePred(myp, H, A, e), top = isFinalEvent(e) ? 10 : 3;
+        const s = scoreFinal(myp, H, A, e), top = isFinalEvent(e) ? 10 : 3;
         pb = " · " + (s === 0 ? "0 PTS" : (s === top ? (myp.pens ? "PENS CALLED! " : "EXACT! ") : "RESULT ") + "+" + s + " PT" + (s > 1 ? "S" : ""));
       }
       const _ptxt = myp.pens ? esc((myp.w === "home" ? H : A).team.displayName) + " on pens" : myp.h + "–" + myp.a;
@@ -1321,7 +1505,7 @@ function renderMatches() {
       ? '<div class="mhint">&#9662; Press for match details</div>'
       : '<div class="mhint">&#9662; Press for line-ups, formation &amp; stats</div>';
     const vt = venueTime(e);
-    return `<div class="mcard${egy ? " egy" : ""}${flashIds.has(e.id) ? " goal" : ""}${openId === e.id ? " open" : ""}${liveCls}" onclick="toggleM('${e.id}')">
+    return `<div class="mcard${egy ? " egy" : ""}${flashIds.has(e.id) ? " goal" : ""}${openId === e.id ? " open" : ""}${liveCls}" id="mc${e.id}" onclick="toggleM('${e.id}')">
       <div class="mtop">${badge}<span>${esc(note)}</span><span style="margin-left:auto">${dayw}</span></div>
       <div class="mrow">
         <div class="${hCls}">${logo(H)}<span class="tcol"><span class="tname${H.team.displayName === myNation() ? " egy" : ""}">${esc(H.team.displayName)}</span>${rankChip(H)}</span></div>
@@ -1359,8 +1543,51 @@ function renderMatches() {
     if (_stChanged) fillDetail(openId, true);            // pull fresh data once on a state change
   }
   // card TV comes straight from the scoreboard · no per-card /summary fetch (keeps the matches list light)
+  renderLiveSummary();
 }
 const logo = c => `<img src="${c.team.logo || ""}" alt="" onerror="this.style.visibility='hidden'">`;
+// Compact LIVE NOW strip at the top of Matches: each in-progress match as flag · ABBR · score · ABBR · flag · minute.
+function renderLiveSummary() {
+  const box = $("liveSummary"); if (!box) return;
+  const list = events;   // LIVE NOW is tournament-wide · the nation filter narrows only the cards below, never this strip
+  const live = (list || []).filter(e => e.status && e.status.type && e.status.type.state === "in");
+  if (!live.length) { box.className = ""; box.style.display = "none"; box.innerHTML = ""; return; }
+  const nm = t => { const dn = t.team.displayName || t.team.shortDisplayName || t.team.abbreviation || ""; return esc((typeof LANG !== "undefined" && LANG === "ar") ? tAR(dn) : dn); };   // FULL names · translated to Arabic in Arabic mode
+  const fl = t => { const u = t.team.logo || (t.team.logos && t.team.logos[0] && t.team.logos[0].href) || ""; return u ? '<img src="' + esc(u) + '" alt="" onerror="this.style.visibility=\'hidden\'">' : ''; };
+  const rows = live.map(e => {
+    const c = e.competitions[0];
+    const H = c.competitors.find(x => x.homeAway === "home"), A = c.competitors.find(x => x.homeAway === "away");
+    const clk = esc(e.status.displayClock || (LANG === "ar" ? "مباشر" : "LIVE"));
+    return '<button type="button" class="lsrow" onclick="goLive(\'' + e.id + '\')">' +
+      '<span class="lsside lshome">' + fl(H) + '<span class="lsteam">' + nm(H) + '</span></span>' +
+      '<span class="lsmid"><span class="lsmin">' + clk + '</span><span class="lsscore">' + (H.score != null ? H.score : 0) + ' – ' + (A.score != null ? A.score : 0) + '</span></span>' +
+      '<span class="lsside lsaway"><span class="lsteam">' + nm(A) + '</span>' + fl(A) + '</span>' +
+      '<span class="lschev" aria-hidden="true">' + (LANG === "ar" ? "‹" : "›") + '</span>' +
+      '</button>';
+  }).join("");
+  const n = live.length, cnt = LANG === "ar" ? (n + " مباشرة") : (n + (n === 1 ? " match" : " matches"));
+  box.innerHTML = '<div class="lshead"><span class="lspulse"></span><span class="lshead__t">' + (LANG === "ar" ? "مباشر الآن" : "LIVE NOW") + '</span><span class="lscount">' + cnt + '</span></div>' + rows;
+  box.className = "livesum"; box.style.display = "";
+}
+function goLive(id) {   // tap a live-summary row → open + scroll to that match's full card
+  showTab("M");
+  const el = document.getElementById("mc" + id);
+  if (el) { if (openId !== id) toggleM(id); setTimeout(function () { const x = document.getElementById("mc" + id); if (x) x.scrollIntoView({ behavior: "smooth", block: "center" }); }, 80); }
+}
+function updateAuthTog() {   // header auth button: Sign in (logged out → login/create) / Sign out (logged in)
+  const b = $("authTog"); if (!b) return;
+  const ar = (typeof LANG !== "undefined" && LANG === "ar");
+  b.classList.toggle("is-out", !!cs_user);
+  b.onclick = cs_user ? signOut : function(){ openAuth("L"); };
+  const t = b.querySelector(".authbtn__txt");
+  if (t) t.textContent = cs_user ? (ar ? "تسجيل الخروج" : "Sign out") : (ar ? "تسجيل الدخول" : "Sign in");
+  try { updateNatLock(); } catch (_) {}   // keep the nation-search placeholder language-correct
+}
+// settings sheet (timezone / format / language) opened from the TZ chip
+function toggleSettings(e){ if(e) e.stopPropagation(); const sh=$("setSheet"); if(!sh) return; if(sh.hasAttribute("hidden")){ sh.removeAttribute("hidden"); const b=$("setBtn"); if(b) b.setAttribute("aria-expanded","true"); } else closeSettings(); }
+function closeSettings(){ const sh=$("setSheet"); if(sh && !sh.hasAttribute("hidden")){ sh.setAttribute("hidden",""); const b=$("setBtn"); if(b) b.setAttribute("aria-expanded","false"); } }
+addEventListener("click", e => { const sh=$("setSheet"); if(sh && !sh.hasAttribute("hidden") && e.target && e.target.closest && !e.target.closest("#setSheet") && !e.target.closest("#setBtn")) closeSettings(); });
+addEventListener("keydown", e => { if(e.key === "Escape") closeSettings(); });
 // Official FIFA Men's World Ranking snapshot · as of 18 Jun 2026 · keyed by ESPN 3-letter team code (matched by code,
 // not name, so IR Iran/Iran, Cabo Verde/Cape Verde etc. can't mis-map). Static: FIFA doesn't update mid-tournament;
 // refresh these 48 values when FIFA publishes a new ranking. Non-WC teams + bracket placeholders aren't in the map → no chip.
@@ -1912,13 +2139,12 @@ async function renderHero() {
     drawHero();
   } catch (_) { $("heroBox").innerHTML = ""; }
 }
-function heroBtns() {   // CHANGE + SIGN OUT, kept together on one right-aligned line (own row → never wraps)
-  return '<div class="herobtns" onclick="event.stopPropagation()"><span class="heroChange" onclick="openNation(event)">CHANGE NATION ⚙</span>' +
-    (cs_user ? '<span class="heroChange so" onclick="signOut()">SIGN OUT</span>' : '') + '</div>';
+function heroBtns() {   // CHANGE NATION only · sign out now lives in the header
+  return '<div class="herobtns" onclick="event.stopPropagation()"><span class="heroChange" onclick="pickMyNation(event)">CHANGE NATION ⚙</span></div>';
 }
 function drawHero() {
   if (!myNation()) {   // no nation chosen yet → prompt in the green card instead of defaulting to Egypt
-    $("heroBox").innerHTML = '<div class="hero" onclick="openNation(event)" style="cursor:pointer">' +
+    $("heroBox").innerHTML = '<div class="hero" onclick="pickMyNation(event)" style="cursor:pointer">' +
       '<div class="hl"><span>★ CHOOSE YOUR NATION</span><span class="heroChange">PICK ⚙</span></div>' +
       '<div class="hpick">Tap to follow your team · your next match, live highlights &amp; their road to the final</div></div>';
     return;
@@ -1976,9 +2202,9 @@ function weekKeyAddDays(key, n) {
   d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().slice(0, 10).replace(/-/g, "");
 }
-async function syncMyPreds() {
+async function syncMyPreds(preAll) {
   try {
-    const all = await readKey(PRED_KEY, {});
+    const all = preAll || await readKey(PRED_KEY, {});   // reuse a read already done this render (avoids a duplicate fetch)
     const sv = (all[myId] && all[myId].preds) || {};
     if (!all[myId] && Object.keys(myPreds).length) return;  // transient/empty read · keep local cache, don't wipe
     const clean = {};
@@ -1989,7 +2215,9 @@ async function syncMyPreds() {
 }
 async function renderPredict() {
   try {
-    await syncMyPreds();
+    let allPreds = null;
+    try { allPreds = await readKey(PRED_KEY, {}); } catch (_) { allPreds = null; }   // ONE read · shared by syncMyPreds + loadLeaderboard below
+    await syncMyPreds(allPreds);
     const evs = await seasonEvents();
     const now = Date.now();
     const up = evs.filter(e => e.status.type.state === "pre" && new Date(e.date) > now && ((e.competitions[0] || {}).competitors || []).every(c => c.team && c.team.logo));   // real-team fixtures only (skip knockout placeholders)
@@ -2030,7 +2258,7 @@ async function renderPredict() {
       recent.map(e => predCard(e, true)).join("");
     const guestBanner = !cs_user ? '<div class="guestbar">👀 You’re browsing as a guest · <button onclick="openAuth(\'C\',{ctx:\'predict\'})">Sign in</button> to make predictions &amp; climb the leaderboard.</div>' : "";
     $("predList").innerHTML = guestBanner + html;
-    loadLeaderboard(evs);
+    loadLeaderboard(evs, allPreds);
     predictPopups(koUp);   // one-time knockout-rules / finale briefing
   } catch (err) {
     $("predList").innerHTML = '<div class="empty">Could not load fixtures · check connection.</div>';
@@ -2045,7 +2273,7 @@ function predCard(e, started) {
   const isKO = isKOEvent(e), isFin = isFinalEvent(e);
   let meta;
   if (e.status.type.state === "post") {
-    const pts = scorePred(p, H, A, e);
+    const pts = scoreFinal(p, H, A, e);
     meta = '<span class="res">FT ' + (H.score ?? "-") + '–' + (A.score ?? "-") + '</span>' +
       '<span class="pts' + pts + '">' + (hasPred(p) ? pts + " PTS" : "NO PREDICTION") + '</span>';
   } else {
@@ -2111,6 +2339,29 @@ function scorePred(p, H, A, e) {
   if (ph === h && pa === a) return 3;
   if (Math.sign(ph - pa) === Math.sign(h - a)) return 1;
   return 0;
+}
+/* ---- Incremental leaderboard scoring (cache the past · only compute the new) ----
+   A finished match's result never changes, so its points for a given prediction are a
+   pure function of (final score, prediction) and need computing only once. We memoise
+   per (matchId · finalResult · prediction); last week's finals stay cached and only this
+   week's newly-finished matches actually run scorePred. The key embeds the final score +
+   shootout + final-flag, so a post-FT correction (or a changed pick) busts it automatically
+   — the cached total can never drift from a full recompute. */
+const _ptsCache = new Map();
+function matchFinalKey(e, H, A) {   // identity of a finished result · null until the match is final
+  if (!e || !e.status || !e.status.type || e.status.type.state !== "post") return null;
+  if (H.score == null || A.score == null || H.score === "" || A.score === "") return null;
+  const so = (H.shootoutScore != null && A.shootoutScore != null) ? (H.shootoutScore + "-" + A.shootoutScore) : "";
+  return H.score + ":" + A.score + (so ? "/" + so : "") + (isFinalEvent(e) ? "#F" : "");
+}
+function _predSig(p) { return !p ? "" : (p.pens ? "P:" + (p.w || "") : (p.h + "v" + p.a)); }
+function scoreFinal(p, H, A, e) {   // same value as scorePred for FINISHED matches, memoised
+  const fk = matchFinalKey(e, H, A);
+  if (fk == null) return scorePred(p, H, A, e);   // not final yet → still in flux, never cache
+  const k = e.id + "|" + fk + "|" + _predSig(p);
+  let v = _ptsCache.get(k);
+  if (v === undefined) { v = scorePred(p, H, A, e); _ptsCache.set(k, v); }
+  return v;
 }
 async function submitPred(btn, ev) {
   ev.stopPropagation();
@@ -2308,7 +2559,7 @@ function installInstructionsHtml(){
     '<p>' + bi("أيقونة على شاشتك تفتح التطبيق مباشرةً، دون كتابة الرابط.", "An icon on your home screen that opens the app directly.") + '</p>' +
     steps + btn;
 }
-function updateInstallIcon(){ const ic = $("instIco"); if(!ic) return; ic.style.display = isStandaloneApp() ? "none" : "inline-flex"; }   // permanent, dismiss-proof: visible whenever not installed (works on iOS too → shows the Safari steps)
+function updateInstallIcon(){ const sh = $("setSheet"); if(sh) sh.classList.toggle("is-installable", !isStandaloneApp()); }   // shows the "Install app" row inside the Settings sheet whenever not installed (iOS too → Safari steps)
 addEventListener("beforeinstallprompt", e => { e.preventDefault(); _installPrompt = e; maybeShowInstall(); updateInstallIcon(); });
 addEventListener("appinstalled", () => { _installPrompt = null; hideInstallBar(); updateInstallIcon(); });
 function predictPopups(koUp) {   // one-time per user, on opening the Predict tab
@@ -2350,15 +2601,15 @@ async function newWeekPopup() {
     showInfo(LANG === "ar" ? NEXTWEEK_AR : NEXTWEEK_HTML);
   } catch (_) {}
 }
-async function loadLeaderboard(evs) {
+async function loadLeaderboard(evs, preAll) {
   try {
-    const all = await readKey(PRED_KEY, {});
+    const all = preAll || await readKey(PRED_KEY, {});   // reuse renderPredict's single read when provided
     // OVERALL · all weeks: total points across every finished match (the standing that decides the final)
     try {
       const donePost = evs.filter(e => e.status.type.state === "post");
       const allRows = Object.entries(all).map(([uid, u]) => {
         let pts = 0, exact = 0, played = 0;
-        donePost.forEach(e => { const c = e.competitions[0]; const H = c.competitors.find(x => x.homeAway === "home"), A = c.competitors.find(x => x.homeAway === "away"); const p = (u.preds || {})[e.id]; if (!hasPred(p)) return; played++; const s = scorePred(p, H, A, e); pts += s; if (s === 3 || s === 10) exact++; });
+        donePost.forEach(e => { const c = e.competitions[0]; const H = c.competitors.find(x => x.homeAway === "home"), A = c.competitors.find(x => x.homeAway === "away"); const p = (u.preds || {})[e.id]; if (!hasPred(p)) return; played++; const s = scoreFinal(p, H, A, e); pts += s; if (s === 3 || s === 10) exact++; });
         return { uid, name: u.name || "?", pts, exact, played };
       }).filter(r => r.played > 0).sort((a, b) => b.pts - a.pts || b.exact - a.exact);
       const champ = allRows[0];
@@ -2385,7 +2636,7 @@ async function loadLeaderboard(evs) {
         const p = (u.preds || {})[e.id];
         if (!hasPred(p)) return;
         played++;
-        const s = scorePred(p, H, A, e);
+        const s = scoreFinal(p, H, A, e);
         pts += s;
         if (s === 3 || s === 10) exact++;
       });
@@ -2908,7 +3159,7 @@ function weekScores(evsWeek, all) {
       const H = c.competitors.find(x => x.homeAway === "home"), A = c.competitors.find(x => x.homeAway === "away");
       const p = (u.preds || {})[e.id];
       if (!hasPred(p)) return;
-      const s = scorePred(p, H, A, e);
+      const s = scoreFinal(p, H, A, e);
       pts += s; if (s === 3 || s === 10) exact++;
     });
     return { uid, name: u.name || "?", pts, exact };
@@ -2976,6 +3227,8 @@ function openAuth(m, opts) {
     ? "Sign in to make predictions, earn points & climb the leaderboard · browsing stays free."
     : opts.ctx === "chat"
     ? "Sign in to post in the team chat · reading is always free."
+    : opts.ctx === "nation"
+    ? "Sign in to follow a nation and see its full schedule · browsing stays free."
     : "One-time setup · username, password & your nation";
 }
 function authSkip() {
@@ -2998,26 +3251,31 @@ function authMode(m) {
   $("auUser").style.display = ""; $("auPass").style.display = "";
   $("authRemRow").style.display = "";
   $("authClose").style.display = "none";
-  $("auNation").style.display = m === "C" ? "" : "none";
+  $("auNationBtn").style.display = m === "C" ? "" : "none";
+  syncAuNationBtn();
   $("authTitle").textContent = m === "C" ? "JOIN WORLD CUP 2026" : "WELCOME BACK";
   $("authBtn").textContent = "LET'S GO ⚽";
   $("authErr").textContent = "";
 }
-async function fillNations() {
-  const sel = $("auNation");
-  if (sel.options.length > 5) return;
-  let names = NATIONS_FALLBACK;
-  try {
-    const evs = await seasonEvents();
-    const s = new Set();
-    evs.forEach(e => e.competitions[0].competitors.forEach(c => {
-      const n = c.team.displayName || "";
-      if (!/winner|runner|loser|3rd|tbd|play|qualif/i.test(n)) s.add(n);
-    }));
-    if (s.size >= 32 && s.size <= 60) names = [...s].sort();
-  } catch (_) {}
-  sel.innerHTML = '<option value="">Choose your nation…</option>' +
-    names.map(n => '<option>' + esc(n) + '</option>').join("");
+async function fillNations() {   // ensure the picker has data + reflect any current value on the button
+  try { if (!_natNames.length) await fillNatFilter(); } catch (_) {}
+  syncAuNationBtn();
+}
+function syncAuNationBtn() {   // the create-account nation field is a button that opens the shared picker
+  const btn = $("auNationBtn"), lab = $("auNationLab"); if (!btn || !lab) return;
+  const v = ($("auNation") && $("auNation").value) || "";
+  const ar = (typeof LANG !== "undefined" && LANG === "ar");
+  lab.textContent = v || (ar ? "اختر منتخبك…" : "Choose your nation…");
+  btn.classList.toggle("empty", !v);
+}
+function openAuthNation(ev) {   // open the flag picker for the create-account form (sits above the auth modal)
+  if (ev) ev.stopPropagation();
+  openNatPicker(function (name) { setAuNation(name); });
+}
+function setAuNation(name) {
+  const h = $("auNation"); if (h) h.value = name || "";
+  syncAuNationBtn();
+  const e = $("authErr"); if (e) e.textContent = "";
 }
 async function sha256(s) {
   const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
@@ -3066,9 +3324,18 @@ function finishAuth(a) {
     if (events.length) renderMatches();
     if (!$("paneP").classList.contains("hide")) renderPredict();
   });
-  renderHero(); loadStandings(); pollChat(); renderChatComposer();
+  renderHero(); loadStandings(); pollChat(); renderChatComposer(); updateAuthTog();
 }
-function signOut() {   // shared-device safety: fully clear the signed-in identity + its cached predictions
+function signOut() {   // confirm first · a stray tap must never sign someone out (it lost a user their session before)
+  const ar = (typeof LANG !== "undefined" && LANG === "ar");
+  showInfo('<h2>' + (ar ? "تسجيل الخروج؟" : "SIGN OUT?") + '</h2>' +
+    '<p>' + (ar ? "هل أنت متأكد أنك تريد تسجيل الخروج؟" : "Are you sure you want to sign out?") + '</p>' +
+    '<div class="cfrow">' +
+      '<button type="button" class="cfno" onclick="closeInfo()">' + (ar ? "لا" : "No") + '</button>' +
+      '<button type="button" class="cfyes" onclick="closeInfo();doSignOut()">' + (ar ? "نعم، تسجيل الخروج" : "Yes, sign out") + '</button>' +
+    '</div>');
+}
+function doSignOut() {   // shared-device safety: fully clear the signed-in identity + its cached predictions
   cs_user = null;
   try { localStorage.removeItem("cs_user"); sessionStorage.removeItem("cs_user"); localStorage.removeItem("cs_name"); localStorage.removeItem("cs_preds"); } catch (_) {}
   myPreds = {};
@@ -3077,7 +3344,7 @@ function signOut() {   // shared-device safety: fully clear the signed-in identi
   window._predSkipped = true;
   $("nameModal").classList.add("hide");
   if (events.length) renderMatches();
-  renderHero(); renderChatComposer(); loadStandings();
+  renderHero(); renderChatComposer(); loadStandings(); updateAuthTog();
   if (!$("paneP").classList.contains("hide")) renderPredict();
 }
 function openNation(ev) {
@@ -3098,8 +3365,8 @@ function openNation(ev) {
   fillNations();
   const _ns = $("auNation"); if (_ns) _ns.value = myNation();   // preselect current nation
 }
-async function saveNation() {
-  const nation = $("auNation").value;
+async function saveNation(nationArg) {
+  const nation = (typeof nationArg === "string" && nationArg) ? nationArg : $("auNation").value;
   if (!nation) { $("authErr").textContent = "Choose a nation"; return; }
   if (!cs_user) {   // guest · store favourite nation locally, no account needed
     try { localStorage.setItem("cs_guest_nation", nation); } catch (_) {}
@@ -3118,6 +3385,34 @@ async function saveNation() {
     if (events.length) renderMatches();
   } catch (_) { $("authErr").textContent = "Couldn't save · try again"; }
 }
+// ===== Follow-a-nation (the green card) · sign-in required · reuses the search list look =====
+function pickMyNation(ev) {
+  if (ev) ev.stopPropagation();
+  if (!cs_user) { openAuth("L", { ctx: "nation" }); return; }   // following a nation is a signed-in feature
+  openNatPicker(function (name) { saveNation(name); });
+}
+let _natPickCb = null;
+async function openNatPicker(onPick) {
+  _natPickCb = onPick || null;
+  try { if (!_natNames.length) await fillNatFilter(); } catch (_) {}   // make sure the list has data
+  const t = $("natPickTitle"); if (t) t.textContent = (LANG === "ar") ? "اختر منتخبك" : "CHOOSE YOUR NATION";
+  const inp = $("natPickIn"); if (inp) { inp.value = ""; inp.placeholder = (LANG === "ar") ? "🔎 ابحث عن منتخب" : "🔎 Search nations"; }
+  natPickRender();
+  $("natPick").classList.remove("hide");
+}
+function closeNatPicker() { const o = $("natPick"); if (o) o.classList.add("hide"); _natPickCb = null; }
+function natPickRender() {
+  const box = $("natPickList"); if (!box) return;
+  const q = ($("natPickIn").value || "").trim().toLowerCase();
+  const matches = _natNames.filter(n => !q || n.toLowerCase().indexOf(q) !== -1);
+  box.innerHTML = matches.length
+    ? matches.map(n => { const lg = (_natLogos && _natLogos[n]) || "", cur = (n === myNation()) ? " cur" : "";
+        return '<div class="natitem' + cur + '" role="option" data-n="' + esc(n) + '" onclick="natPickChoose(this.dataset.n)">' +
+          (lg ? '<img src="' + esc(lg) + '" alt="" onerror="this.style.visibility=\'hidden\'">' : '') +
+          '<span class="nn">' + esc(n) + '</span>' + (cur ? '<span class="natcur">✓</span>' : '') + '</div>'; }).join("")
+    : '<div class="natempty">' + (LANG === "ar" ? "لا يوجد منتخب مطابق." : "No nation matches that.") + '</div>';
+}
+function natPickChoose(n) { const cb = _natPickCb; closeNatPicker(); if (cb) cb(n); }
 async function readKey(key, fallback) {
   const r = await fetch("https://textdb.online/" + key + "?t=" + Date.now(), { cache: "no-store" });
   if (!r.ok) throw new Error("HTTP " + r.status);
@@ -3320,6 +3615,7 @@ async function toggleReaction(id, emoji) {
   // persist: read-merge-write enforcing the target state, verify it landed, retry on a concurrent clobber
   for (let t = 0; t < 4; t++) {
     let msgs = []; try { msgs = await readRoom(); } catch (_) {}
+    if (!Array.isArray(msgs) || msgs.length === 0) { await new Promise(r => setTimeout(r, 250 + Math.random() * 300)); continue; }   // wipe guard · never write on an empty/failed read
     const m = msgs.find(x => x.id === id);
     if (!m) return;
     m.rx = m.rx || {};
@@ -3586,8 +3882,28 @@ if (cs_user) {
 newWeekPopup();   // signed-in users → one-time "next week's predictions are open" nudge during the early-open window
 applyLangInit();   // EN default; if AR saved → RTL + translate the UI and keep translating re-renders
 refreshCalIcons();   // swap the fixed 📅 glyph for a live calendar showing TODAY's date
+updateAuthTog();   // header Sign in / Sign out pill
+try { updateNatLock(); } catch (_) {}
 postFunFactBots();   // daily: 2 chat posts (AR + EN) of today's On This Day facts (dedup by id → once/day)
-if ("serviceWorker" in navigator) { addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {})); }   // offline + installable
+if ("serviceWorker" in navigator) {
+  // One-time hard refresh, gated by FORCE_RELOAD. A new service worker (skipWaiting+claim) fires
+  // controllerchange on already-open clients; we reload ONCE per token, then remember it. Normal
+  // deploys (token unchanged) never reload an open session. Fresh first-ever visits never reload.
+  let _swReloaded = false;
+  const _hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (_swReloaded || !_hadController) return;                         // ignore first-ever control (not an update)
+    try { if (localStorage.getItem("cs_reload_token") === FORCE_RELOAD) return; } catch (_) {}  // already did this token
+    try { localStorage.setItem("cs_reload_token", FORCE_RELOAD); } catch (_) {}
+    _swReloaded = true;
+    location.reload();
+  });
+  addEventListener("load", () => navigator.serviceWorker.register("sw.js").then(reg => {
+    const check = () => { try { reg.update(); } catch (_) {} };
+    setInterval(check, 300000);                                          // open/background tabs re-check every 5 min
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) check(); });
+  }).catch(() => {}));
+}
 maybeShowInstall();   // "Install to phone" bar (hidden if already installed / on home screen)
 updateInstallIcon();   // permanent header install icon (always available while not installed)
 renderHero();
