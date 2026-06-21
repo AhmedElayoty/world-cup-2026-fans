@@ -788,6 +788,30 @@ html[dir="rtl"] .appbar__inner{direction:rtl}
 html[dir="rtl"] .connbar{direction:rtl}
 html[dir="rtl"] .clock,html[dir="rtl"] .cz{direction:ltr;unicode-bidi:isolate}
 html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px center;text-align:right}
+/* ===== RE-ENGAGEMENT POPUP (missed-2-in-a-row) · reuses .infomodal h2 + .igo ===== */
+.reng-emoji{font-size:46px;line-height:1;margin-bottom:6px;display:inline-block;animation:rengPop .5s cubic-bezier(.18,.9,.32,1.4) both}
+.reng-emoji .ball{display:inline-block;animation:rengKick 2.2s ease-in-out .5s infinite}
+@keyframes rengPop{0%{transform:scale(.4) rotate(-12deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
+@keyframes rengKick{0%,72%,100%{transform:translateX(0) rotate(0)}80%{transform:translateX(7px) rotate(20deg)}88%{transform:translateX(-2px) rotate(-8deg)}}
+.reng-streak{display:inline-flex;align-items:center;gap:6px;background:rgba(255,192,46,.1);border:1px solid rgba(255,192,46,.4);border-radius:999px;padding:4px 11px;margin:0 0 14px;font-family:'Oswald';font-weight:600;font-size:11px;letter-spacing:1px;color:var(--gold)}
+.reng-body{color:var(--mut);font-size:13px;line-height:1.5;margin:0 0 16px}
+.reng-body b{color:var(--rust2);font-weight:700}
+.infomodal .igo.reng-go{box-shadow:0 8px 22px rgba(224,90,43,.4)}
+.reng-later{width:100%;margin-top:9px;background:none;border:none;color:var(--dim);font-family:'Oswald';font-weight:600;letter-spacing:1px;font-size:12px;padding:6px;cursor:pointer}
+.reng-later:hover,.reng-later:active{color:var(--mut)}
+/* ===== STATS PER-BOARD LOADING ===== */
+.stload{display:flex;flex-direction:column;align-items:center;gap:11px;padding:26px 0 24px;min-height:96px;box-sizing:border-box;text-align:center}
+.stspin{width:30px;height:30px;border-radius:50%;border:3px solid rgba(25,200,255,.18);border-top-color:var(--bacc,var(--cyan));animation:stspin .7s linear infinite}
+@keyframes stspin{to{transform:rotate(360deg)}}
+.stload .stlbl{font-family:'Oswald';font-weight:600;font-size:12.5px;letter-spacing:1.4px;color:var(--mut);text-transform:uppercase}
+.stload .stlbl .stdot{display:inline-block;animation:stdot 1.4s steps(4,end) infinite;width:0;overflow:hidden;vertical-align:bottom}
+@keyframes stdot{0%{width:0}100%{width:1.1em}}
+.stload .stcount{font-family:'Oswald';font-weight:700;font-size:13px;letter-spacing:1px;color:var(--bacc,var(--cyan));font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+.stload .stcount .stsuf{color:var(--dim);font-weight:600}
+.stload .stbar{width:140px;height:4px;border-radius:999px;background:rgba(25,200,255,.14);overflow:hidden;position:relative}
+.stload .stbar::after{content:"";position:absolute;inset:0;width:38%;border-radius:999px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);animation:stbar 1.15s ease-in-out infinite}
+@keyframes stbar{0%{transform:translateX(-110%)}100%{transform:translateX(320%)}}
+@media (prefers-reduced-motion:reduce){.reng-emoji,.reng-emoji .ball{animation:none}.stspin{animation-duration:1.6s}.stload .stbar::after,.stload .stdot{animation:none}.stload .stdot{width:1.1em}}
 </style>
 </head>
 <body>
@@ -873,7 +897,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.05</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.06</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -920,10 +944,10 @@ const STATS_KEY = "capriole_wc26_analytics";   // internal visitor counter (aggr
 const SEASON_RANGE = "20260611-20260719";
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.05";
+const APP_VERSION = "2.06";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-21-v205d";
+const FORCE_RELOAD = "2026-06-21-v206";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -1187,6 +1211,10 @@ function applyLangInit(){
   try { document.title = "كأس العالم 2026 · مباشر"; } catch(_) {}
   translateTree(document.body);
   if(!_arObs){ _arObs = new MutationObserver(ms => { for(const m of ms){ if(m.type === "characterData"){ _tNode(m.target); } else if(m.addedNodes){ m.addedNodes.forEach(nd => translateTree(nd)); } } }); _arObs.observe(document.body, { childList:true, subtree:true, characterData:true }); }
+  // The date strip was scrolled to the selected day while the page was still LTR (buildStrip runs before this);
+  // flipping to RTL resets that scroll to the first day. Re-center the selected chip AFTER the RTL flip + Arabic reflow.
+  const _recenterStrip = () => { const c = document.querySelector('#dstrip .dchip.on'); if(c) c.scrollIntoView({ inline:"center", block:"nearest" }); };
+  requestAnimationFrame(_recenterStrip); setTimeout(_recenterStrip, 140);
 }
 function setLang(v){ try { localStorage.setItem("cs_lang", v === "ar" ? "ar" : "en"); } catch(_) {} location.reload(); }
 function updateLangTog(){ const seg = $("langTog"); if(!seg) return; seg.querySelectorAll(".seg__btn").forEach(b => { const on = b.dataset.lang === LANG; b.classList.toggle("is-on", on); b.setAttribute("aria-checked", on ? "true" : "false"); }); }
@@ -1194,11 +1222,13 @@ function setHour12(v) { if (HOUR12 === v) return; HOUR12 = v; try { localStorage
 
 /* ================= TABS ================= */
 function showTab(t) {
+  try { sessionStorage.setItem("cs_tab", t); } catch (_) {}   // remember tab → a reload / pull-to-refresh stays here (only the logo→goHome resets to M)
   if (t !== "M" && openId) { openId = null; renderMatches(); }   // leaving Matches → collapse the open match
   ["M", "G", "S", "P", "C"].forEach(x => {
     $("tab" + x).classList.toggle("on", x === t);
     $("pane" + x).classList.toggle("hide", x !== t);
   });
+  window.scrollTo(0, 0);   // always land at the TOP of a tab on switch (deep-links into Matches re-scroll just after)
   if (t === "C") { renderChatComposer(); pollChat(); }
   if (t === "G") { loadStandings(); groupsTimer = groupsTimer || setInterval(loadStandings, 20000); }
   else if (groupsTimer) { clearInterval(groupsTimer); groupsTimer = null; }
@@ -1242,7 +1272,7 @@ async function goHome() {
   const k = (await liveDayKey()) || uaeYMD(new Date());   // a live match wins over the calendar day
   if ($("dc" + k)) pickDate(k, true);
   else { const f = document.querySelector("#dstrip .dchip"); if (f) pickDate(f.dataset.d, true); }
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo(0, 0);   // instant · showTab already scrolled to top, this just guarantees it after pickDate
 }
 // The UAE-calendar day of the EARLIEST in-progress match (else null). A match that kicks off before
 // midnight and runs past it still belongs to its kickoff day's strip · so without this, opening the app
@@ -1303,7 +1333,7 @@ async function fillNatFilter() {
 // custom search combobox · open to everyone. 1st tap drops the list (no keyboard);
 // 2nd tap turns on typing. `readonly` is the off-switch for the mobile keyboard.
 function natOpen() { const b = $("natListBox"); return !!(b && !b.classList.contains("hide")); }
-function natReset() { const inp = $("natFilter"); if (inp) { inp.setAttribute("readonly", ""); inp.blur(); } }   // re-arm "1st tap = list", drop keyboard
+function natReset() { const inp = $("natFilter"); if (inp) { inp.setAttribute("readonly", ""); inp.blur(); } updateNatLock(); }   // re-arm "1st tap = list", drop keyboard, restore normal placeholder
 function updateNatLock() {   // nation search is open to everyone · just keep the placeholder language-correct
   const inp = $("natFilter"); if (!inp) return;
   const ar = (typeof LANG !== "undefined" && LANG === "ar");
@@ -1312,9 +1342,14 @@ function updateNatLock() {   // nation search is open to everyone · just keep t
 function natTap(e) {
   if (e) e.stopPropagation();
   const inp = $("natFilter");
-  if (!natOpen()) { natSearchInput(); return; }                  // 1st tap: drop the list, keyboard stays down
+  if (!natOpen()) {                                              // 1st tap: drop the list, keyboard stays down
+    natSearchInput();
+    if (inp && !inp.value) inp.placeholder = (typeof LANG !== "undefined" && LANG === "ar") ? "👆 اضغط هنا للكتابة" : "👆 Press here to type";   // hint: a 2nd tap opens the keyboard
+    return;
+  }
   if (inp && inp.hasAttribute("readonly")) {                     // 2nd tap: enable typing → keyboard
     inp.removeAttribute("readonly");
+    updateNatLock();                                             // restore the normal placeholder for typing mode
     inp.blur(); inp.focus();                                     // sync blur+focus on the now-editable field opens the keyboard
     try { inp.setSelectionRange(0, (inp.value || "").length); } catch (_) {}   // select-all so the first keystroke replaces
   }
@@ -1572,7 +1607,7 @@ function renderLiveSummary() {
 function goLive(id) {   // tap a live-summary row → open + scroll to that match's full card
   showTab("M");
   const el = document.getElementById("mc" + id);
-  if (el) { if (openId !== id) toggleM(id); setTimeout(function () { const x = document.getElementById("mc" + id); if (x) x.scrollIntoView({ behavior: "smooth", block: "center" }); }, 80); }
+  if (el) { if (openId !== id) toggleM(id, true); setTimeout(function () { const x = document.getElementById("mc" + id); if (x) x.scrollIntoView({ behavior: "smooth", block: "center" }); }, 80); }
 }
 function updateAuthTog() {   // header auth button: Sign in (logged out → login/create) / Sign out (logged in)
   const b = $("authTog"); if (!b) return;
@@ -1609,10 +1644,20 @@ async function fillDetail(id, force) {
     if (box) box.innerHTML = `<div class="dnote">Couldn't load line-ups (${esc(String(e.message || e))}).</div>`;
   }
 }
-async function toggleM(id) {
+async function toggleM(id, noScroll) {
   openId = openId === id ? null : id;
   renderMatches();
-  if (openId) fillDetail(openId);
+  if (openId) {
+    fillDetail(openId);
+    if (!noScroll) setTimeout(() => {   // land at the TOP of the just-opened card (below the sticky header), not deep in its details
+      if (openId !== id) return;
+      const card = document.getElementById("mc" + id); if (!card) return;
+      const tb = document.querySelector(".topbar");
+      const off = (tb ? tb.getBoundingClientRect().height : 0) + 8;
+      const y = card.getBoundingClientRect().top + window.scrollY - off;
+      window.scrollTo({ top: Math.max(0, y), behavior: "auto" });   // instant · the detail loads BELOW this point so the top stays put; a smooth scroll would get canceled by that async re-render
+    }, 70);
+  }
 }
 
 /* ================= GROUPS ================= */
@@ -2601,6 +2646,65 @@ async function newWeekPopup() {
     showInfo(LANG === "ar" ? NEXTWEEK_AR : NEXTWEEK_HTML);
   } catch (_) {}
 }
+/* ===== Re-engagement nudge · signed-in user who missed their last 2 predictable matches · one-time, on app open ===== */
+const REENGAGE_HTML =
+  '<div class="reng-emoji" aria-hidden="true"><span class="ball">⚽</span></div>' +
+  '<h2>YOUR PICKS MISS YOU</h2>' +
+  '<div class="reng-streak"><span id="rengCount">🔥 2 MATCHES UNPREDICTED</span></div>' +
+  '<p class="reng-body">Two games kicked off without your call. Jump back in, <b>back your hunches</b>, and climb the board.</p>' +
+  '<button class="igo reng-go" type="button" onclick="closeInfo();showTab(\'P\')">PREDICT NOW</button>' +
+  '<button class="reng-later" type="button" onclick="closeInfo()">Maybe later</button>';
+const REENGAGE_AR =
+  '<div class="reng-emoji" aria-hidden="true"><span class="ball">⚽</span></div>' +
+  '<h2>توقعاتك تنتظرك</h2>' +
+  '<div class="reng-streak"><span id="rengCount">🔥 مباراتان بدون توقع</span></div>' +
+  '<p class="reng-body">مرّت مباراتان دون توقعك. عُد الآن، <b>راهن على حدسك</b>، واصعد في الترتيب.</p>' +
+  '<button class="igo reng-go" type="button" onclick="closeInfo();showTab(\'P\')">توقّع الآن</button>' +
+  '<button class="reng-later" type="button" onclick="closeInfo()">لاحقاً</button>';
+function rengCountText(n) {
+  const ar = (typeof LANG !== "undefined" && LANG === "ar");
+  if (ar) return n === 2 ? "🔥 مباراتان بدون توقع" : "🔥 " + n + " مباريات بدون توقع";
+  return n === 1 ? "🔥 1 MATCH UNPREDICTED" : "🔥 " + n + " MATCHES UNPREDICTED";
+}
+function showMissedPopup(n) {   // render the popup with a live missed-count (also the demo's forced-preview entry point)
+  showInfo((typeof LANG !== "undefined" && LANG === "ar") ? REENGAGE_AR : REENGAGE_HTML);
+  const c = document.getElementById("rengCount"); if (c) c.textContent = rengCountText(n || 2);
+}
+// count of the user's MOST-RECENT consecutive missed predictable matches (real-team, finished),
+// only among matches after their first-ever prediction (so newcomers aren't nudged for pre-join games).
+// {n, startId} of the user's MOST-RECENT consecutive missed predictable matches (a "miss-run").
+// startId = the OLDEST match in that run · it stays stable as the run grows but changes once the user
+// predicts again (breaking the run) and a new run forms → that's how we nudge once PER run, not per match.
+function missedStreakInfo() {
+  const out = { n: 0, startId: null };
+  if (!cs_user) return out;
+  const evs = (seasonCache && seasonCache.events) || [];
+  const has = id => hasPred(myPreds[id]);
+  const myIds = Object.keys(myPreds).filter(has);
+  if (!myIds.length) return out;                     // never predicted → not a lapsed predictor
+  const dateOf = {}; evs.forEach(e => { dateOf[e.id] = +new Date(e.date); });
+  let firstTs = Infinity; myIds.forEach(id => { if (dateOf[id] != null) firstTs = Math.min(firstTs, dateOf[id]); });
+  if (!isFinite(firstTs)) return out;
+  const predictable = e => e.status && e.status.type && e.status.type.state === "post" &&
+    ((e.competitions[0] || {}).competitors || []).every(c => c.team && c.team.logo);
+  const fin = evs.filter(predictable).filter(e => +new Date(e.date) >= firstTs)
+                 .sort((a, b) => new Date(a.date) - new Date(b.date));
+  for (let i = fin.length - 1; i >= 0; i--) { if (!has(fin[i].id)) { out.n++; out.startId = fin[i].id; } else break; }
+  return out;
+}
+function maybeMissedStreakPopup() {
+  try {
+    if (!cs_user) return;                            // signed-in users only (guests don't predict)
+    const _nm = $("nameModal");
+    if (document.getElementById("infoModal") || (_nm && !_nm.classList.contains("hide"))) return;   // don't stack on another modal
+    const info = missedStreakInfo();
+    if (info.n < 2 || !info.startId) return;
+    const key = "cs_missed2_run_" + (cs_user.uid || cs_user.username);
+    if (localStorage.getItem(key) === info.startId) return;   // already nudged for THIS run · shows again only for a NEW run (predicted, then missed 2 more)
+    localStorage.setItem(key, info.startId);
+    showMissedPopup(info.n);
+  } catch (_) {}
+}
 async function loadLeaderboard(evs, preAll) {
   try {
     const all = preAll || await readKey(PRED_KEY, {});   // reuse renderPredict's single read when provided
@@ -2803,11 +2907,14 @@ function rtPersist(id, payload, alsoShared) {
 }
 async function loadRatings(ev) {
   const id = ev.id;
-  if (_ratings[id] && (_ratings[id].ready || _ratings[id].loading)) return _ratings[id];
-  try { const _c = localStorage.getItem("cs_rtv2_" + id); if (_c) { const _d = JSON.parse(_c); if (_d && _d.byId) return (_ratings[id] = { ready: true, byId: _d.byId, motm: _d.motm }); } } catch (_) {}   // a finished match's ratings never change → reuse the saved copy (no recompute)
+  const prev = _ratings[id];
+  if (prev && (prev.ready || prev.loading)) return prev;
+  try { const _c = localStorage.getItem("cs_rtv2_" + id); if (_c) { const _d = JSON.parse(_c); if (_d && _d.byId && Object.keys(_d.byId).length) return (_ratings[id] = { ready: true, byId: _d.byId, motm: _d.motm }); } } catch (_) {}   // a finished match's ratings never change → reuse the saved copy (non-empty only)
   if (!ev.status || ev.status.type.state !== "post") return null;   // full-time only
-  _ratings[id] = { loading: true, byId: {} };
-  const gj = u => fetch(String(u).replace(/^http:/, "https:")).then(r => r.json());
+  const _failed = (prev && prev.failed) || 0;   // carry the retry count across attempts
+  _ratings[id] = { loading: true, byId: {}, failed: _failed };
+  // 8s timeout + abort per request → a stalled ESPN call fails FAST instead of hanging the whole compute forever (the old bug)
+  const gj = u => { const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 8000); return fetch(String(u).replace(/^http:/, "https:"), { signal: ctl.signal }).then(r => r.json()).finally(() => clearTimeout(to)); };
   let byId = {}, motm = null, fromShared = false;
   try {
     // 1) shared global cache · if anyone already computed this match, reuse it (no recompute for everyone else)
@@ -2840,17 +2947,34 @@ async function loadRatings(ev) {
       Object.keys(byId).forEach(pid => { const x = byId[pid]; if (x.name && (!motm || x.rating > motm.rating)) motm = { pid, name: x.name, team: x.team, rating: x.rating, m: x.m, c: x.c }; });
     }
   } catch (e) {}
-  _ratings[id] = { ready: true, byId, motm };
-  // publish to the shared store ONLY for a complete compute · motm is set only when names resolved (i.e. the
-  // summary lineup was loaded). Guards against ever pushing a nameless / all-midfielder compute to everyone.
-  if (Object.keys(byId).length) rtPersist(id, fromShared ? { byId, motm } : rtPayload(byId, motm), !fromShared && !!motm);
-  if (openId === id && $("det" + id)) { const oe = events.find(x => x.id === id); if (oe && lineups[id]) $("det" + id).innerHTML = matchDetail(lineups[id], oe); }
+  if (Object.keys(byId).length) {
+    _ratings[id] = { ready: true, byId, motm };
+    // publish to the shared store ONLY for a complete compute · motm set only when names resolved (summary was loaded).
+    rtPersist(id, fromShared ? { byId, motm } : rtPayload(byId, motm), !fromShared && !!motm);
+  } else {
+    _ratings[id] = { failed: _failed + 1 };   // timed out / no data → RETRYABLE (motmCard auto-retries up to 3x, then offers tap-to-retry)
+  }
+  // repaint the OPEN match detail so the result (or the next retry) shows IN PLACE · runs whether we succeeded or failed
+  if (openId === id) { const oe = events.find(x => x.id === id), box = document.getElementById("det" + id); if (oe && box && lineups[id]) box.innerHTML = matchDetail(lineups[id], oe); }
   return _ratings[id];
+}
+function retryRatings(id) {   // manual retry after repeated failures
+  delete _ratings[id];
+  const ev = (typeof events !== "undefined" && events.find(x => x.id === id)) || null;
+  if (!ev) return;
+  if (openId === id && lineups[id] && document.getElementById("det" + id)) document.getElementById("det" + id).innerHTML = matchDetail(lineups[id], ev);
+  else loadRatings(ev);
 }
 function motmCard(data, ev) {
   if (ev.status.type.state !== "post") return "";
   const R = _ratings[ev.id];
-  if (!R || !R.ready) { if (!R) loadRatings(ev); return '<div class="motm loading"><span class="ic">⭐</span><div class="motmb"><div class="nm">Analyzing player ratings…</div><div class="sub">crunching the full match stats</div></div><div class="tag">MOTM<br>(BY RATING)</div></div>'; }
+  const LOADING = '<div class="motm loading"><span class="ic">⭐</span><div class="motmb"><div class="nm">Analyzing player ratings…</div><div class="sub">crunching the full match stats</div></div><div class="tag">MOTM<br>(BY RATING)</div></div>';
+  if (!R) { loadRatings(ev); return LOADING; }
+  if (R.loading) return LOADING;
+  if (R.failed) {
+    if (R.failed < 3) { loadRatings(ev); return LOADING; }   // a couple of silent auto-retries
+    return '<div class="motm loading" style="cursor:pointer" onclick="event.stopPropagation();retryRatings(\'' + ev.id + '\')"><span class="ic">⭐</span><div class="motmb"><div class="nm">Ratings didn\'t load · tap to retry</div></div><div class="tag">MOTM<br>(BY RATING)</div></div>';
+  }
   const m = R.motm; if (!m) return starMan(data, ev);   // ratings unavailable → fall back to the simple heuristic
   const s = m.m, bits = [];
   if (s.totalGoals) bits.push(s.totalGoals + (s.totalGoals > 1 ? " goals" : " goal"));
@@ -2896,7 +3020,7 @@ function ldTab(btn, which) {
 }
 function ratingsTable(ev) {
   const R = _ratings[ev.id];
-  if (!R || !R.ready) { if (!R) loadRatings(ev); return '<div class="dnote">Analyzing player ratings…</div>'; }
+  if (!R || !R.ready) { if (!R || (R.failed && R.failed < 3)) loadRatings(ev); return '<div class="dnote">Analyzing player ratings…</div>'; }
   const all = Object.keys(R.byId).map(pid => Object.assign({ pid }, R.byId[pid])).filter(x => x.name);
   if (!all.length) return '<div class="dnote">Player ratings unavailable for this match.</div>';
   const motmPid = R.motm ? R.motm.pid : null;
@@ -3744,9 +3868,19 @@ const ICON = {
 };
 let stExpand = {};
 function toggleBoard(t) { stExpand[t] = !stExpand[t]; paintStatsBody(); }
+function statsLoadingBody(have, total) {   // per-board "computing…" body (event-driven; counter updated live via .stDeepCount)
+  const ar = (typeof LANG !== "undefined" && LANG === "ar");
+  return '<div class="stload" role="status" aria-live="polite">' +
+    '<div class="stspin" aria-hidden="true"></div>' +
+    '<div class="stlbl">' + (ar ? "يتم احتساب إحصائيات اللاعبين" : "Computing player stats") + '<span class="stdot" aria-hidden="true">...</span></div>' +
+    '<div class="stcount"><span class="stDeepCount">' + have + ' / ' + total + '</span> <span class="stsuf">' + (ar ? "مباراة" : "matches") + '</span></div>' +
+    '<div class="stbar" aria-hidden="true"></div></div>';
+}
 function board(title, icon, accent, items, opts) {
   opts = opts || {};
   const sub = opts.sub || (x => x.team || ""), val = opts.val || (x => '<div class="v">' + (x.n || 0) + '</div>');
+  const head = '<div class="h"><span class="ic">' + icon + '</span><div class="ht"><span class="t">' + title + '</span>' + (opts.subcap ? '<span class="sc">' + opts.subcap + '</span>' : "") + '</div></div>';
+  if (opts.loadingHtml) return '<div class="lbc" style="--bacc:' + accent + '">' + head + opts.loadingHtml + '</div>';   // still computing → loading body, no rows/expander
   const total = items.length, expanded = !!stExpand[title];
   let body = "";
   if (!total) { body = '<div class="lbempty">' + (opts.empty || "No data yet") + '</div>'; }
@@ -3765,7 +3899,6 @@ function board(title, icon, accent, items, opts) {
     const label = expanded ? "SHOW LESS" : (total > 10 ? "SHOW TOP 10" : "SHOW ALL " + total);
     ctrl = '<button class="lbexp" onclick="toggleBoard(\'' + title + '\')">' + label + '<span class="chev">' + (expanded ? "▴" : "▾") + '</span></button>';
   }
-  const head = '<div class="h"><span class="ic">' + icon + '</span><div class="ht"><span class="t">' + title + '</span>' + (opts.subcap ? '<span class="sc">' + opts.subcap + '</span>' : "") + '</div></div>';
   return '<div class="lbc" style="--bacc:' + accent + '">' + head + body + ctrl + '</div>';
 }
 const vNum = () => (x) => '<div class="v">' + (x.n || 0) + '</div>';
@@ -3796,11 +3929,16 @@ function progEmpty(p) { if (!p || !p[1]) return "Fills in once matches finish"; 
 function paintStatsBody() {
   const inst = window._statsInst; if (!inst) return;
   if (statsView === "P") {
-    const deep = deepBoards(), p = window._deepProg || [0, 0];
+    const deep = deepBoards();
+    // ASSISTS + SAVES need the per-match deep fetch · show a loading block under their headers until it's DONE
+    // (event-driven: done when every finished match is in deepCache), so the lists never appear stale + re-shuffle.
+    const finIds = window._statsFinIds || [];
+    const total = finIds.length, have = finIds.filter(id => deepCache[id]).length;
+    const loadHtml = (!total || have === total) ? null : statsLoadingBody(have, total);
     $("stBody").innerHTML =
       board("GOLDEN BOOT", ICON.ball, "var(--gold)", withRanks(inst.scorers, x => x.goals), { val: vScorer, subcap: "Top scorers" }) +
-      board("ASSISTS", ICON.assist, "var(--cyan)", withRanks(deep.assists, x => x.n), { val: vNum(), subcap: progHint(p), empty: progEmpty(p) }) +
-      board("SAVES", ICON.glove, "var(--cyan)", withRanks(deep.saves, x => x.n), { val: vNum(), subcap: progHint(p), empty: progEmpty(p) }) +
+      board("ASSISTS", ICON.assist, "var(--cyan)", withRanks(deep.assists, x => x.n), { val: vNum(), loadingHtml: loadHtml }) +
+      board("SAVES", ICON.glove, "var(--cyan)", withRanks(deep.saves, x => x.n), { val: vNum(), loadingHtml: loadHtml }) +
       board("MOST BOOKED", ICON.card, "#f4c20d", withRanks(inst.booked, x => x.y + x.r * 3), { val: vCards });
   } else {
     const teams = (window._statsTeams || []).filter(t => t.pl >= 1);
@@ -3823,12 +3961,17 @@ function setStatsView(v) {
 async function renderStats() {
   try {
     window._statsInst = await aggInstant();
-    try { const evs = await seasonEvents(); window._logoByName = window._logoByName || {}; evs.forEach(e => (e.competitions[0].competitors || []).forEach(c => { if (c.team && c.team.displayName && c.team.logo) window._logoByName[c.team.displayName] = c.team.logo; })); } catch (_) {}
+    try { const evs = await seasonEvents(); window._logoByName = window._logoByName || {}; evs.forEach(e => (e.competitions[0].competitors || []).forEach(c => { if (c.team && c.team.displayName && c.team.logo) window._logoByName[c.team.displayName] = c.team.logo; })); window._statsFinIds = evs.filter(e => e.status && e.status.type && e.status.type.state === "post").map(e => e.id); } catch (_) {}
     $("stHero").innerHTML = heroTiles(window._statsInst.totals);
     $("stFacts").innerHTML = factsStrip(window._statsInst.totals, window._statsInst.cleanSheets);
     try { window._statsTeams = await aggTeams(); } catch (_) { window._statsTeams = window._statsTeams || []; }
     paintStatsBody();
-    ensureDeep((d, t) => { window._deepProg = [d, t]; if (statsView === "P" && !$("paneS").classList.contains("hide")) paintStatsBody(); });
+    ensureDeep((d, t) => {
+      window._deepProg = [d, t];
+      if (statsView !== "P" || $("paneS").classList.contains("hide")) return;
+      if (d >= t) paintStatsBody();                                                          // DONE → one final paint with the fully-sorted lists
+      else document.querySelectorAll(".stDeepCount").forEach(el => el.textContent = d + " / " + t);   // computing → update ONLY the counter (no list re-sort)
+    });
   } catch (e) { $("stBody").innerHTML = '<div class="empty">Couldn\'t load stats · retrying.</div>'; }
 }
 /* ===== INTERNAL VISITOR COUNTER (aggregate analytics, no PII) =====
@@ -3877,10 +4020,12 @@ renderChatComposer();
 pollChat(); chatTimer = setInterval(pollChat, 7000);   // always-on chat poll → unread badge + new-message toasts everywhere
 if (cs_user) {
   localStorage.setItem("cs_name", cs_user.username);
-  syncMyPreds().then(() => { if (events.length) renderMatches(); });
+  syncMyPreds().then(() => { if (events.length) renderMatches(); return seasonEvents(); }).then(() => maybeMissedStreakPopup()).catch(() => {});
 }
 newWeekPopup();   // signed-in users → one-time "next week's predictions are open" nudge during the early-open window
 applyLangInit();   // EN default; if AR saved → RTL + translate the UI and keep translating re-renders
+// Restore the tab the user was on before a reload / pull-to-refresh (logo→goHome still resets to Matches).
+try { const _rt = sessionStorage.getItem("cs_tab"); if (_rt && _rt !== "M" && ["G","S","P","C"].indexOf(_rt) !== -1) { window._predSkipped = true; showTab(_rt); } } catch (_) {}
 refreshCalIcons();   // swap the fixed 📅 glyph for a live calendar showing TODAY's date
 updateAuthTog();   // header Sign in / Sign out pill
 try { updateNatLock(); } catch (_) {}
