@@ -2,7 +2,7 @@
    NETWORK-FIRST for the app shell (HTML) so a new deploy ALWAYS shows when online;
    cache is only a fallback for offline. Live data (ESPN/textdb/etc.) never cached.
    Static assets (icons/logo/manifest) cache-first. */
-const CACHE = "wcfans-v32";   // v32: v2.26 · QA-audit batch (XSS, fetch timeouts, store wipe-guards, R32 flicker/bubble, a11y, dashes, guest nation)
+const CACHE = "wcfans-v33";   // v33: v2.27 · R32 badge rename + real-time flicker on home
 const SHELL = ["./", "./index.html", "./manifest.json", "./logo.png", "./trophy.png", "./icon-192-2.png", "./icon-512-2.png", "./icon-180-2.png", "./share-card.png"];
 
 self.addEventListener("install", e => {
