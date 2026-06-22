@@ -2,7 +2,7 @@
    NETWORK-FIRST for the app shell (HTML) so a new deploy ALWAYS shows when online;
    cache is only a fallback for offline. Live data (ESPN/textdb/etc.) never cached.
    Static assets (icons/logo/manifest) cache-first. */
-const CACHE = "wcfans-v41";   // v41: v2.35 · LIVE NOW strip is tournament-wide + persists across date browsing (was tied to the selected date)
+const CACHE = "wcfans-v42";   // v42: v2.36 · SUSPENDED/إيقاف status (ESPN delayed): stays in the LIVE box with a suspended label until ESPN marks it finished
 const SHELL = ["./", "./index.html", "./manifest.json", "./logo.png", "./trophy.png", "./icon-192-2.png", "./icon-512-2.png", "./icon-180-2.png", "./share-card.png"];
 
 self.addEventListener("install", e => {
