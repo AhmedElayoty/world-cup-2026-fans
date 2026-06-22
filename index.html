@@ -897,7 +897,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.11</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.12</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -944,7 +944,7 @@ const STATS_KEY = "capriole_wc26_analytics";   // internal visitor counter (aggr
 const SEASON_RANGE = "20260611-20260719";
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.11";
+const APP_VERSION = "2.12";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-22-v211";
@@ -1477,6 +1477,10 @@ function ymdShift(key, days) {
 // swap home/away here while the score box stays direction:ltr — that keeps the time/FT label
 // readable AND puts each number back under its own team. LTR: "home – away" as usual.
 function scoreLine(h, a, sep) { sep = sep || " – "; return (typeof LANG !== "undefined" && LANG === "ar") ? (a + sep + h) : (h + sep + a); }
+// A scoreline shown as STANDALONE text (prediction, FT result, timeline running score) — NOT flanked
+// by team columns, so it must always read "home–away". Wrap in an LTR isolate so Arabic's RTL flow
+// can't bidi-reverse the pair (bare "2–1" otherwise renders as "1–2" in an Arabic sentence).
+function scoreTag(h, a, sep) { return '<bdi dir="ltr">' + h + (sep || "–") + a + '</bdi>'; }
 function renderMatches() {
   const list = nationFilter ? _natMatches : events;
   if (!list.length) {
@@ -1519,7 +1523,7 @@ function renderMatches() {
         const s = scoreFinal(myp, H, A, e), top = isFinalEvent(e) ? 10 : 3;
         pb = " · " + (s === 0 ? "0 PTS" : (s === top ? (myp.pens ? "PENS CALLED! " : "EXACT! ") : "RESULT ") + "+" + s + " PT" + (s > 1 ? "S" : ""));
       }
-      const _ptxt = myp.pens ? esc((myp.w === "home" ? H : A).team.displayName) + " on pens" : myp.h + "–" + myp.a;
+      const _ptxt = myp.pens ? esc((myp.w === "home" ? H : A).team.displayName) + " on pens" : scoreTag(myp.h, myp.a);
       predStrip = '<div class="mypred">YOUR PREDICTION: ' + _ptxt + pb + '</div>';
     } else if (state === "pre" && new Date(e.date) - Date.now() > 1800000) {
       predStrip = '<div class="mypred hint" onclick="event.stopPropagation();showTab(&quot;P&quot;)">PREDICT THIS MATCH \u2192</div>';
@@ -2356,7 +2360,7 @@ function predCard(e, started) {
   let meta;
   if (e.status.type.state === "post") {
     const pts = scoreFinal(p, H, A, e);
-    meta = '<span class="res">FT ' + (H.score ?? "-") + '–' + (A.score ?? "-") + '</span>' +
+    meta = '<span class="res">FT ' + scoreTag(H.score ?? "-", A.score ?? "-") + '</span>' +
       '<span class="pts' + pts + '">' + (hasPred(p) ? pts + " PTS" : "NO PREDICTION") + '</span>';
   } else {
     meta = '<span>' + fmt(ko, { weekday: "short", day: "2-digit", month: "short" }).toUpperCase() +
@@ -3119,7 +3123,7 @@ function evTimeline(ev, data) {
   const gc = (c.details || []).filter(d => (d.scoringPlay || /card/i.test((d.type && d.type.text) || "")) && !d.shootout);
   let hh = 0, aa = 0;
   gc.slice().sort((a, b) => minNum((a.clock || {}).displayValue) - minNum((b.clock || {}).displayValue)).forEach(d => {
-    if (d.scoringPlay) { if (isHomeId((d.team || {}).id)) hh++; else aa++; d._rs = hh + "&#8211;" + aa; }
+    if (d.scoringPlay) { if (isHomeId((d.team || {}).id)) hh++; else aa++; d._rs = scoreTag(hh, aa, "&#8211;"); }
   });
   const items = [];
   gc.forEach(d => {
@@ -3145,7 +3149,7 @@ function evTimeline(ev, data) {
   });
   if (!items.length) return "";
   items.sort((a, b) => b.m - a.m);
-  const _st = ev.status.type, fs = (H.score != null ? H.score : 0) + "&#8211;" + (A.score != null ? A.score : 0);
+  const _st = ev.status.type, fs = scoreTag(H.score != null ? H.score : 0, A.score != null ? A.score : 0, "&#8211;");
   const _top = _st.state === "post" ? ("FULL TIME &#183; " + fs + (/penalt/i.test(_st.description || "") ? " (PENS)" : /extra/i.test(_st.description || "") ? " (AET)" : ""))
     : _st.state === "in" ? (esc(ev.status.displayClock || "LIVE") + " &#183; " + fs) : fs;
   return '<div class="sech">TIMELINE</div><div class="tl"><div class="tlmark top">' + _top + '</div>' + items.map(i => i.html).join("") + '<div class="tlmark bot">KICK-OFF</div></div>';
