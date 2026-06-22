@@ -929,7 +929,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.15</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.16</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -976,7 +976,7 @@ const STATS_KEY = "capriole_wc26_analytics";   // internal visitor counter (aggr
 const SEASON_RANGE = "20260611-20260719";
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.15";
+const APP_VERSION = "2.16";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-22-v215";
@@ -1555,7 +1555,7 @@ async function loadMatches() {
     renderMatches();
     if (openId) {                                   // open match is live → its cached detail is stale, refresh it
       const oe = events.find(x => x.id === openId);
-      if (oe && oe.status.type.state === "in") fillDetail(openId, true);
+      if (oe && oe.status.type.state === "in" && (!lineupsTs[openId] || Date.now() - lineupsTs[openId] > 12000)) fillDetail(openId, true);   // refresh the heavier detail feed ~12s, not every 5s poll
     }
     lastFetch = Date.now();
     setCon(true, "LIVE FEED · UPDATED 0S AGO");
@@ -1563,8 +1563,18 @@ async function loadMatches() {
     const anyLive = events.some(e => e.status.type.state === "in");
     const soon = events.some(e => e.status.type.state === "pre" &&
       new Date(e.date) - now < 1800000 && new Date(e.date) - now > -300000);
+    // keep the hero's live score fresh from today's just-fetched events (seasonCache is up to 10 min stale)
+    if (anyLive) { const hm = events.find(e => e.status.type.state === "in" && e.competitions[0].competitors.some(c => MYTEAMS().includes(c.team.displayName))); if (hm) { heroEvent = hm; drawHero(); } }
+    // Adaptive poll: fast (5s) only while a match is LIVE and the app is on-screen (responsive scores); ease
+    // off to 30s when hidden (saves battery/data); 60s near kickoff, 5min idle. Also wake ~4s after the next
+    // kickoff so a match flips to LIVE within seconds. Efficient: fast only when it matters, never hammering.
+    const vis = !document.hidden;
+    let nextMs = anyLive ? (vis ? 5000 : 30000) : soon ? 60000 : 300000;
+    let toKO = Infinity;
+    events.forEach(e => { if (e.status.type.state === "pre") { const d = new Date(e.date).getTime() - now; if (d > -2000 && d < toKO) toKO = d; } });
+    if (toKO < nextMs) nextMs = Math.max(3000, toKO + 4000);
     clearTimeout(matchTimer);
-    matchTimer = setTimeout(loadMatches, anyLive ? 15000 : soon ? 60000 : 300000);
+    matchTimer = setTimeout(loadMatches, nextMs);
   } catch (err) {
     setCon(false, "OFFLINE · RETRYING");
     $("mlist").innerHTML = `<div class="empty"><div class="big">📡</div>Can't reach the live feed.<br>
@@ -4185,6 +4195,8 @@ buildStrip();
 jumpToLiveDay();   // if a match is live (incl. one that crossed midnight), open on its day, not the empty new day
 renderChatComposer();
 pollChat(); chatTimer = setInterval(pollChat, 7000);   // always-on chat poll → unread badge + new-message toasts everywhere
+// reopening the app during a live match → refresh the feed immediately instead of waiting for the next poll
+document.addEventListener("visibilitychange", () => { if (!document.hidden && events.some(e => e.status && e.status.type && e.status.type.state === "in")) { clearTimeout(matchTimer); loadMatches(); } });
 if (cs_user) {
   localStorage.setItem("cs_name", cs_user.username);
   syncMyPreds().then(() => { if (events.length) renderMatches(); return seasonEvents(); }).then(() => maybeMissedStreakPopup()).catch(() => {});
