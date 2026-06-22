@@ -897,7 +897,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.09</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.10</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -944,10 +944,10 @@ const STATS_KEY = "capriole_wc26_analytics";   // internal visitor counter (aggr
 const SEASON_RANGE = "20260611-20260719";
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.09";
+const APP_VERSION = "2.10";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-21-v209";
+const FORCE_RELOAD = "2026-06-22-v210";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -1630,7 +1630,19 @@ addEventListener("keydown", e => { if(e.key === "Escape") closeSettings(); });
 // Official FIFA Men's World Ranking snapshot · as of 18 Jun 2026 · keyed by ESPN 3-letter team code (matched by code,
 // not name, so IR Iran/Iran, Cabo Verde/Cape Verde etc. can't mis-map). Static: FIFA doesn't update mid-tournament;
 // refresh these 48 values when FIFA publishes a new ranking. Non-WC teams + bracket placeholders aren't in the map → no chip.
-const FIFA_RANK = {ARG:1,FRA:2,ESP:3,ENG:4,BRA:5,MAR:6,POR:7,NED:8,GER:9,BEL:10,COL:11,MEX:13,CRO:14,USA:15,SEN:16,JPN:17,URU:18,SUI:19,AUT:21,KOR:22,AUS:23,IRN:24,TUR:26,NOR:27,ECU:28,EGY:29,CIV:30,ALG:31,CAN:32,SWE:34,SCO:37,PAN:40,PAR:42,COD:43,CZE:44,QAT:49,TUN:55,UZB:56,KSA:59,IRQ:60,RSA:61,BIH:63,CPV:64,GHA:65,JOR:68,NZL:82,CUW:83,HAI:85};
+const FIFARANK_KEY = "capriole_wc26_fifarank";   // daily 1am task writes the live ranks here · the app merges them over the fallback below (no redeploy needed)
+// Fallback ranks (live FIFA values as of 22 Jun 2026) · overridden at runtime by FIFARANK_KEY when present.
+let FIFA_RANK = {ARG:1,FRA:2,ESP:3,ENG:4,BRA:5,MAR:6,NED:7,GER:8,POR:9,BEL:10,MEX:11,COL:12,USA:13,CRO:15,JPN:16,SEN:17,SUI:18,URU:19,AUT:21,IRN:22,KOR:23,AUS:25,EGY:26,NOR:27,CAN:28,ALG:29,ECU:30,CIV:31,TUR:32,SWE:36,PAR:37,PAN:40,SCO:41,COD:43,CZE:44,UZB:54,QAT:57,TUN:58,KSA:59,IRQ:60,RSA:61,CPV:63,BIH:64,GHA:65,JOR:68,CUW:81,NZL:84,HAI:87};
+async function loadFifaRank() {   // pull the daily-updated live ranks; sanity-gated so a bad read can't wipe the chips
+  try {
+    const r = await readKey(FIFARANK_KEY, null);
+    if (r && typeof r === "object" && Object.keys(r).length >= 20) {
+      FIFA_RANK = r;
+      if (events.length && !$("paneM").classList.contains("hide")) renderMatches();
+      if (!$("paneG").classList.contains("hide")) loadStandings();
+    }
+  } catch (_) {}
+}
 function rankChip(c) { const t = c && c.team; const r = t && FIFA_RANK[t.abbreviation]; if (!r) return ""; const mine = t.displayName === myNation(); return `<span class="frank${mine ? " egy" : ""}">FIFA #${r}</span>`; }
 async function fillDetail(id, force) {
   if (!$("det" + id)) return;
@@ -4083,6 +4095,7 @@ renderHero();
 setInterval(renderHero, 300000);
 announceChampion();
 setInterval(announceChampion, 600000);
+loadFifaRank();   // merge the daily-updated live FIFA ranks over the built-in fallback
 setTimeout(trackVisit, 1800);
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) {
