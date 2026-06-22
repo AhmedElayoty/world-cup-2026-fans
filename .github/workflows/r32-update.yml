@@ -1,18 +1,29 @@
 name: R32 opponent precompute
 
 # Recompute every nation's Round-of-32 opponent and publish to textdb key capriole_wc26_r32.
-# Runs often so the value is fresh the MOMENT a group match finishes (live -> confirmed) — exactly
-# when people open the app to see who their nation now plays in the Round of 32, even if they were
-# offline during the match (the server is always online with ESPN access). The script is cheap and
-# self-throttling: it SKIPS while any match is live, and only WRITES when the result actually
-# changed, so the vast majority of runs are a no-op read.
-#
-# The fifa-rank.yml job ALSO runs this same script 3x/day as a baseline/fallback.
-# LONGEVITY: GitHub auto-disables schedules in a public repo after 60 days with no new commits; the
-# group stage is well within that. Set repo Variable HEALTHCHECK_URL_R32 for a dead-man's-switch.
+# SCHEDULE-AWARE: fires every 5 min ONLY in each remaining GROUP match's end-window (~minute 88
+# through ~12 min after the final whistle), derived from the real ESPN kickoff times. It does NOT
+# run during the first ~88 minutes of a match, does NOT run overnight when nothing is ending, and
+# stops after the group stage (no knockout runs — the R32 forecast is locked once groups finish).
+# The script itself SKIPS while any match is still live (covers stoppage/extra time) and WRITES only
+# when the result actually changed, so it publishes the new opponent the instant a match settles.
+# Windows below are UTC, day-of-month 22-28 June (remaining group stage as of 22 Jun 2026).
+# Regenerate from the schedule if matches are rescheduled. The 3x/day step in fifa-rank.yml is the
+# safety-net baseline. The app ALSO recomputes client-side within ~5s for anyone with it open.
 on:
   schedule:
-    - cron: "*/10 * * * *"   # every ~10 min (best-effort); catches a match finishing within minutes
+    - cron: "40,45,50,55 18 22-28 6 *"
+    - cron: "0,5,10 19 22-28 6 *"
+    - cron: "40,45,50,55 20 22-28 6 *"
+    - cron: "0,5,10,40,45,50,55 21 22-28 6 *"
+    - cron: "0,5,10,40,45,50,55 22 22-28 6 *"
+    - cron: "0,5,10,40,45,50,55 23 22-28 6 *"
+    - cron: "0,5,10,40,45,50,55 0 22-28 6 *"
+    - cron: "0,5,10,15,20,25,30,35,40,45,50,55 1 22-28 6 *"
+    - cron: "0,5,10,40,45,50,55 2 22-28 6 *"
+    - cron: "0,5,10,40,45,50,55 3 22-28 6 *"
+    - cron: "0,5,10,40,45,50,55 4 22-28 6 *"
+    - cron: "0,5,10 5 22-28 6 *"
   workflow_dispatch: {}      # manual run from the Actions tab
 
 permissions:
