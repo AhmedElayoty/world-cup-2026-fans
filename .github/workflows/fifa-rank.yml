@@ -40,3 +40,8 @@ jobs:
         env:
           HEALTHCHECK_URL: ${{ vars.HEALTHCHECK_URL }}   # optional; alerts you if updates ever stop
         run: node .github/scripts/fifa-rank-update.mjs
+      - name: Update R32 opponents (all 48 nations)
+        if: always()                                       # independent of the FIFA step
+        env:
+          HEALTHCHECK_URL_R32: ${{ vars.HEALTHCHECK_URL_R32 }}   # optional; separate dead-man's-switch
+        run: node .github/scripts/r32-update.mjs
