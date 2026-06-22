@@ -169,6 +169,8 @@ main{flex:1;padding:14px 14px calc(20px + env(safe-area-inset-bottom));overflow-
  white-space:nowrap;color:var(--gold);background:rgba(255,192,46,.12);border:1px solid rgba(255,192,46,.5);border-radius:999px;padding:0 7px}
 .team.away .frank{align-self:flex-end}
 .frank.egy{color:#6dffb5;background:rgba(0,210,106,.14);border-color:rgba(0,210,106,.5)}
+.frmini{font-family:'Oswald';font-weight:700;font-size:9px;letter-spacing:.2px;color:var(--gold);background:rgba(255,192,46,.12);border:1px solid rgba(255,192,46,.42);border-radius:999px;padding:0 5px;line-height:1.55;white-space:nowrap;flex:none}
+.frmini.egy{color:#6dffb5;background:rgba(0,210,106,.14);border-color:rgba(0,210,106,.5)}
 .score{font-family:'Oswald';font-weight:700;font-size:26px;letter-spacing:1px;min-width:74px;text-align:center}
 .score small{display:block;font-size:10px;font-weight:500;letter-spacing:1.6px;color:var(--cyan);margin-top:1px}
 .mven{margin-top:9px;font-size:11px;color:var(--dim);display:flex;flex-direction:column;align-items:flex-end;text-align:right;gap:2px}
@@ -433,6 +435,31 @@ footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px
 .tlside{flex:1;font-size:12.5px;color:var(--txt);min-width:0;line-height:1.34}
 .tlside.l{text-align:right}
 .tlside.r{text-align:left}
+/* RTL: the row mirrors (home moves to the right), so mirror the goal-highlight gradient + text so each
+   highlight sits under its own scoring team and events still hug the centre spine. */
+html[dir="rtl"] .tlrow.goal.l{background:linear-gradient(270deg,rgba(224,90,43,.16),transparent 62%)}
+html[dir="rtl"] .tlrow.goal.r{background:linear-gradient(90deg,rgba(25,200,255,.14),transparent 62%)}
+html[dir="rtl"] .tlside.l{text-align:left}
+html[dir="rtl"] .tlside.r{text-align:right}
+/* RTL mirroring (QA audit): physical-edge accents/affordances/close-buttons that don't auto-mirror */
+html[dir="rtl"] .navbadge{left:auto;right:calc(50% + 13px)}
+html[dir="rtl"] .ctoast{border-left:1px solid var(--line);border-right:3px solid var(--rust2)}
+html[dir="rtl"] #nameModal .modalx,html[dir="rtl"] .infomodal .modalx,html[dir="rtl"] .natpick__x{right:auto;left:10px}
+html[dir="rtl"] .fpopx{right:auto;left:8px}
+html[dir="rtl"] .psrate{right:auto;left:46px}
+html[dir="rtl"] .lbr.egy{box-shadow:inset -3px 0 0 var(--green)}
+html[dir="rtl"] .gt tr.q1 td.pos{box-shadow:inset -3px 0 0 var(--cyan)}
+html[dir="rtl"] .gt tr.q3 td.pos{box-shadow:inset -3px 0 0 var(--gold)}
+html[dir="rtl"] .gt tr.qo td.pos{box-shadow:inset -3px 0 0 #46557f}
+html[dir="rtl"] .t3row{padding-left:0;padding-right:9px}
+html[dir="rtl"] .t3row.in{box-shadow:inset -3px 0 0 var(--green)}
+html[dir="rtl"] .t3row.out{box-shadow:inset -3px 0 0 var(--red)}
+html[dir="rtl"] .frow.me{box-shadow:inset -3px 0 0 0 #6dffb5;background:linear-gradient(270deg,rgba(109,255,181,.10),var(--card2) 60%)}
+html[dir="rtl"] .msg{border-radius:14px 14px 4px 14px}
+html[dir="rtl"] .msg.me{border-radius:14px 14px 14px 4px}
+html[dir="rtl"] .brnote{margin-left:0;margin-right:5px}
+html[dir="rtl"] .motm .motmr{margin-left:0;margin-right:3px}
+html[dir="rtl"] .fchip b{margin-left:0;margin-right:6px}
 .tlside .ev{font-size:15px;vertical-align:-1px;margin:0 3px;white-space:nowrap}
 .tlside b{color:#fff;font-weight:600}
 .tlmin{flex:0 0 44px;text-align:center;font-family:'Oswald';font-weight:600;font-size:11px;color:#9fb3e6;background:#1a2548;border:1px solid var(--line);border-radius:10px;padding:2px 0;position:relative;z-index:1;line-height:1.15}
@@ -897,7 +924,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.12</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.13</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -944,7 +971,7 @@ const STATS_KEY = "capriole_wc26_analytics";   // internal visitor counter (aggr
 const SEASON_RANGE = "20260611-20260719";
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.12";
+const APP_VERSION = "2.13";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-22-v211";
@@ -1187,6 +1214,79 @@ AR_RX.push(   // ★ my-nation tracker + best-3rd race box (Groups tab)
   [/BEST 3RD-PLACED RACE/g, "سباق أفضل مركز ثالث"],
   [/8 of the 12 third-placed teams also reach the Round of 32/g, "يتأهّل 8 من أصحاب المركز الثالث الـ12 أيضاً إلى دور الـ32"],
   [/· fills in once results start/g, "· يكتمل عند بدء النتائج"]
+);
+AR_RX.push(   // ⭐ Star / MOTM player stat line (e.g. "1 goal, 2 on tgt, 1 save")
+  [/(\d+) goals\b/g, "$1 أهداف"],
+  [/(\d+) goal\b/g, "$1 هدف"],
+  [/(\d+) on tgt\b/g, "$1 على المرمى"],
+  [/(\d+) big chances\b/g, "$1 فرص محقّقة"],
+  [/(\d+) big chance\b/g, "$1 فرصة محقّقة"],
+  [/(\d+) saves\b/g, "$1 تصدّيات"],
+  [/\bclean sheet\b/g, "شباك نظيفة"],
+  [/\btap for stats\b/g, "اضغط للإحصائيات"],
+  [/\(BY RATING\)/g, "(حسب التقييم)"],
+  [/\bAnalyzing player ratings…/g, "نحلّل تقييمات اللاعبين…"],
+  [/\bcrunching the full match stats\b/g, "جارٍ تحليل إحصائيات المباراة كاملةً"],
+  [/Ratings didn't load · tap to retry/g, "تعذّر تحميل التقييمات · اضغط لإعادة المحاولة"]
+);
+Object.assign(AR, { "MOTM": "الأفضل", "STAR OF": "نجم", "THE MATCH": "المباراة" });   // compact badges split by <br>: "MOTM"/"(BY RATING)" and "STAR OF"/"THE MATCH"
+// QA audit (wf_f5e91a35): close the Arabic translation gaps found across auth/nation, empty/error states, popups & bracket
+Object.assign(AR, {
+  // JS-injected empty / error states
+  "Can't reach the live feed.":"تعذّر الوصول إلى البث المباشر.",
+  "Pick another date above.":"اختر تاريخاً آخر بالأعلى.",
+  "Couldn't load standings · retrying automatically.":"تعذّر تحميل الترتيب · تتم إعادة المحاولة تلقائياً.",
+  "No matches open yet · next week’s fixtures open 2 days before it starts.":"لا مباريات مفتوحة بعد · تُفتح مباريات الأسبوع القادم قبل يومين من انطلاقه.",
+  "Could not load fixtures · check connection.":"تعذّر تحميل المباريات · تحقّق من الاتصال.",
+  "Chat room unreachable.":"تعذّر الوصول إلى غرفة الدردشة.",
+  "No messages yet · say hello! 👋":"لا رسائل بعد · ألقِ التحية! 👋",
+  // auth / create-account / change-nation flow
+  "Sign in to follow a nation and see its full schedule · browsing stays free.":"سجّل الدخول لمتابعة منتخب ورؤية جدوله الكامل · التصفّح يبقى مجانياً.",
+  "No spaces in the username · letters, numbers or _ only":"لا مسافات في اسم المستخدم · أحرف وأرقام و _ فقط",
+  "Username: 3–15 characters · letters, numbers or _ only (no spaces or symbols)":"اسم المستخدم: من 3 إلى 15 حرفاً · أحرف وأرقام و _ فقط (دون مسافات أو رموز)",
+  "Password: at least 4 characters":"كلمة المرور: 4 أحرف على الأقل",
+  "Can't reach the club server · try again":"تعذّر الوصول إلى خادم النادي · حاول مجدداً",
+  "No such username · create an account?":"اسم المستخدم غير موجود · أتريد إنشاء حساب؟",
+  "Wrong password (ask Ahmed to reset)":"كلمة المرور خاطئة (اطلب من أحمد إعادة التعيين)",
+  "Username taken · try LOG IN instead":"اسم المستخدم مستخدم · جرّب تسجيل الدخول بدلاً من ذلك",
+  "Save failed · try again":"فشل الحفظ · حاول مجدداً",
+  "Follow a nation · no account needed":"تابِع منتخباً · دون حساب",
+  "Update your favourite nation":"حدّث منتخبك المفضّل",
+  "Couldn't save · try again":"تعذّر الحفظ · حاول مجدداً",
+  "SAVE TEAM":"حفظ المنتخب",
+  "Choose a nation":"اختر منتخباً",
+  // predict-flow transient button states
+  "PICK THE PENALTY WINNER":"اختر الفائز بركلات الترجيح",
+  "ENTER BOTH SCORES FIRST":"أدخِل النتيجتين أولاً",
+  "NO DRAWS · TAP THE PENALTIES BUTTON BELOW":"لا تعادل · اضغط زر ركلات الترجيح بالأسفل",
+  "SIGN IN, THEN SUBMIT":"سجّل الدخول ثم أكّد",
+  "SAVING…":"جارٍ الحفظ…",
+  "FAILED · TAP TO RETRY":"فشل · اضغط لإعادة المحاولة",
+  // player-stats popup + form/H2H labels
+  "Minutes":"الدقائق",
+  "Duels won":"المواجهات الفائزة",
+  "Goals prevented":"الأهداف الممنوعة",
+  "Conceded":"استقبل",
+  "RATING":"التقييم",
+  "Player ratings unavailable for this match.":"تقييمات اللاعبين غير متاحة لهذه المباراة.",
+  "Tap any player for full stats →":"اضغط أي لاعب لعرض إحصائياته الكاملة ←",
+  "REF":"الحكم",
+  "WIN":"فوز","LOSS":"خسارة","WON":"فاز",
+  // knockout round-code chips
+  "R32":"دور الـ32","R16":"دور الـ16","QF":"ربع النهائي","SF":"نصف النهائي","FINAL":"النهائي","BRONZE":"البرونزية"
+});
+AR_RX.unshift([/\bon pens\b/gi, "بركلات الترجيح"]);   // run before the earlier /\bPENS\b/ rule so "on pens" fully translates
+AR_RX.push(
+  [/\b(R32|R16|QF|SF|FINAL|BRONZE) · MATCH (\d+)/g, (m,c,n)=>({R32:"دور الـ32",R16:"دور الـ16",QF:"ربع النهائي",SF:"نصف النهائي",FINAL:"النهائي",BRONZE:"البرونزية"}[c]+" · مباراة "+n)],
+  [/· MATCH (\d+)/g, "· مباراة $1"],
+  [/No matches found for (.+?)\./g, "لا مباريات لـ $1."],
+  [/No matches this day \((.+?) time\)\./g, "لا مباريات في هذا اليوم (بتوقيت $1)."],
+  [/(\d+) MET\b/g, "$1 لقاءات"],
+  [/SHOW ALL (\d+)/g, "عرض الكل $1"],
+  [/Played (\d+)/g, "لعب $1"],
+  [/\bGoal\b/g, "هدف"],
+  [/★ Your nation · /g, "★ منتخبك · "],
+  [/Teams drop in as groups finish · times /g, "تُضاف المنتخبات مع انتهاء المجموعات · التوقيت "]
 );
 function tAR(s){
   if(!s) return s; const k = s.trim(); if(!k || !/[A-Za-z]/.test(k)) return s;
@@ -1645,13 +1745,24 @@ async function loadFifaRank() {   // pull the daily-updated live ranks; sanity-g
   try {
     const r = await readKey(FIFARANK_KEY, null);
     if (r && typeof r === "object" && Object.keys(r).length >= 20) {
-      FIFA_RANK = r;
+      FIFA_RANK = r; _rankByName = null;   // ranks changed → rebuild the name→rank lookup
       if (events.length && !$("paneM").classList.contains("hide")) renderMatches();
       if (!$("paneG").classList.contains("hide")) loadStandings();
     }
   } catch (_) {}
 }
 function rankChip(c) { const t = c && c.team; const r = t && FIFA_RANK[t.abbreviation]; if (!r) return ""; const mine = t.displayName === myNation(); return `<span class="frank${mine ? " egy" : ""}">FIFA #${r}</span>`; }
+// FIFA rank for a team, resolved by abbreviation (matches/standings) or by display name (bracket, where
+// teams arrive as {name,logo} with no abbreviation). _rankByName is built lazily from the season cache.
+let _rankByName = null;
+function nationRank(team) {
+  if (!team) return 0;
+  if (team.abbreviation && FIFA_RANK[team.abbreviation]) return FIFA_RANK[team.abbreviation];
+  if (_rankByName === null) { _rankByName = {}; try { (seasonCache.events || []).forEach(e => (e.competitions[0].competitors || []).forEach(c => { const t = c.team; if (t && t.displayName && t.abbreviation && FIFA_RANK[t.abbreviation]) _rankByName[t.displayName] = FIFA_RANK[t.abbreviation]; })); } catch (_) {} }
+  const nm = team.displayName || team.name; return (nm && _rankByName[nm]) || 0;
+}
+// compact "#N" rank pill for tight spots (standings rows, bracket cells); gold, green for the user's nation
+function rankMini(team) { const r = nationRank(team); if (!r) return ""; const nm = team.displayName || team.name; return `<span class="frmini${nm === myNation() ? " egy" : ""}">FIFA #${r}</span>`; }
 async function fillDetail(id, force) {
   if (!$("det" + id)) return;
   try {
@@ -1775,9 +1886,9 @@ async function loadStandings() {
           const zone = _show ? (i < 2 ? "q1" : i === 2 ? "q3" : "qo") : "";   // no qualify coloring until the group has started
           return `<tr class="${zone}${(_show && i === 1) ? " cutline" : ""}${egy ? " egy" : ""}">
             <td class="pos">${i + 1}</td>
-            <td><span class="tm"><img src="${esc(r.team.logos && r.team.logos[0] ? r.team.logos[0].href : "")}" alt="">${esc(r.team.displayName)}</span></td>
+            <td><span class="tm"><img src="${esc(r.team.logos && r.team.logos[0] ? r.team.logos[0].href : "")}" alt="">${esc(r.team.displayName)}${rankMini(r.team)}</span></td>
             <td>${s.gamesPlayed || 0}</td><td>${s.wins || 0}</td><td>${s.ties || 0}</td><td>${s.losses || 0}</td>
-            <td>${s.pointDifferential || s.pointsDiff || 0}</td><td class="pts">${s.points || 0}</td></tr>`;
+            <td><bdi dir="ltr">${s.pointDifferential || s.pointsDiff || 0}</bdi></td><td class="pts">${s.points || 0}</td></tr>`;
         }).join("") + `</table></div>`;
     }).join("") + '<div class="qlegend" style="grid-column:1/-1"><span><i style="background:var(--cyan)"></i>TOP 2 · DIRECT R32</span><span><i style="background:var(--gold)"></i>3RD · BEST-THIRD RACE</span><span><i style="background:#46557f"></i>4TH · OUT</span></div>';
     renderThirds(groups);
@@ -1904,7 +2015,7 @@ function brTeamRow(node, side) {
   const isWin = !!(r && r.win && r.win === side), isLose = !!(r && r.win && r.win !== side);
   if (t) {
     const egy = t.name === myNation();
-    return '<div class="brteam' + (egy ? " egy" : "") + (isWin ? " win" : "") + (isLose ? " lose" : "") + '"><img src="' + (t.logo || "") + '" alt="" onerror="this.style.visibility=&#39;hidden&#39;"><span class="bn">' + esc(t.name) + '</span><span class="bsc">' + (sc != null ? sc : "") + '</span></div>';
+    return '<div class="brteam' + (egy ? " egy" : "") + (isWin ? " win" : "") + (isLose ? " lose" : "") + '"><img src="' + (t.logo || "") + '" alt="" onerror="this.style.visibility=&#39;hidden&#39;"><span class="bn">' + esc(t.name) + rankMini(t) + '</span><span class="bsc">' + (sc != null ? sc : "") + '</span></div>';
   }
   const L = slotLabel(slot), prov = egyProvisional(slot);
   return '<div class="brteam ph' + (prov ? " egy" : "") + '"><span class="phc"></span><span class="bn">' + esc(L.main) +
@@ -2211,7 +2322,7 @@ async function downloadBracketPNG(btn){
           c.toBlob(b=>{ if(!b){ rej(); return; } const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="World-Cup-2026-Bracket.png"; document.body.appendChild(a); a.click(); a.remove(); res(); }, "image/png"); }
         catch(e){ URL.revokeObjectURL(burl); rej(e); } };
       img.onerror=()=>{ URL.revokeObjectURL(burl); rej(); }; img.src=burl; });
-  }catch(e){ try{ alert("Couldn't build the image on this device · opening the bracket in a new tab instead; screenshot it to save."); }catch(_){} openBracketPoster(); }
+  }catch(e){ try{ alert(LANG === "ar" ? "تعذّر إنشاء الصورة على هذا الجهاز · سيُفتح المخطّط في تبويب جديد؛ التقط لقطة شاشة لحفظه." : "Couldn't build the image on this device · opening the bracket in a new tab instead; screenshot it to save."); }catch(_){} openBracketPoster(); }
   if(btn){ btn.innerHTML=orig; btn.disabled=false; }
 }
 
@@ -2251,7 +2362,7 @@ function drawHero() {
     '<span>' + fmt(ko, { weekday: "short", day: "2-digit", month: "short" }).toUpperCase() +
     ' · ' + fmt(ko, { hour: "2-digit", minute: "2-digit" }) + ' ' + tzAbbr() + '</span></div>' + heroBtns() +
     '<div class="hm"><img src="' + (H.team.logo || "") + '" alt="">' +
-    '<div class="ht1">' + esc(H.team.displayName) + ' <span style="color:var(--dim)">v</span> ' + esc(A.team.displayName) + '</div>' +
+    '<div class="ht1">' + esc(H.team.displayName) + ' <span style="color:var(--dim)">' + (LANG === "ar" ? "ضد" : "v") + '</span> ' + esc(A.team.displayName) + '</div>' +
     '<img src="' + (A.team.logo || "") + '" alt="">' +
     '<div class="cd" id="heroCd">' + mid + '<small>' + (live ? esc(e.status.displayClock || "LIVE") : "TO KICK-OFF") + '</small></div></div></div>';
 }
@@ -3008,6 +3119,9 @@ function retryRatings(id) {   // manual retry after repeated failures
   if (openId === id && lineups[id] && document.getElementById("det" + id)) document.getElementById("det" + id).innerHTML = matchDetail(lineups[id], ev);
   else loadRatings(ev);
 }
+// Build the "· N goal · N assist · N on tgt" stat tail. Each bit is wrapped in <bdi> so in Arabic (RTL)
+// the count stays glued to its OWN word and can't visually bleed into the neighbouring stat.
+function statBits(bits){ return bits.length ? ' · ' + bits.map(b => '<bdi>' + esc(b) + '</bdi>').join(' · ') : ''; }
 function motmCard(data, ev) {
   if (ev.status.type.state !== "post") return "";
   const R = _ratings[ev.id];
@@ -3024,7 +3138,7 @@ function motmCard(data, ev) {
   if (s.goalAssists) bits.push(s.goalAssists + (s.goalAssists > 1 ? " assists" : " assist"));
   if (m.c === "GK") { if (s.saves) bits.push(s.saves + " saves"); if (s.cleanSheet) bits.push("clean sheet"); }
   else { if (s.shotsOnTarget) bits.push(s.shotsOnTarget + " on tgt"); if (s.bigChanceCreated) bits.push(s.bigChanceCreated + " big chance" + (s.bigChanceCreated > 1 ? "s" : "")); }
-  return '<div class="motm" onclick="event.stopPropagation();playerStatPop(\'' + ev.id + '\',\'' + m.pid + '\')"><span class="ic">⭐</span><div class="motmb"><div class="nm">' + esc(m.name) + ' <b class="motmr">' + m.rating.toFixed(1) + '</b></div><div class="sub">' + esc(m.team) + (bits.length ? ' · ' + bits.join(", ") : "") + ' · tap for stats</div></div><div class="tag">MOTM<br>(BY RATING)</div></div>';
+  return '<div class="motm" onclick="event.stopPropagation();playerStatPop(\'' + ev.id + '\',\'' + m.pid + '\')"><span class="ic">⭐</span><div class="motmb"><div class="nm">' + esc(m.name) + ' <b class="motmr">' + m.rating.toFixed(1) + '</b></div><div class="sub">' + esc(m.team) + statBits(bits) + ' · tap for stats</div></div><div class="tag">MOTM<br>(BY RATING)</div></div>';
 }
 function playerStatPop(eventId, pid) {
   const R = _ratings[eventId]; if (!R || !R.byId || !R.byId[pid]) return;
@@ -3111,7 +3225,7 @@ function starMan(data, ev) {
   if (best.a) bits.push(best.a + (best.a > 1 ? " assists" : " assist"));
   if (best.gk) { if (best.gc === 0) bits.push("clean sheet"); if (best.sv) bits.push(best.sv + " saves"); }
   return '<div class="starman"><span class="ic">\u2B50</span><div><div class="nm">' + esc(best.name) +
-    '</div><div class="sub">' + esc(best.team) + (bits.length ? ' \u00B7 ' + bits.join(", ") : "") +
+    '</div><div class="sub">' + esc(best.team) + statBits(bits) +
     '</div></div><div class="tag">STAR OF<br>THE MATCH</div></div>';
 }
 function evTimeline(ev, data) {
@@ -3702,7 +3816,7 @@ async function sendMsg() {
   try {
     await postRoom([mine]);
     lastChatJson = ""; pollChat();
-  } catch (e) { alert("Couldn't send · check connection."); }
+  } catch (e) { alert(LANG === "ar" ? "تعذّر الإرسال · تحقّق من الاتصال." : "Couldn't send · check connection."); }
 }
 /* ---- chat emoji picker, sender nation flag & message reactions ---- */
 const CHAT_EMOJIS = ["😀","😃","😄","😁","😅","😂","🤣","😊","😍","😘","😎","🤩","🤔","😴","🙄","😜","😢","😭","😡","🥳","🥶","😱","🤝","🙏","👍","👎","👏","🙌","💪","🤞","👀","🔥","⚽","🥅","🏆","🎉","🎊","❤️","💔","💯","⭐","🚩","🟨","🟥"];
