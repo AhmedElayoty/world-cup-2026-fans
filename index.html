@@ -952,7 +952,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.24</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.25</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -999,10 +999,10 @@ const STATS_KEY = "capriole_wc26_analytics";   // internal visitor counter (aggr
 const SEASON_RANGE = "20260611-20260719";
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.24";
+const APP_VERSION = "2.25";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-22-v225";
+const FORCE_RELOAD = "2026-06-22-v226";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -3223,15 +3223,17 @@ function rtPayload(byId, motm) {
   return { byId: b, motm: motm ? { pid: motm.pid, name: motm.name, team: motm.team, rating: motm.rating, c: motm.c, m: rtTrimM(motm.m) } : null };
 }
 function rtPersist(id, payload, alsoShared) {
-  try { localStorage.setItem("cs_rtv2_" + id, JSON.stringify(payload)); }
-  catch (_) { try { Object.keys(localStorage).filter(k => k.indexOf("cs_rtv2_") === 0).forEach(k => localStorage.removeItem(k)); localStorage.setItem("cs_rtv2_" + id, JSON.stringify(payload)); } catch (__) {} }
+  if (payload && payload.byId && payload.motm && payload.motm.pid) {   // only cache a COMPLETE result (ratings + a NAMED MOTM) — never a partial/nameless one
+    try { localStorage.setItem("cs_rtv3_" + id, JSON.stringify(payload)); }
+    catch (_) { try { Object.keys(localStorage).filter(k => k.indexOf("cs_rtv") === 0).forEach(k => localStorage.removeItem(k)); localStorage.setItem("cs_rtv3_" + id, JSON.stringify(payload)); } catch (__) {} }
+  }
   if (alsoShared) { try { writeKey("capriole_wc26_rt2_" + id, payload); } catch (_) {} }   // share globally → others read it instead of recomputing
 }
 async function loadRatings(ev) {
   const id = ev.id;
   const prev = _ratings[id];
   if (prev && (prev.ready || prev.loading)) return prev;
-  try { const _c = localStorage.getItem("cs_rtv2_" + id); if (_c) { const _d = JSON.parse(_c); if (_d && _d.byId && Object.keys(_d.byId).length) return (_ratings[id] = { ready: true, byId: _d.byId, motm: _d.motm }); } } catch (_) {}   // a finished match's ratings never change → reuse the saved copy (non-empty only)
+  try { const _c = localStorage.getItem("cs_rtv3_" + id); if (_c) { const _d = JSON.parse(_c); if (_d && _d.byId && Object.keys(_d.byId).length && _d.motm && _d.motm.pid) return (_ratings[id] = { ready: true, byId: _d.byId, motm: _d.motm }); } } catch (_) {}   // reuse the saved copy ONLY if COMPLETE (has a named MOTM); a stale/partial local cache is ignored → falls through to the shared cache / fresh compute
   if (!ev.status || ev.status.type.state !== "post") return null;   // full-time only
   const _failed = (prev && prev.failed) || 0;   // carry the retry count across attempts
   _ratings[id] = { loading: true, byId: {}, failed: _failed };
