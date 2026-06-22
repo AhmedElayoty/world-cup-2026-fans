@@ -956,7 +956,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.34</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.35</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1003,10 +1003,10 @@ const STATS_KEY = "capriole_wc26_analytics";   // internal visitor counter (aggr
 const SEASON_RANGE = "20260611-20260719";
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.34";
+const APP_VERSION = "2.35";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-23-v235";
+const FORCE_RELOAD = "2026-06-23-v236";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -1015,6 +1015,7 @@ const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
 let selDate = null;          // 'YYYYMMDD' in UAE calendar
 let _userTouchedStrip = false;   // true once the user manually taps a day chip → never auto-jump over their choice
 let events = [];             // merged events for selected UAE day
+let _liveNow = [];           // tournament-wide currently-live matches (TODAY), drives the always-on LIVE NOW strip regardless of the date being browsed
 let openId = null;           // expanded match id
 let nationFilter = "";       // "" = normal date view; else a nation displayName → show only its matches
 let _natMatches = [];        // that nation's matches (from seasonEvents), sorted by date
@@ -1575,18 +1576,36 @@ function clearNationFilter() {
 /* ================= MATCHES ================= */
 async function loadMatches() {
   const day = selDate;
+  const today = uaeYMD(new Date());   // real current UAE day — where any live match actually is
   try {
     // a UAE day spans two ESPN (event-local) days · fetch both and filter
     const prev = ymdShift(day, -1);
-    const [a, b] = await Promise.all([
+    const reqs = [
       getJSON(API + "/scoreboard?dates=" + prev).catch(() => ({ events: [] })),
       getJSON(API + "/scoreboard?dates=" + day).catch(() => ({ events: [] })),
-    ]);
+    ];
+    const needToday = day !== today;   // browsing another date → also pull today so the LIVE NOW strip stays tournament-wide
+    if (needToday) {
+      reqs.push(getJSON(API + "/scoreboard?dates=" + ymdShift(today, -1)).catch(() => ({ events: [] })));
+      reqs.push(getJSON(API + "/scoreboard?dates=" + today).catch(() => ({ events: [] })));
+    }
+    const res = await Promise.all(reqs);
     if (selDate !== day) return; // user moved on
+    const a = res[0], b = res[1];
     const seen = new Set();
     events = [...(a.events || []), ...(b.events || [])]
       .filter(e => !seen.has(e.id) && seen.add(e.id))
       .filter(e => uaeYMD(new Date(e.date)) === day)
+      .sort((x, y) => new Date(x.date) - new Date(y.date));
+    // tournament-wide TODAY set → feeds the always-on LIVE NOW strip + the live poll cadence (independent of the browsed date)
+    let liveSrc;
+    if (needToday) {
+      const ts = new Set();
+      liveSrc = [...(res[2].events || []), ...(res[3].events || [])]
+        .filter(e => !ts.has(e.id) && ts.add(e.id))
+        .filter(e => uaeYMD(new Date(e.date)) === today);
+    } else { liveSrc = events; }
+    _liveNow = liveSrc.filter(e => e.status && e.status.type && e.status.type.state === "in")
       .sort((x, y) => new Date(x.date) - new Date(y.date));
     flashIds.clear();
     let buzz = false;
@@ -1607,12 +1626,12 @@ async function loadMatches() {
     lastFetch = Date.now();
     setCon(true, "LIVE FEED · UPDATED 0S AGO");
     const now = Date.now();
-    const anyLive = events.some(e => e.status.type.state === "in");
+    const anyLive = _liveNow.length > 0;   // tournament-wide (any date) so the strip + fast poll persist while you browse other dates
     if (_r32frozenNow !== anyLive) { _r32frozenNow = anyLive; if (typeof drawHero === "function") drawHero(); }   // keep the R32 flicker in sync with the REAL live state on EVERY tab incl. home (not just after a Groups-tab visit)
-    const soon = events.some(e => e.status.type.state === "pre" &&
+    const soon = liveSrc.some(e => e.status.type.state === "pre" &&
       new Date(e.date) - now < 1800000 && new Date(e.date) - now > -300000);
     // keep the hero's live score fresh from today's just-fetched events (seasonCache is up to 10 min stale)
-    if (anyLive) { const hm = events.find(e => e.status.type.state === "in" && e.competitions[0].competitors.some(c => MYTEAMS().includes(c.team.displayName))); if (hm) { heroEvent = hm; drawHero(); } }
+    if (anyLive) { const hm = _liveNow.find(e => e.competitions[0].competitors.some(c => MYTEAMS().includes(c.team.displayName))); if (hm) { heroEvent = hm; drawHero(); } }
     if (_prevAnyLive && !anyLive) {   // a live match just finished → recompute the R32 opponent NOW (don't wait for the timer)
       _r32updating = true; if (typeof drawHero === "function") drawHero();
       loadStandings(true).finally(() => { _r32updating = false; if (typeof drawHero === "function") drawHero(); });
@@ -1624,7 +1643,7 @@ async function loadMatches() {
     const vis = !document.hidden;
     let nextMs = anyLive ? (vis ? 5000 : 30000) : soon ? 60000 : 300000;
     let toKO = Infinity;
-    events.forEach(e => { if (e.status.type.state === "pre") { const d = new Date(e.date).getTime() - now; if (d > -2000 && d < toKO) toKO = d; } });
+    liveSrc.forEach(e => { if (e.status.type.state === "pre") { const d = new Date(e.date).getTime() - now; if (d > -2000 && d < toKO) toKO = d; } });
     if (toKO < nextMs) nextMs = Math.max(3000, toKO + 4000);
     clearTimeout(matchTimer);
     matchTimer = setTimeout(loadMatches, nextMs);
@@ -1772,8 +1791,7 @@ function liveClk(st){
 // Compact LIVE NOW strip at the top of Matches: each in-progress match as flag · ABBR · score · ABBR · flag · minute.
 function renderLiveSummary() {
   const box = $("liveSummary"); if (!box) return;
-  const list = events;   // LIVE NOW is tournament-wide · the nation filter narrows only the cards below, never this strip
-  const live = (list || []).filter(e => e.status && e.status.type && e.status.type.state === "in");
+  const live = (_liveNow || []).filter(e => e.status && e.status.type && e.status.type.state === "in");   // tournament-wide live set · persists across date browsing (never tied to the selected date)
   if (!live.length) { box.className = ""; box.style.display = "none"; box.innerHTML = ""; return; }
   const nm = t => { const dn = t.team.displayName || t.team.shortDisplayName || t.team.abbreviation || ""; return esc((typeof LANG !== "undefined" && LANG === "ar") ? tAR(dn) : dn); };   // FULL names · translated to Arabic in Arabic mode
   const fl = t => { const u = t.team.logo || (t.team.logos && t.team.logos[0] && t.team.logos[0].href) || ""; return u ? '<img src="' + esc(u) + '" alt="" onerror="this.style.visibility=\'hidden\'">' : ''; };
