@@ -224,7 +224,9 @@ html[dir="rtl"] .team.away img{box-shadow:-3px 0 0 0 var(--cyan)}
 .gt th:first-child{text-align:left}
 .gt td{padding:6px 2px;text-align:center;color:var(--mut);border-bottom:1px solid #1a2750}
 .gt tr:last-child td{border-bottom:none}
-.gt .tm{display:flex;align-items:center;gap:7px;text-align:left;color:var(--txt);font-weight:600;font-size:12.5px}
+.gt .tm{display:flex;align-items:center;gap:6px;text-align:left;color:var(--txt);font-weight:600;font-size:12.5px;min-width:0}
+.gt .tnm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.gt .tm .frmini{font-size:8.5px;padding:0 4px}
 .gt .tm img{width:20px;height:20px;object-fit:contain}
 .gt .pts{font-family:'Oswald';font-weight:700;color:#fff}
 .gt td{font-variant-numeric:tabular-nums}
@@ -924,7 +926,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.13</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.14</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -971,10 +973,10 @@ const STATS_KEY = "capriole_wc26_analytics";   // internal visitor counter (aggr
 const SEASON_RANGE = "20260611-20260719";
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.13";
+const APP_VERSION = "2.14";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-22-v211";
+const FORCE_RELOAD = "2026-06-22-v214";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -1762,7 +1764,7 @@ function nationRank(team) {
   const nm = team.displayName || team.name; return (nm && _rankByName[nm]) || 0;
 }
 // compact "#N" rank pill for tight spots (standings rows, bracket cells); gold, green for the user's nation
-function rankMini(team) { const r = nationRank(team); if (!r) return ""; const nm = team.displayName || team.name; return `<span class="frmini${nm === myNation() ? " egy" : ""}">FIFA #${r}</span>`; }
+function rankMini(team) { const r = nationRank(team); if (!r) return ""; const nm = team.displayName || team.name; return `<span class="frmini${nm === myNation() ? " egy" : ""}" title="FIFA #${r}">#${r}</span>`; }
 async function fillDetail(id, force) {
   if (!$("det" + id)) return;
   try {
@@ -1886,7 +1888,7 @@ async function loadStandings() {
           const zone = _show ? (i < 2 ? "q1" : i === 2 ? "q3" : "qo") : "";   // no qualify coloring until the group has started
           return `<tr class="${zone}${(_show && i === 1) ? " cutline" : ""}${egy ? " egy" : ""}">
             <td class="pos">${i + 1}</td>
-            <td><span class="tm"><img src="${esc(r.team.logos && r.team.logos[0] ? r.team.logos[0].href : "")}" alt="">${esc(r.team.displayName)}${rankMini(r.team)}</span></td>
+            <td><span class="tm"><img src="${esc(r.team.logos && r.team.logos[0] ? r.team.logos[0].href : "")}" alt=""><span class="tnm">${esc(r.team.displayName)}</span>${rankMini(r.team)}</span></td>
             <td>${s.gamesPlayed || 0}</td><td>${s.wins || 0}</td><td>${s.ties || 0}</td><td>${s.losses || 0}</td>
             <td><bdi dir="ltr">${s.pointDifferential || s.pointsDiff || 0}</bdi></td><td class="pts">${s.points || 0}</td></tr>`;
         }).join("") + `</table></div>`;
