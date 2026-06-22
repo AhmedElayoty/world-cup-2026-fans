@@ -155,6 +155,8 @@ main{flex:1;padding:14px 14px calc(20px + env(safe-area-inset-bottom));overflow-
 .badge.ft{background:#26345f;color:#cdd9ff}
 .badge.pre{background:#26345f;color:var(--cyan)}
 .badge.ht{background:var(--gold);color:#231500}
+.badge.susp{background:#7a4a16;color:#ffd9a3}
+.lsmin.susp{color:#ffd9a3}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
 @keyframes goalflash{0%{background:#7a5208}30%{background:#a8741a}100%{background:var(--card)}}
 .mcard.goal{animation:goalflash 2.5s ease-out}
@@ -956,7 +958,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.35</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.36</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1003,10 +1005,10 @@ const STATS_KEY = "capriole_wc26_analytics";   // internal visitor counter (aggr
 const SEASON_RANGE = "20260611-20260719";
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.35";
+const APP_VERSION = "2.36";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-23-v236";
+const FORCE_RELOAD = "2026-06-23-v237";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -1641,7 +1643,8 @@ async function loadMatches() {
     // off to 30s when hidden (saves battery/data); 60s near kickoff, 5min idle. Also wake ~4s after the next
     // kickoff so a match flips to LIVE within seconds. Efficient: fast only when it matters, never hammering.
     const vis = !document.hidden;
-    let nextMs = anyLive ? (vis ? 5000 : 30000) : soon ? 60000 : 300000;
+    const anyActive = _liveNow.some(e => !isSusp(e.status));   // genuinely playing (not just paused/suspended)
+    let nextMs = anyActive ? (vis ? 5000 : 30000) : (anyLive ? 60000 : (soon ? 60000 : 300000));   // suspended-only → ease to 60s, still catch the resume/finish
     let toKO = Infinity;
     liveSrc.forEach(e => { if (e.status.type.state === "pre") { const d = new Date(e.date).getTime() - now; if (d > -2000 && d < toKO) toKO = d; } });
     if (toKO < nextMs) nextMs = Math.max(3000, toKO + 4000);
@@ -1687,9 +1690,11 @@ function renderMatches() {
     let badge, mid;
     if (state === "in") {
       const desc = st.type.description || "";
+      const susp = isSusp(st);
       const half = /half/i.test(desc) && /time/i.test(desc);
       const pens = /penalt|shootout/i.test(desc);
-      badge = pens ? `<span class="badge live">● PENALTY SHOOTOUT</span>`
+      badge = susp ? `<span class="badge susp">⏸ ${LANG === "ar" ? "إيقاف" : "SUSPENDED"}</span>`
+            : pens ? `<span class="badge live">● PENALTY SHOOTOUT</span>`
             : half ? `<span class="badge ht">HALF-TIME</span>`
                    : `<span class="badge live">● LIVE ${esc(st.displayClock || "")}</span>`;
       mid = `<div class="score islive">${scoreLine(H.score ?? 0, A.score ?? 0)}<small>${esc(liveClk(st))}</small></div>`;
@@ -1780,10 +1785,16 @@ function renderMatches() {
   renderLiveSummary();
 }
 const logo = c => `<img src="${c.team.logo || ""}" alt="" onerror="this.style.visibility='hidden'">`;
-// live minute, but show "HT" at half-time / "PENS" at a shootout (the clock is paused then, not a minute)
+// match is paused/stopped (weather etc.) · ESPN reports this as STATUS_DELAYED/SUSPENDED with state still "in"
+function isSusp(st){
+  const t = (st && st.type) || {};
+  return /suspend|delay|abandon|interrupt|postpon/i.test((t.name || "") + " " + (t.description || "") + " " + (t.detail || "") + " " + (t.shortDetail || ""));
+}
+// live minute, but show "SUSPENDED" when stopped / "HT" at half-time / "PENS" at a shootout (clock paused, not a minute)
 function liveClk(st){
   const d = (st && st.type && st.type.description) || "";
   const ar = (typeof LANG !== "undefined" && LANG === "ar");
+  if (isSusp(st)) return ar ? "إيقاف" : "SUSP";
   if (/penalt|shootout/i.test(d)) return ar ? "ترجيح" : "PENS";
   if (/half/i.test(d) && /time/i.test(d)) return ar ? "استراحة" : "HT";
   return (st && st.displayClock) || (ar ? "مباشر" : "LIVE");
@@ -1801,7 +1812,7 @@ function renderLiveSummary() {
     const clk = esc(liveClk(e.status));
     return '<button type="button" class="lsrow" onclick="goLive(\'' + e.id + '\')">' +
       '<span class="lsside lshome">' + fl(H) + '<span class="lsteam">' + nm(H) + '</span></span>' +
-      '<span class="lsmid"><span class="lsmin">' + clk + '</span><span class="lsscore">' + scoreLine(H.score != null ? H.score : 0, A.score != null ? A.score : 0) + '</span></span>' +
+      '<span class="lsmid"><span class="lsmin' + (isSusp(e.status) ? ' susp' : '') + '">' + clk + '</span><span class="lsscore">' + scoreLine(H.score != null ? H.score : 0, A.score != null ? A.score : 0) + '</span></span>' +
       '<span class="lsside lsaway"><span class="lsteam">' + nm(A) + '</span>' + fl(A) + '</span>' +
       '<span class="lschev" aria-hidden="true">' + (LANG === "ar" ? "‹" : "›") + '</span>' +
       '</button>';
