@@ -413,6 +413,7 @@ html[dir="rtl"] .hero .he{letter-spacing:0}
  padding:12px 15px;margin-bottom:12px;font-size:13.5px;color:#ffe9b8;line-height:1.55}
 .brk b{font-family:'Oswald';letter-spacing:1.2px;color:var(--gold)}
 .brk span{display:block;font-family:'Oswald';font-weight:700;font-size:16.5px;letter-spacing:1.2px;color:var(--gold);margin-top:3px}
+.brk .myscore{display:block;font-family:'Oswald';font-weight:600;font-size:12.5px;letter-spacing:.5px;color:#e9d8a4;margin-top:5px}
 .brk.none{background:var(--card);border-color:var(--line);color:var(--mut)}
 .brknote{font-size:10.5px;color:#c9a44a;font-family:'Oswald';letter-spacing:1px;margin:-4px 0 8px}
 .otdkey{margin-left:auto;background:transparent;border:1px solid var(--gold);color:var(--gold);font-family:'Oswald';font-weight:600;font-size:10.5px;letter-spacing:1px;padding:5px 11px;border-radius:8px;cursor:pointer;white-space:nowrap;flex:none}
@@ -951,7 +952,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.23</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.24</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -998,7 +999,7 @@ const STATS_KEY = "capriole_wc26_analytics";   // internal visitor counter (aggr
 const SEASON_RANGE = "20260611-20260719";
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.23";
+const APP_VERSION = "2.24";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-22-v224";
@@ -3644,9 +3645,17 @@ async function announceChampion() {
     const winners = scores.filter(s => s.pts === top);
     const names = winners.map(x => x.name).join(" & ");
     const plural = winners.length > 1;
+    let mineLine = "";
+    if (cs_user) {
+      const mine = scores.find(s => s.uid === myId);
+      const myPts = mine ? mine.pts : 0;
+      const _lbl = (typeof LANG !== "undefined" && LANG === "ar") ? "نتيجتك الأسبوع الماضي : " : "Your last week score was : ";
+      const _pt  = (typeof LANG !== "undefined" && LANG === "ar") ? " نقطة" : " pts";
+      mineLine = '<span class="myscore">' + _lbl + myPts + _pt + '</span>';
+    }
     $("brkBox").innerHTML = '<div class="brk">&#127942; <b>PREDICTION CHAMPION' + (plural ? "S" : "") + '</b> &#183; ' +
       esc(names) + ' topped last week (' + w.lab + ') with ' + top + ' pts.' +
-      '<span>CHAMPION OF THE WEEK!</span></div>';
+      '<span>CHAMPION OF THE WEEK!</span>' + mineLine + '</div>';
     // weekly champion → posted to chat ONCE per completed week (uid champbot · distinct from the legacy
     // breakfast brkbot which stays hidden). First-run fence skips the already-announced week; only NEWER weeks post.
     try {
