@@ -929,7 +929,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.17</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.18</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -976,7 +976,7 @@ const STATS_KEY = "capriole_wc26_analytics";   // internal visitor counter (aggr
 const SEASON_RANGE = "20260611-20260719";
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.17";
+const APP_VERSION = "2.18";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-22-v215";
@@ -2213,7 +2213,9 @@ function bpBidi(){ return (typeof LANG !== "undefined" && LANG === "ar") ? ' uni
 // Arabize the finished poster SVG: translate every <text>/<tspan> holding Latin text, and add an Arabic font
 // (Oswald/Inter are Latin-only) so glyphs shape — per-glyph fallback keeps digits/dates in the Latin face.
 function bpArabize(svg){
-  svg = svg.replace(/(<(?:text|tspan)\b[^>]*>)([^<>]*[A-Za-z][^<>]*)(<\/(?:text|tspan)>)/g, (m, o, t, c) => o + tAR(t) + c);
+  // translate text content, but SKIP a lone letter — those are the group-letter glyph tiles (A-L). Without this,
+  // group D's "D" tile becomes تعادل (Draw) and group L's "L" becomes خسر (Loss) — they collide with the standings codes.
+  svg = svg.replace(/(<(?:text|tspan)\b[^>]*>)([^<>]*[A-Za-z][^<>]*)(<\/(?:text|tspan)>)/g, (m, o, t, c) => o + (/^\s*[A-Za-z]\s*$/.test(t) ? t : tAR(t)) + c);
   return svg.replace(/font-family="Oswald"/g, 'font-family="Oswald, Cairo"').replace(/font-family="Inter"/g, 'font-family="Inter, Cairo"');
 }
 function bpCell(p, pos){
