@@ -929,7 +929,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.16</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.17</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -976,7 +976,7 @@ const STATS_KEY = "capriole_wc26_analytics";   // internal visitor counter (aggr
 const SEASON_RANGE = "20260611-20260719";
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.16";
+const APP_VERSION = "2.17";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-22-v215";
@@ -1293,6 +1293,22 @@ AR_RX.push(
   [/★ Your nation · /g, "★ منتخبك · "],
   [/Teams drop in as groups finish · times /g, "تُضاف المنتخبات مع انتهاء المجموعات · التوقيت "]
 );
+// Bracket POSTER (the standalone SVG wallchart) — built as its own string, so the DOM translator never sees
+// it. These are applied at build time via bpT()/tAR(). (round names also feed koRangeByName as English keys.)
+Object.assign(AR, {
+  "FIFA WORLD CUP 2026":"كأس العالم 2026",
+  "ROAD TO THE FINAL · KNOCKOUT BRACKET":"الطريق إلى النهائي · مخطّط الأدوار الإقصائية",
+  "48 TEAMS · 16 HOST CITIES":"48 منتخباً · 16 مدينة مضيفة",
+  "ROUND OF 32":"دور الـ32","ROUND OF 16":"دور الـ16","QUARTER-FINAL":"ربع النهائي","SEMI-FINAL":"نصف النهائي",
+  "THE FINAL":"النهائي المرتقب","WORLD CHAMPIONS 2026":"أبطال العالم 2026","· AWAITING THE FINAL ·":"· بانتظار النهائي ·",
+  "your road to the final":"طريقه إلى النهائي","Unofficial fan wallchart · World Cup 2026":"مخطّط جماهيري غير رسمي · كأس العالم 2026",
+  "ALL TIMES":"كل الأوقات بتوقيت","World Cup 2026 · turn your phone sideways for the full-size bracket · screenshot to share":"كأس العالم 2026 · أدِر هاتفك أفقياً لعرض المخطّط كاملاً · التقط لقطة شاشة للمشاركة","Play along & predict at":"العب وتوقّع على"
+});
+AR_RX.push(   // poster per-cell meta "M5 · R32" (bare round codes, not the "· MATCH n" form)
+  [/\bM(\d+) · /g, "م$1 · "], [/\bR32\b/g, "دور 32"], [/\bR16\b/g, "دور 16"], [/\bQF\b/g, "ربع النهائي"], [/\bSF\b/g, "نصف النهائي"],
+  [/Loser Match (\d+)/g, "الخاسر من مباراة $1"]   // bronze-match feeders (Winner Match is already covered above)
+);
+AR_PHRASES.push("your road to the final");   // this key was added to AR AFTER AR_PHRASES was first built (~line 1147), so register it for substring matching
 function tAR(s){
   if(!s) return s; const k = s.trim(); if(!k || !/[A-Za-z]/.test(k)) return s;
   if(AR[k] !== undefined) return s.replace(k, AR[k]);          // whole-node exact match
@@ -2166,7 +2182,7 @@ function bpSlotR(node, side, x, top, w, sh, scale){
     o+='<image href="'+(team.logo||"")+'" x="'+fx+'" y="'+fy+'" width="'+tileW+'" height="'+tileH+'" preserveAspectRatio="xMidYMid meet" clip-path="url(#bpc'+node.n+side+')"'+(win&&!isWin?' opacity="0.6"':"")+'/>';
     const fill=egy?BPC.nat:(isWin?BPC.win:(win&&!isWin?BPC.lose:BPC.txt));
     if(isWin&&!egy&&node.n!==104) o+='<rect x="'+(x+2)+'" y="'+(top+4)+'" width="3" height="'+(sh-8)+'" rx="1.5" fill="'+BPC.win+'"/>';
-    o+='<text x="'+nameX+'" y="'+cy+'" dominant-baseline="central" font-family="Oswald" font-weight="'+(isWin?700:600)+'" font-size="'+ns+'" fill="'+fill+'">'+esc(bpTrunc(team.name,scale&&scale>1.2?16:18))+'</text>';
+    o+='<text x="'+nameX+'" y="'+cy+'" dominant-baseline="central" font-family="Oswald" font-weight="'+(isWin?700:600)+'" font-size="'+ns+'"'+bpBidi()+' fill="'+fill+'">'+esc(bpTrunc(bpT(team.name),scale&&scale>1.2?16:18))+'</text>';
     if(score!=null){ const sx=x+w-12;
       if(isWin) o+='<rect x="'+(sx-24)+'" y="'+(cy-12)+'" width="24" height="24" rx="5" fill="url(#bpGold)"/><text x="'+(sx-12)+'" y="'+cy+'" text-anchor="middle" dominant-baseline="central" font-family="Oswald" font-weight="700" font-size="17" fill="#2A1622">'+score+'</text>';
       else o+='<text x="'+sx+'" y="'+cy+'" text-anchor="end" dominant-baseline="central" font-family="Oswald" font-weight="700" font-size="16" fill="'+BPC.lose+'">'+score+'</text>'; }
@@ -2176,10 +2192,10 @@ function bpSlotR(node, side, x, top, w, sh, scale){
     o+='<rect x="'+fx+'" y="'+fy+'" width="'+tileW+'" height="'+tileH+'" rx="4" fill="#2A1C32" stroke="'+BPC.hair+'" stroke-width="0.7"/>';
     o+='<text x="'+(fx+tileW/2)+'" y="'+(fy+tileH/2)+'" text-anchor="middle" dominant-baseline="central" font-family="Oswald" font-weight="700" font-size="'+gfs.toFixed(1)+'" fill="'+gl.c+'">'+esc(gl.g)+'</text>';
     if(slot&&slot.t==="3"){
-      o+='<text x="'+nameX+'" y="'+(cy-ns*0.34)+'" dominant-baseline="central" font-family="Oswald" font-weight="500" font-size="'+(ns-2)+'" fill="'+BPC.ph+'">'+esc(bpTrunc(L.main,18))+'</text>';
-      o+='<text x="'+nameX+'" y="'+(cy+ns*0.56)+'" dominant-baseline="central" font-family="Inter" font-weight="500" font-size="'+(ns*0.62).toFixed(1)+'" letter-spacing="0.3" fill="'+BPC.meta+'">'+esc(bpTrunc(L.sub,22))+'</text>';
+      o+='<text x="'+nameX+'" y="'+(cy-ns*0.34)+'" dominant-baseline="central" font-family="Oswald" font-weight="500" font-size="'+(ns-2)+'"'+bpBidi()+' fill="'+BPC.ph+'">'+esc(bpTrunc(bpT(L.main),18))+'</text>';
+      o+='<text x="'+nameX+'" y="'+(cy+ns*0.56)+'" dominant-baseline="central" font-family="Inter" font-weight="500" font-size="'+(ns*0.62).toFixed(1)+'" letter-spacing="0.3"'+bpBidi()+' fill="'+BPC.meta+'">'+esc(bpTrunc(bpT(L.sub),22))+'</text>';
     } else {
-      o+='<text x="'+nameX+'" y="'+cy+'" dominant-baseline="central" font-family="Oswald" font-weight="500" font-size="'+(ns-1.5)+'" fill="'+BPC.ph+'">'+esc(bpTrunc(L.main,20))+'</text>';
+      o+='<text x="'+nameX+'" y="'+cy+'" dominant-baseline="central" font-family="Oswald" font-weight="500" font-size="'+(ns-1.5)+'"'+bpBidi()+' fill="'+BPC.ph+'">'+esc(bpTrunc(bpT(L.main),20))+'</text>';
     }
   }
   return o;
@@ -2189,13 +2205,24 @@ function bpCardDepth(x,y,w,h,op,stroke,sw){
     '<rect x="'+(x+1)+'" y="'+(y+1)+'" width="'+(w-2)+'" height="'+(h-2)+'" rx="11" fill="none" stroke="#FFFFFF" stroke-opacity="0.12" stroke-width="1"/>'+
     '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="12" fill="none" stroke="'+(stroke||BPC.hair)+'" stroke-width="'+(sw||0.9)+'"'+(stroke===BPC.nat?' filter="url(#bpNat)"':"")+'/>';
 }
+// translate a poster string at build time (no-op in English)
+function bpT(s){ return (typeof LANG !== "undefined" && LANG === "ar" && s) ? tAR(s) : s; }
+// In Arabic, let a mixed Arabic+Latin <text> resolve its OWN base direction from its first strong char
+// (RLM marks are inert under the root direction:ltr). Keeps text-anchor/x, fixes group-letter & date order.
+function bpBidi(){ return (typeof LANG !== "undefined" && LANG === "ar") ? ' unicode-bidi="plaintext"' : ''; }
+// Arabize the finished poster SVG: translate every <text>/<tspan> holding Latin text, and add an Arabic font
+// (Oswald/Inter are Latin-only) so glyphs shape — per-glyph fallback keeps digits/dates in the Latin face.
+function bpArabize(svg){
+  svg = svg.replace(/(<(?:text|tspan)\b[^>]*>)([^<>]*[A-Za-z][^<>]*)(<\/(?:text|tspan)>)/g, (m, o, t, c) => o + tAR(t) + c);
+  return svg.replace(/font-family="Oswald"/g, 'font-family="Oswald, Cairo"').replace(/font-family="Inter"/g, 'font-family="Inter, Cairo"');
+}
 function bpCell(p, pos){
   const node=bpBR(p.n), top=p.y-p.h/2, op={R32:0.92,R16:0.95,QF:0.97,SF:1}[p.round]||1, egy=bpNatIn(p.n), stroke=egy?BPC.nat:BPC.hair, sw=egy?2:0.9;
   let o=bpCardDepth(p.x,top,p.w,p.h,op,stroke,sw);
   if(egy){ const railX=p.side==="R"?p.x+p.w-4:p.x; o+='<rect x="'+railX+'" y="'+(top+5)+'" width="4" height="'+(p.h-10)+'" rx="2" fill="'+BPC.nat+'" filter="url(#bpNat)"/>'; }
   const _w=koWhen(node.uae), time=_w.time, dd=_w.day.toUpperCase();
   o+='<text x="'+(p.x+12)+'" y="'+(top+15)+'" font-family="Oswald" font-weight="600" font-size="10.5" letter-spacing="1.1" fill="'+BPC.meta+'">M'+p.n+' · '+p.round+'</text>';
-  o+='<text x="'+(p.x+p.w-12)+'" y="'+(top+15)+'" text-anchor="end" font-family="Inter" font-weight="500" font-size="10" fill="'+BPC.plat+'">'+esc(dd+" · "+time)+'</text>';
+  o+='<text x="'+(p.x+p.w-12)+'" y="'+(top+15)+'" text-anchor="end" font-family="Inter" font-weight="500" font-size="10"'+bpBidi()+' fill="'+BPC.plat+'">'+esc(dd+" · "+time)+'</text>';
   o+='<line x1="'+(p.x+11)+'" y1="'+(top+22)+'" x2="'+(p.x+p.w-11)+'" y2="'+(top+22)+'" stroke="'+BPC.div+'" stroke-width="0.9"/>';
   const sh=(p.h-22)/2;
   o+=bpSlotR(node,"h",p.x,top+22,p.w,sh);
@@ -2209,12 +2236,12 @@ function bpHeader(){
   return '<text x="120" y="116" font-family="Oswald" font-weight="700" font-size="54" letter-spacing="3" fill="'+BPC.txt+'">FIFA WORLD CUP 2026</text>'+
     '<text x="122" y="146" font-family="Oswald" font-weight="500" font-size="17" letter-spacing="5" fill="url(#bpGold)">ROAD TO THE FINAL · KNOCKOUT BRACKET</text>'+
     '<text x="2336" y="92" text-anchor="end" font-family="Oswald" font-weight="500" font-size="13" letter-spacing="2" fill="'+BPC.plat+'">48 TEAMS · 16 HOST CITIES</text>'+
-    '<text x="2336" y="120" text-anchor="end" font-family="Oswald" font-weight="500" font-size="13" letter-spacing="2" fill="'+BPC.plat+'">ALL TIMES <tspan fill="'+BPC.gold+'">'+esc(tzAbbr())+'</tspan> · '+esc(tzOffset(TZ))+'</text>';
+    '<text x="2336" y="120" text-anchor="end" font-family="Oswald" font-weight="500" font-size="13" letter-spacing="2" fill="'+BPC.plat+'">'+bpT('ALL TIMES')+' <tspan fill="'+BPC.gold+'">'+esc(tzAbbr())+'</tspan> · '+esc(bpT(tzOffset(TZ)))+'</text>';
 }
 function bpRoundHeaders(){
   const cols=[[176,"ROUND OF 32","28 JUN – 1 JUL",BPC.plat],[424,"ROUND OF 16","4 – 8 JUL",BPC.plat],[672,"QUARTER-FINAL","10 – 12 JUL","g"],[920,"SEMI-FINAL","14 – 15 JUL","g"],[2224,"ROUND OF 32","28 JUN – 1 JUL",BPC.plat],[1976,"ROUND OF 16","4 – 8 JUL",BPC.plat],[1728,"QUARTER-FINAL","10 – 12 JUL","g"],[1480,"SEMI-FINAL","14 – 15 JUL","g"]];
-  let o=""; cols.forEach(c=>{ const fill=c[3]==="g"?"url(#bpGold)":c[3]; o+='<text x="'+c[0]+'" y="174" text-anchor="middle" font-family="Oswald" font-weight="600" font-size="13" letter-spacing="2" fill="'+fill+'">'+c[1]+'</text><text x="'+c[0]+'" y="190" text-anchor="middle" font-family="Inter" font-weight="500" font-size="8.5" fill="'+BPC.meta+'">'+koRangeByName(c[1])+'</text>'; });
-  o+='<text x="1200" y="174" text-anchor="middle" font-family="Oswald" font-weight="700" font-size="14" letter-spacing="3" fill="url(#bpGold)">FINAL</text><text x="1200" y="190" text-anchor="middle" font-family="Inter" font-weight="500" font-size="8.5" fill="'+BPC.meta+'">'+koRange("FINAL")+'</text>';
+  let o=""; cols.forEach(c=>{ const fill=c[3]==="g"?"url(#bpGold)":c[3]; o+='<text x="'+c[0]+'" y="174" text-anchor="middle" font-family="Oswald" font-weight="600" font-size="13" letter-spacing="2" fill="'+fill+'">'+c[1]+'</text><text x="'+c[0]+'" y="190" text-anchor="middle" font-family="Inter" font-weight="500" font-size="8.5"'+bpBidi()+' fill="'+BPC.meta+'">'+koRangeByName(c[1])+'</text>'; });
+  o+='<text x="1200" y="174" text-anchor="middle" font-family="Oswald" font-weight="700" font-size="14" letter-spacing="3" fill="url(#bpGold)">FINAL</text><text x="1200" y="190" text-anchor="middle" font-family="Inter" font-weight="500" font-size="8.5"'+bpBidi()+' fill="'+BPC.meta+'">'+koRange("FINAL")+'</text>';
   return o;
 }
 function bpTrophyBlock(tro){
@@ -2258,7 +2285,7 @@ function bpFinalBlock(pos){
 function bpFooter(){
   const items=[[BPC.nat,esc(myNation())+" · your road to the final"],["url(#bpGold)","Winner"],[BPC.plat,"To be played"],["#4A3550","Awaiting"],[BPC.ember,"AET / Pens"]];
   let x=120,o=""; items.forEach(it=>{ o+='<rect x="'+x+'" y="1156" width="12" height="12" rx="2" fill="'+it[0]+'"/><text x="'+(x+18)+'" y="1166" font-family="Inter" font-weight="600" font-size="10" fill="'+BPC.plat+'">'+it[1]+'</text>'; x+=Math.max(190,it[1].length*7+44); });
-  o+='<a href="'+FANS_URL+'" target="_blank"><text x="2336" y="1149" text-anchor="end" font-family="Oswald" font-weight="600" font-size="15" letter-spacing="0.8"><tspan fill="'+BPC.plat+'">POWERED BY  </tspan><tspan fill="url(#bpGold)">'+FANS_URL_DISP+'</tspan></text></a>';
+  o+='<a href="'+FANS_URL+'" target="_blank"><text x="2336" y="1149" text-anchor="'+(LANG==="ar"?"start":"end")+'"'+(LANG==="ar"?' direction="rtl"':'')+' font-family="Oswald" font-weight="600" font-size="15" letter-spacing="0.8"><tspan fill="'+BPC.plat+'">'+(LANG==="ar"?"بدعم من  ":"POWERED BY  ")+'</tspan><tspan fill="url(#bpGold)">'+FANS_URL_DISP+'</tspan></text></a>';
   o+='<text x="2336" y="1168" text-anchor="end" font-family="Inter" font-weight="400" font-size="9.5" letter-spacing="0.3" fill="'+BPC.meta+'">Unofficial fan wallchart · World Cup 2026</text>';
   return o;
 }
@@ -2293,31 +2320,37 @@ function bracketPosterSVG(){
   s+=bpTrophyBlock(tro);
   Object.values(pos).forEach(p=>{ if(p.round!=="FINAL"&&p.round!=="BRONZE") s+=bpCell(p,pos); });
   s+=bpFooter();
-  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2400 1200" width="2400" height="1200">'+s+'</svg>';
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2400 1200" width="2400" height="1200" direction="ltr">'+s+'</svg>';
+  return (typeof LANG !== "undefined" && LANG === "ar") ? bpArabize(svg) : svg;
 }
 function openBracketPoster(){
   const svg=bracketPosterSVG();
-  const html='<!doctype html><html><head><meta charset="utf-8"><title>World Cup 2026 · Bracket</title>'+
+  const _ar=(typeof LANG!=="undefined"&&LANG==="ar");
+  const html='<!doctype html><html'+(_ar?' dir="rtl" lang="ar"':'')+'><head><meta charset="utf-8"><title>'+(_ar?'كأس العالم 2026 · المخطّط':'World Cup 2026 · Bracket')+'</title>'+
     '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">'+
-    '<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">'+
+    '<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700'+(_ar?'&family=Cairo:wght@400;500;600;700':'')+'&display=swap" rel="stylesheet">'+
     '<style>html,body{margin:0;background:#100810;height:100%}'+
-    '.tip{font-family:Inter,sans-serif;color:#8a90b8;font-size:12px;text-align:center;padding:8px;letter-spacing:.3px}'+
+    '.tip{font-family:Inter,"Cairo",sans-serif;color:#8a90b8;font-size:12px;text-align:center;padding:8px;letter-spacing:.3px}'+
     '.tip a{color:#F4D27A;font-weight:700;text-decoration:none}.tip .go{display:block;margin-top:4px;color:#bfc6d8}'+
     'svg{display:block}'+
     '@media (orientation:portrait){svg{width:100vw;height:auto}}'+
     '@media (orientation:landscape){body{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh}svg{height:94vh;width:auto;max-width:100vw}.tip{display:none}}'+
-    '</style></head><body><div class="tip">World Cup 2026 · turn your phone sideways for the full-size bracket · screenshot to share<span class="go">Play along &amp; predict at <a href="'+FANS_URL+'" target="_blank">'+FANS_URL_DISP+'</a></span></div>'+svg+'</body></html>';
+    '</style></head><body><div class="tip">'+(_ar?'كأس العالم 2026 · أدِر هاتفك أفقياً لعرض المخطّط كاملاً · التقط لقطة شاشة للمشاركة':'World Cup 2026 · turn your phone sideways for the full-size bracket · screenshot to share')+'<span class="go">'+(_ar?'العب وتوقّع على':'Play along &amp; predict at')+' <a href="'+FANS_URL+'" target="_blank">'+FANS_URL_DISP+'</a></span></div>'+svg+'</body></html>';
   const url=URL.createObjectURL(new Blob([html],{type:"text/html"}));
   const w=window.open(url,"_blank"); if(!w) location.href=url;
 }
 function bpDataURI(u){ return fetch(u).then(r=>r.blob()).then(b=>new Promise(res=>{const f=new FileReader();f.onload=()=>res(f.result);f.onerror=()=>res(null);f.readAsDataURL(b);})).catch(()=>null); }
 async function bpFontCSS(){
   try{
-    const css=await (await fetch("https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap")).text();
+    const ar=(typeof LANG!=="undefined"&&LANG==="ar");
+    const fams="family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700"+(ar?"&family=Cairo:wght@400;500;600;700":"");   // Cairo = Arabic glyphs for the PNG
+    const css=await (await fetch("https://fonts.googleapis.com/css2?"+fams+"&display=swap")).text();
     let out=""; for(const blk of css.split("@font-face").slice(1)){
       const fam=(blk.match(/font-family:\s*'([^']+)'/)||[])[1], wt=(blk.match(/font-weight:\s*(\d+)/)||[])[1]||"400",
             st=(blk.match(/font-style:\s*(\w+)/)||[])[1]||"normal", u=(blk.match(/url\(([^)]+\.woff2)\)/)||[])[1];
-      if(fam&&u&&(fam==="Oswald"||fam==="Inter")){ const d=await bpDataURI(u); if(d) out+="@font-face{font-family:'"+fam+"';font-style:"+st+";font-weight:"+wt+";src:url("+d+") format('woff2');}"; }
+      const isCairo=fam==="Cairo";
+      if(isCairo && !/U\+0600/i.test(blk)) continue;   // for Cairo, embed only the Arabic subset (small payload)
+      if(fam&&u&&(fam==="Oswald"||fam==="Inter"||isCairo)){ const d=await bpDataURI(u); if(d) out+="@font-face{font-family:'"+fam+"';font-style:"+st+";font-weight:"+wt+";src:url("+d+") format('woff2');}"; }
     } return out;
   }catch(e){ return ""; }
 }
