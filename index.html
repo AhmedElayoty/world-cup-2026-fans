@@ -956,7 +956,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.26</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.27</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1003,10 +1003,10 @@ const STATS_KEY = "capriole_wc26_analytics";   // internal visitor counter (aggr
 const SEASON_RANGE = "20260611-20260719";
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.26";
+const APP_VERSION = "2.27";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-22-v227";
+const FORCE_RELOAD = "2026-06-22-v228";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -1608,6 +1608,7 @@ async function loadMatches() {
     setCon(true, "LIVE FEED · UPDATED 0S AGO");
     const now = Date.now();
     const anyLive = events.some(e => e.status.type.state === "in");
+    if (_r32frozenNow !== anyLive) { _r32frozenNow = anyLive; if (typeof drawHero === "function") drawHero(); }   // keep the R32 flicker in sync with the REAL live state on EVERY tab incl. home (not just after a Groups-tab visit)
     const soon = events.some(e => e.status.type.state === "pre" &&
       new Date(e.date) - now < 1800000 && new Date(e.date) - now > -300000);
     // keep the hero's live score fresh from today's just-fetched events (seasonCache is up to 10 min stale)
@@ -2511,7 +2512,7 @@ function _heroR32Sec(nation){
   if(node){ const w=koWhen(node.uae); when=esc((w.dayW||"").toUpperCase()+" · "+w.time+" "+tzAbbr()); }
   const badge = _r32updating ? '<div class="bdg plain flick">&#8635; '+HT("Updating…","يُحدّث الآن…")+'</div>'
     : r.status==="conf" ? '<div class="bdg conf">&#10003; '+HT("Confirmed","مؤكد")+'</div>'
-    : frozen ? '<div class="bdg plain flick">'+HT("Updates when matches finish","يُحدّث بعد انتهاء المباريات")+'</div>'
+    : frozen ? '<div class="bdg plain flick">'+HT("Updates After Live Matches Finish","يُحدّث بعد انتهاء المباريات المباشرة")+'</div>'
     : '<div class="bdg prov">&#9888; '+HT("Still provisional","غير مؤكد بعد")+'</div>';
   return '<div class="heroSec r32" '+open+'><div class="he">'+eye+'<span class="when">'+when+'</span></div>'
     + '<div class="row"><div class="matchup'+((frozen||_r32updating)?" fz":"")+'"><span class="vs">'+HT("vs","ضد")+'</span>'
