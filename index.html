@@ -36,7 +36,7 @@
 <style>
 :root{
   --navy:#0a1230; --navy2:#0d1838; --card:#121d44; --card2:#0e1736;
-  --line:#22305f; --txt:#eef2ff; --mut:#8fa2d8; --dim:#5e6da0;
+  --line:#22305f; --txt:#eef2ff; --mut:#8fa2d8; --dim:#8493c8;
   --rust:#e05a2b; --rust2:#ff7a45; --cyan:#19c8ff; --gold:#ffc02e;
   --green:#00d26a; --red:#ff3b5c; --lime:#b8e62e;
 }
@@ -120,6 +120,7 @@ nav{display:flex;background:transparent;border-top:1px solid var(--line)}
 nav button{flex:1;background:none;border:none;color:var(--mut);font-family:'Oswald';font-weight:600;white-space:nowrap;
  font-size:11.5px;letter-spacing:.6px;padding:12px 2px 10px;cursor:pointer;border-bottom:2.5px solid transparent;position:relative}
 nav button.on{color:#fff;border-bottom-color:var(--rust2)}
+nav button{min-height:46px}
 .navbadge{position:absolute;top:5px;left:calc(50% + 13px);min-width:16px;height:16px;padding:0 4px;border-radius:9px;background:var(--rust2);color:#fff;font-family:'Inter';font-weight:700;font-size:9.5px;line-height:16px;text-align:center;display:none;box-shadow:0 0 0 2px var(--navy)}
 #toastWrap{position:fixed;top:calc(8px + env(safe-area-inset-top));left:0;right:0;z-index:200;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 10px}
 .ctoast{pointer-events:auto;width:100%;max-width:430px;background:rgba(16,26,60,.97);border:1px solid var(--line);border-left:3px solid var(--rust2);border-radius:14px;box-shadow:0 10px 34px rgba(0,0,0,.55);padding:10px 11px;display:flex;align-items:center;gap:10px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);animation:toastIn .26s cubic-bezier(.2,.9,.3,1)}
@@ -320,11 +321,14 @@ html[dir="rtl"] .hero .he{letter-spacing:0}
 .hero .r32sub{font-family:'Oswald';font-weight:600;font-size:13px;color:#90a89a;flex:1;min-width:0}
 .hero .bdg{display:inline-flex;align-items:center;gap:4px;flex:none;font-family:'Oswald';font-weight:600;font-size:10px;letter-spacing:.3px;padding:4px 9px;border-radius:999px;white-space:nowrap}
 .hero .bdg.prov{color:#ecd06a;background:rgba(212,175,55,.10);border:1px solid rgba(212,175,55,.42)}
-.hero .bdg.conf{color:#f0d77a;background:rgba(212,175,55,.20)}
+.hero .bdg.conf{color:#7bdcb0;background:rgba(0,168,90,.18);border:1px solid rgba(0,168,90,.42)}
 .hero .bdg.out{color:#c2ad88;background:rgba(194,173,136,.10);border:1px solid rgba(194,173,136,.38)}
 .hero .bdg.plain{color:#8aa094;padding:4px 0;background:none}
 .hero .matchup.fz{animation:heroFz 2.2s ease-in-out infinite}
 @keyframes heroFz{0%,100%{opacity:1}50%{opacity:.5}}
+.hero .bdg.flick{animation:r32flick 1.2s ease-in-out infinite}
+@keyframes r32flick{0%,100%{opacity:1}45%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.hero .bdg.flick{animation:none}}
 @media (prefers-reduced-motion:reduce){.hero .matchup.fz{animation:none;opacity:.85}}
 .pcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 13px;margin-bottom:10px}
 .pcard.lock{opacity:.78}
@@ -952,7 +956,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.25</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.26</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -999,10 +1003,10 @@ const STATS_KEY = "capriole_wc26_analytics";   // internal visitor counter (aggr
 const SEASON_RANGE = "20260611-20260719";
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.25";
+const APP_VERSION = "2.26";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-22-v226";
+const FORCE_RELOAD = "2026-06-22-v227";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -1073,8 +1077,12 @@ function setCon(ok, msg) {
   $("condot").className = "condot " + (ok === null ? "is-wait" : ok ? "" : "is-off");
   $("contxt").textContent = msg;
 }
+async function _fetchTO(url, opts, ms) {   // fetch with a hard timeout so a stalled (not-failed) socket can't hang a poll forever
+  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), ms || 10000);
+  try { return await fetch(url, Object.assign({ signal: ctl.signal }, opts || {})); } finally { clearTimeout(t); }
+}
 async function getJSON(url) {
-  const r = await fetch(url, { cache: "no-store" });
+  const r = await _fetchTO(url, { cache: "no-store" }, 10000);
   if (!r.ok) throw new Error("HTTP " + r.status);
   return r.json();
 }
@@ -1087,7 +1095,7 @@ setInterval(() => {
     $("contxt").textContent = "LIVE FEED · UPDATED " + (s < 60 ? s + "S" : Math.round(s/60) + "M") + " AGO";
   }
   const cd = document.getElementById("heroCd");
-  if (cd && heroEvent && heroEvent.status.type.state !== "in") {
+  if (cd && heroEvent && heroEvent.status && heroEvent.status.type && heroEvent.status.type.state !== "in") {
     cd.innerHTML = countdown(new Date(heroEvent.date)) + "<small>TO KICK-OFF</small>";
   }
 }, 1000);
@@ -1271,7 +1279,7 @@ Object.assign(AR, {
   // auth / create-account / change-nation flow
   "Sign in to follow a nation and see its full schedule · browsing stays free.":"سجّل الدخول لمتابعة منتخب ورؤية جدوله الكامل · التصفّح يبقى مجانياً.",
   "No spaces in the username · letters, numbers or _ only":"لا مسافات في اسم المستخدم · أحرف وأرقام و _ فقط",
-  "Username: 3–15 characters · letters, numbers or _ only (no spaces or symbols)":"اسم المستخدم: من 3 إلى 15 حرفاً · أحرف وأرقام و _ فقط (دون مسافات أو رموز)",
+  "Username: 3-15 characters · letters, numbers or _ only (no spaces or symbols)":"اسم المستخدم: من 3 إلى 15 حرفاً · أحرف وأرقام و _ فقط (دون مسافات أو رموز)",
   "Password: at least 4 characters":"كلمة المرور: 4 أحرف على الأقل",
   "Can't reach the club server · try again":"تعذّر الوصول إلى خادم النادي · حاول مجدداً",
   "No such username · create an account?":"اسم المستخدم غير موجود · أتريد إنشاء حساب؟",
@@ -1378,7 +1386,7 @@ function showTab(t) {
     const toBottom = () => { if (!$("paneC").classList.contains("hide")) window.scrollTo(0, document.body.scrollHeight); };
     toBottom(); [150, 450, 900].forEach(d => setTimeout(toBottom, d));   // re-assert to the latest message as the chat loads async
   }
-  if (t === "G") { loadStandings(); groupsTimer = groupsTimer || setInterval(loadStandings, 20000); }
+  if (t === "G") { loadStandings(true); groupsTimer = groupsTimer || setInterval(loadStandings, 20000); }
   else if (groupsTimer) { clearInterval(groupsTimer); groupsTimer = null; }
   if (t === "P") { renderPredict(); if (!cs_user && !window._predSkipped) openAuth("C", { ctx: "predict" }); }
   if (t === "S") { renderStats(); statsTimer = statsTimer || setInterval(() => { if (!$("paneS").classList.contains("hide")) renderStats(); }, 30000); }
@@ -1590,7 +1598,7 @@ async function loadMatches() {
       lastScores[e.id] = sc;
     });
     if (buzz && navigator.vibrate) navigator.vibrate([180, 90, 180]);
-    if (flashIds.size && !$("paneG").classList.contains("hide")) loadStandings();  // goal → refresh standings; chat stays human-only (no goal bot)
+    if (flashIds.size && !$("paneG").classList.contains("hide")) loadStandings(true);  // goal → refresh standings; chat stays human-only (no goal bot)
     renderMatches();
     if (openId) {                                   // open match is live → its cached detail is stale, refresh it
       const oe = events.find(x => x.id === openId);
@@ -1606,7 +1614,7 @@ async function loadMatches() {
     if (anyLive) { const hm = events.find(e => e.status.type.state === "in" && e.competitions[0].competitors.some(c => MYTEAMS().includes(c.team.displayName))); if (hm) { heroEvent = hm; drawHero(); } }
     if (_prevAnyLive && !anyLive) {   // a live match just finished → recompute the R32 opponent NOW (don't wait for the timer)
       _r32updating = true; if (typeof drawHero === "function") drawHero();
-      loadStandings().finally(() => { _r32updating = false; if (typeof drawHero === "function") drawHero(); });
+      loadStandings(true).finally(() => { _r32updating = false; if (typeof drawHero === "function") drawHero(); });
     }
     _prevAnyLive = anyLive;
     // Adaptive poll: fast (5s) only while a match is LIVE and the app is on-screen (responsive scores); ease
@@ -1634,12 +1642,12 @@ function ymdShift(key, days) {
 }
 // Score digits in VISUAL order. In Arabic the team row is mirrored (home moves to the right), so
 // swap home/away here while the score box stays direction:ltr — that keeps the time/FT label
-// readable AND puts each number back under its own team. LTR: "home – away" as usual.
-function scoreLine(h, a, sep) { sep = sep || " – "; return (typeof LANG !== "undefined" && LANG === "ar") ? (a + sep + h) : (h + sep + a); }
+// readable AND puts each number back under its own team. LTR: "home - away" as usual.
+function scoreLine(h, a, sep) { sep = sep || " - "; return (typeof LANG !== "undefined" && LANG === "ar") ? (a + sep + h) : (h + sep + a); }
 // A scoreline shown as STANDALONE text (prediction, FT result, timeline running score) — NOT flanked
-// by team columns, so it must always read "home–away". Wrap in an LTR isolate so Arabic's RTL flow
-// can't bidi-reverse the pair (bare "2–1" otherwise renders as "1–2" in an Arabic sentence).
-function scoreTag(h, a, sep) { return '<bdi dir="ltr">' + h + (sep || "–") + a + '</bdi>'; }
+// by team columns, so it must always read "home-away". Wrap in an LTR isolate so Arabic's RTL flow
+// can't bidi-reverse the pair (bare "2-1" otherwise renders as "1-2" in an Arabic sentence).
+function scoreTag(h, a, sep) { return '<bdi dir="ltr">' + h + (sep || "-") + a + '</bdi>'; }
 function renderMatches() {
   const list = nationFilter ? _natMatches : events;
   if (!list.length) {
@@ -1669,7 +1677,7 @@ function renderMatches() {
       const so = H.shootoutScore != null && A.shootoutScore != null && (H.shootoutScore !== 0 || A.shootoutScore !== 0);
       const aet = /extra|penalt/i.test(st.type.description || "") || /extra|penalt/i.test(st.type.detail || "");
       badge = `<span class="badge ft">FULL-TIME${so ? " · PENS" : aet ? " · AET" : ""}</span>`;
-      mid = `<div class="score">${scoreLine(H.score ?? "-", A.score ?? "-")}<small>${so ? esc(scoreLine(H.shootoutScore, A.shootoutScore, "–") + " ON PENS") : aet ? "AET" : "FT"}</small></div>`;
+      mid = `<div class="score">${scoreLine(H.score ?? "-", A.score ?? "-")}<small>${so ? esc(scoreLine(H.shootoutScore, A.shootoutScore, "-") + " ON PENS") : aet ? "AET" : "FT"}</small></div>`;
     } else {
       badge = `<span class="badge pre">${ko} ${tzAbbr()}</span>`;
       mid = `<div class="score">${ko}<small>KICK-OFF ${tzAbbr()}</small></div>`;
@@ -1925,9 +1933,9 @@ function applyLiveStats(groups, evs) {
   });
   return groups;
 }
-async function loadStandings() {
+async function loadStandings(force) {
   try {
-    const [d, evs] = await Promise.all([ getJSON(STAND), seasonEvents(true).catch(() => seasonCache.events) ]);
+    const [d, evs] = await Promise.all([ getJSON(STAND), seasonEvents(!!force).catch(() => seasonCache.events) ]);
     const groups = applyLiveStats(d.children || [], evs);
     syncKnockout(evs);   // populate knockout results from real fixtures
     $("ggrid").innerHTML = groups.map(g => {
@@ -1947,7 +1955,7 @@ async function loadStandings() {
             <td class="pos">${i + 1}</td>
             <td><span class="tm"><img src="${esc(r.team.logos && r.team.logos[0] ? r.team.logos[0].href : "")}" alt=""><span class="tnm">${esc(r.team.displayName)}</span>${rankMini(r.team)}</span></td>
             <td>${s.gamesPlayed || 0}</td><td>${s.wins || 0}</td><td>${s.ties || 0}</td><td>${s.losses || 0}</td>
-            <td><bdi dir="ltr">${s.pointDifferential || s.pointsDiff || 0}</bdi></td><td class="pts">${s.points || 0}</td></tr>`;
+            <td><bdi dir="ltr">${s.pointDifferential || 0}</bdi></td><td class="pts">${s.points || 0}</td></tr>`;
         }).join("") + `</table></div>`;
     }).join("") + '<div class="qlegend" style="grid-column:1/-1"><span><i style="background:var(--cyan)"></i>TOP 2 · DIRECT R32</span><span><i style="background:var(--gold)"></i>3RD · BEST-THIRD RACE</span><span><i style="background:#46557f"></i>4TH · OUT</span></div>';
     renderThirds(groups);
@@ -1955,7 +1963,7 @@ async function loadStandings() {
     computeNatR32(groups); drawHero();
     if (groupsView === "B" && !$("paneG").classList.contains("hide")) renderBracket();
   } catch (e) {
-    $("ggrid").innerHTML = `<div class="empty">Couldn't load standings · retrying automatically.</div>`;
+    { const _g = $("ggrid"); if (_g && !_g.querySelector(".gcard")) _g.innerHTML = `<div class="empty">Couldn't load standings · retrying automatically.</div>`; }   // keep the last good render on a transient blip
   }
 }
 function statmap(r) {
@@ -2126,8 +2134,9 @@ function syncKnockout(evs) {
       const stt = e.status && e.status.type && e.status.type.state; if (stt === "pre") return;
       const comp = e.competitions && e.competitions[0]; if (!comp) return;
       const ymd = fixedYMD(new Date(e.date)), vn = norm((comp.venue || {}).fullName), vc = norm(((comp.venue || {}).address || {}).city);
-      const node = BRACKET.find(n => { const nd = uaeStrToDate(n.uae); return nd && fixedYMD(nd) === ymd && ((vn && vn === norm(n.st)) || (vc && vc === norm(n.city))); });
-      if (!node) return;
+      let node = BRACKET.find(n => { const nd = uaeStrToDate(n.uae); return nd && fixedYMD(nd) === ymd && ((vn && vn === norm(n.st)) || (vc && vc === norm(n.city))); });
+      if (!node) { const sd = BRACKET.filter(n => { const nd = uaeStrToDate(n.uae); return nd && fixedYMD(nd) === ymd; }); if (sd.length === 1) node = sd[0]; }   // venue/city naming drift → unique same-day knockout node
+      if (!node) { try { console.warn("syncKnockout: unmatched knockout event", e.id, ymd, vn || vc); } catch (_) {} return; }
       const cs = comp.competitors || [], H = cs.find(x => x.homeAway === "home"), A = cs.find(x => x.homeAway === "away");
       if (!H || !A || !H.team || !A.team) return;
       const tm = c => ({ name: c.team.displayName, logo: c.team.logo || ((c.team.logos && c.team.logos[0]) ? c.team.logos[0].href : "") });
@@ -2136,7 +2145,7 @@ function syncKnockout(evs) {
       let win = null;
       if (stt === "post" && hs != null && as != null) win = hs > as ? "h" : as > hs ? "a" : (hasSO ? (hso > aso ? "h" : "a") : null);
       _nodeResult[node.n] = { ht: tm(H), at: tm(A), hs, as, win, live: stt === "in",
-        note: hasSO ? (hso + "–" + aso + " PENS") : /extra|aet/i.test((e.status.type.description || "") + (e.status.type.detail || "")) ? "AET" : null };
+        note: hasSO ? (hso + "-" + aso + " PENS") : /extra|aet/i.test((e.status.type.description || "") + (e.status.type.detail || "")) ? "AET" : null };
     } catch (_) {}
   });
 }
@@ -2270,7 +2279,7 @@ function bpHeader(){
     '<text x="2336" y="120" text-anchor="end" font-family="Oswald" font-weight="500" font-size="13" letter-spacing="2" fill="'+BPC.plat+'">'+bpT('ALL TIMES')+' <tspan fill="'+BPC.gold+'">'+esc(tzAbbr())+'</tspan> · '+esc(bpT(tzOffset(TZ)))+'</text>';
 }
 function bpRoundHeaders(){
-  const cols=[[176,"ROUND OF 32","28 JUN – 1 JUL",BPC.plat],[424,"ROUND OF 16","4 – 8 JUL",BPC.plat],[672,"QUARTER-FINAL","10 – 12 JUL","g"],[920,"SEMI-FINAL","14 – 15 JUL","g"],[2224,"ROUND OF 32","28 JUN – 1 JUL",BPC.plat],[1976,"ROUND OF 16","4 – 8 JUL",BPC.plat],[1728,"QUARTER-FINAL","10 – 12 JUL","g"],[1480,"SEMI-FINAL","14 – 15 JUL","g"]];
+  const cols=[[176,"ROUND OF 32","28 JUN - 1 JUL",BPC.plat],[424,"ROUND OF 16","4 - 8 JUL",BPC.plat],[672,"QUARTER-FINAL","10 - 12 JUL","g"],[920,"SEMI-FINAL","14 - 15 JUL","g"],[2224,"ROUND OF 32","28 JUN - 1 JUL",BPC.plat],[1976,"ROUND OF 16","4 - 8 JUL",BPC.plat],[1728,"QUARTER-FINAL","10 - 12 JUL","g"],[1480,"SEMI-FINAL","14 - 15 JUL","g"]];
   let o=""; cols.forEach(c=>{ const fill=c[3]==="g"?"url(#bpGold)":c[3]; o+='<text x="'+c[0]+'" y="174" text-anchor="middle" font-family="Oswald" font-weight="600" font-size="13" letter-spacing="2" fill="'+fill+'">'+c[1]+'</text><text x="'+c[0]+'" y="190" text-anchor="middle" font-family="Inter" font-weight="500" font-size="8.5"'+bpBidi()+' fill="'+BPC.meta+'">'+koRangeByName(c[1])+'</text>'; });
   o+='<text x="1200" y="174" text-anchor="middle" font-family="Oswald" font-weight="700" font-size="14" letter-spacing="3" fill="url(#bpGold)">FINAL</text><text x="1200" y="190" text-anchor="middle" font-family="Inter" font-weight="500" font-size="8.5"'+bpBidi()+' fill="'+BPC.meta+'">'+koRange("FINAL")+'</text>';
   return o;
@@ -2459,8 +2468,8 @@ function _freshNatR32(groups, nation){
   const thirds=Object.values(T).sort((a,b)=>(b.s.points-a.s.points)||(b.s.pointDifferential-a.s.pointDifferential)||(b.s.pointsFor-a.s.pointsFor));
   const top8=thirds.slice(0,8); const set8=top8.map(t=>t.g).sort().join(""); const inSet=top8.some(t=>t.g===me.g);
   const st=allComplete?"conf":"prov";
-  if(me.rank===3) return {status:"out", eliminated:true};
-  if(me.rank===2 && !inSet) return {status:"out", eliminated:allComplete};
+  if(me.rank===3) return {status:"out", eliminated:allComplete};                                  // 4th: out (eliminated only once the group has finished)
+  if(me.rank===2 && !inSet) return allComplete ? {status:"out", eliminated:true} : {status:"bubble"};  // 3rd outside the best-8: eliminated if done, else still ON THE BUBBLE
   const slot=(me.rank+1)+me.g;
   const o=_natFindOpp(slot, set8); if(!o) return {status:"tbd"};
   const oppGroup=o.opp[1], oppPos=+o.opp[0];
@@ -2487,17 +2496,22 @@ function _heroR32Sec(nation){
     return '<div class="heroSec r32" '+open+'><div class="he">'+eye+'</div>'
       + '<div class="row"><div class="r32sub">'+HT("Opponent","الخصم")+'</div><div class="bdg plain">'+HT("Fills in as groups settle","يظهر بعد ترتيب المجموعات")+'</div></div></div>';
   }
+  if(r.status==="bubble"){
+    return '<div class="heroSec r32" '+open+'><div class="he">'+eye+'</div>'
+      + '<div class="row"><div class="bdg prov">'+HT("ON THE BUBBLE","على الحافة")+'</div><div class="bdg plain">'+HT("in the best-thirds race","ضمن سباق أفضل ثالث")+'</div></div></div>';
+  }
   if(r.status==="out"){
+    const lbl = r.eliminated ? HT("NOT QUALIFYING","غير متأهّل") : HT("NOT IN YET","لم يتأهّل بعد");
     const sub = r.eliminated ? HT("Out of contention","خارج المنافسة") : HT("needs results to go their way","يحتاج نتائج مواتية");
     return '<div class="heroSec r32" '+open+'><div class="he">'+eye+'</div>'
-      + '<div class="row"><div class="bdg out">'+HT("NOT QUALIFYING","غير متأهّل")+'</div><div class="bdg plain">'+sub+'</div></div></div>';
+      + '<div class="row"><div class="bdg out">'+lbl+'</div><div class="bdg plain">'+sub+'</div></div></div>';
   }
   const node=(typeof BRACKET!=="undefined") ? BRACKET.find(n=>n.n===r.matchNum) : null;
   let when="";
   if(node){ const w=koWhen(node.uae); when=esc((w.dayW||"").toUpperCase()+" · "+w.time+" "+tzAbbr()); }
-  const badge = _r32updating ? '<div class="bdg plain">&#8635; '+HT("Updating…","يُحدّث الآن…")+'</div>'
-    : frozen ? '<div class="bdg plain">'+HT("Updates when matches finish","يُحدّث بعد انتهاء المباريات")+'</div>'
+  const badge = _r32updating ? '<div class="bdg plain flick">&#8635; '+HT("Updating…","يُحدّث الآن…")+'</div>'
     : r.status==="conf" ? '<div class="bdg conf">&#10003; '+HT("Confirmed","مؤكد")+'</div>'
+    : frozen ? '<div class="bdg plain flick">'+HT("Updates when matches finish","يُحدّث بعد انتهاء المباريات")+'</div>'
     : '<div class="bdg prov">&#9888; '+HT("Still provisional","غير مؤكد بعد")+'</div>';
   return '<div class="heroSec r32" '+open+'><div class="he">'+eye+'<span class="when">'+when+'</span></div>'
     + '<div class="row"><div class="matchup'+((frozen||_r32updating)?" fz":"")+'"><span class="vs">'+HT("vs","ضد")+'</span>'
@@ -2607,7 +2621,7 @@ async function renderPredict() {
     let html = "";
     Object.keys(byWeek).sort().forEach(w => {
       const ms = byWeek[w];
-      const range = (fmt(new Date(ms[0].date), { day: "2-digit", month: "short" }) + " – " +
+      const range = (fmt(new Date(ms[0].date), { day: "2-digit", month: "short" }) + " - " +
                      fmt(new Date(ms[ms.length - 1].date), { day: "2-digit", month: "short" })).toUpperCase();
       const label = w === curWk ? "THIS WEEK" : "NEXT WEEK · PREDICT EARLY";
       html += '<div class="secrow" style="margin-top:' + (html ? "14px" : "2px") + '">' +
@@ -2758,26 +2772,29 @@ async function submitPred(btn, ev) {
   if (!cs_user) { openAuth("C", { ctx: "predict" }); reset("SIGN IN, THEN SUBMIT", 2400); return; }
   btn.disabled = true; btn.textContent = "SAVING…";
   let ok = false;
+  let _seen = 0; try { _seen = +localStorage.getItem("cs_pred_seen") || 0; } catch (_) {}
   for (let t = 0; t < 3 && !ok; t++) {
     try {
-      const all = await readKey(PRED_KEY, {});
+      const all = await readKey(PRED_KEY, {}, true);   // strict: a corrupt body throws → retry, never treated as an empty store
+      if (!all || typeof all !== "object") { await new Promise(r => setTimeout(r, 400)); continue; }
+      const cnt = Object.keys(all).length;
+      if (cnt > _seen) { _seen = cnt; try { localStorage.setItem("cs_pred_seen", String(cnt)); } catch (_) {} }
+      if (cnt === 0 && _seen > 0) { await new Promise(r => setTimeout(r, 400 + Math.random() * 400)); continue; }   // WIPE GUARD: store reads empty but we have seen real data → suspect read, do not overwrite everyone
       const me = all[myId] || {};
       me.name = cs_user.username;
       me.preds = me.preds || {};
-      if (!me.preds[id]) {
-        me.preds[id] = payload;
-        all[myId] = me;
-        await writeKey(PRED_KEY, all);
-      }
+      if (!me.preds[id]) { me.preds[id] = payload; all[myId] = me; }
+      const want = Object.keys(all).length;
+      await writeKey(PRED_KEY, all);
       await new Promise(r => setTimeout(r, 350 + Math.random() * 400));
-      const chk = await readKey(PRED_KEY, {});
-      const sv = chk[myId] && chk[myId].preds && chk[myId].preds[id];
-      if (sv) {
+      const chk = await readKey(PRED_KEY, {}, true);
+      const sv = chk && chk[myId] && chk[myId].preds && chk[myId].preds[id];
+      if (sv && Object.keys(chk).length >= want) {   // our pick landed AND nobody else's slice was dropped by a concurrent write
         myPreds[id] = sv.pens ? { pens: 1, w: sv.w, locked: true } : { h: sv.h, a: sv.a, locked: true };
         localStorage.setItem("cs_preds", JSON.stringify(myPreds));
         ok = true;
       }
-    } catch (_) {}
+    } catch (_) { await new Promise(r => setTimeout(r, 300)); }
   }
   if (ok) renderPredict();
   else { btn.disabled = false; btn.textContent = "FAILED · TAP TO RETRY"; }
@@ -2802,7 +2819,7 @@ const FACTS_OTD_AR = {"0611":["في 1986، فاز المغرب على البرت
 const KO_RULES_HTML = `<div style="font-size:38px;line-height:1;margin-bottom:4px">⚽</div>
 <h2>KNOCKOUTS ARE HERE</h2>
 <p>No more draws · every knockout match has a winner. Here's how predicting works now:</p>
-<div class="irow"><span class="ic">①</span><div><b>Predict a scoreline</b> like normal (e.g. 2–1) · it just can't be a draw.</div></div>
+<div class="irow"><span class="ic">①</span><div><b>Predict a scoreline</b> like normal (e.g. 2-1) · it just can't be a draw.</div></div>
 <div class="irow"><span class="ic">②</span><div>Think it'll be level? Choose <b>"this match will go to penalties"</b> and pick who wins the shootout.</div></div>
 <div class="irow"><span class="ic">🎯</span><div><b>3 pts</b> · exact score, OR you called penalties + the right winner.<br><b>1 pt</b> · right winner either way.</div></div>
 <button class="igo" onclick="closeInfo()">GOT IT ⚽</button>`;
@@ -3051,7 +3068,7 @@ async function loadLeaderboard(evs, preAll) {
     const done = evs.filter(e => e.status.type.state === "post" && weekStartKey(new Date(e.date)) === curWk);
     const wkAll = evs.filter(e => weekStartKey(new Date(e.date)) === curWk);
     const wkRange = wkAll.length
-      ? (fmt(new Date(wkAll[0].date), { day: "2-digit", month: "short" }) + " – " +
+      ? (fmt(new Date(wkAll[0].date), { day: "2-digit", month: "short" }) + " - " +
          fmt(new Date(wkAll[wkAll.length - 1].date), { day: "2-digit", month: "short" })).toUpperCase()
       : "";
     const rows = Object.entries(all).map(([uid, u]) => {
@@ -3127,7 +3144,7 @@ function formPop(el, ev) {   // tap a Recent-Form pill → popup with that match
   let pop = $("fpop"); if (!pop) { pop = document.createElement("div"); pop.id = "fpop"; document.body.appendChild(pop); }
   pop.innerHTML = '<div class="fpopcard"><button class="fpopx" aria-label="Close">&#215;</button>' +
     '<div class="fpoptag ' + cls + '">' + esc(res) + '</div>' +
-    '<div class="fpopsc">' + esc(t) + ' <b>' + esc(score || "–") + '</b> ' + esc(opp) + '</div>' +
+    '<div class="fpopsc">' + esc(t) + ' <b>' + esc(score || "-") + '</b> ' + esc(opp) + '</div>' +
     (date ? '<div class="fpopdt">' + esc(date) + '</div>' : "") + '</div>';
   pop.querySelector(".fpopx").onclick = () => pop.remove();
   pop.onclick = e => { if (e.target === pop) pop.remove(); };
@@ -3149,7 +3166,7 @@ function formH2H(data, ev) {
       const dt = e.gameDate ? fmt(new Date(e.gameDate), { day: "2-digit", month: "short", year: "numeric" }) : "";
       return '<span class="fp ' + cl + (i === fe.length - 1 ? " now" : "") + '" onclick="formPop(this,event)" data-team="' + esc(team.displayName) + '" data-opp="' + esc(opp) + '" data-score="' + esc(e.score || "") + '" data-date="' + esc(dt) + '" data-res="' + (r === "W" ? "WIN" : r === "L" ? "LOSS" : "DRAW") + '">' + (r || "?") + '</span>';
     }).join(""); }
-    if (!pills) pills = '<span class="fp none">&#8211;</span>'.repeat(5);
+    if (!pills) pills = '<span class="fp none">-</span>'.repeat(5);
     return '<div class="frow' + me + '"><span class="fbadge"><img class="fflag" src="' + esc(team.logo || "") + '" alt=""' + ferr + '></span><span class="fname">' + esc(team.displayName) + '</span><span class="fpills">' + pills + '</span></div>';
   }
   const formSec = forms.length
@@ -3171,7 +3188,7 @@ function formH2H(data, ev) {
       const hs = +(hHome ? e.homeTeamScore : e.awayTeamScore), as = +(hHome ? e.awayTeamScore : e.homeTeamScore);
       const res = hs > as ? "win-l" : as > hs ? "win-r" : "draw";
       const dt = e.gameDate ? esc(fmt(new Date(e.gameDate), { month: "short", year: "numeric" })) : "";
-      return '<div class="h2hr ' + res + '"><span class="h2side l"><span class="h2ab">' + esc(ab[String(H.team.id)] || "") + '</span><img class="h2flag" src="' + esc(H.team.logo || "") + '" alt=""' + ferr + '></span><span class="h2hsc ' + res + '">' + hs + '<i>&#8211;</i>' + as + (res === "draw" ? '<b class="h2drawtag">DRAW</b>' : '') + '</span><span class="h2side r"><img class="h2flag" src="' + esc(A.team.logo || "") + '" alt=""' + ferr + '><span class="h2ab">' + esc(ab[String(A.team.id)] || "") + '</span></span><span class="h2dt">' + dt + '</span></div>';
+      return '<div class="h2hr ' + res + '"><span class="h2side l"><span class="h2ab">' + esc(ab[String(H.team.id)] || "") + '</span><img class="h2flag" src="' + esc(H.team.logo || "") + '" alt=""' + ferr + '></span><span class="h2hsc ' + res + '">' + hs + '<i>-</i>' + as + (res === "draw" ? '<b class="h2drawtag">DRAW</b>' : '') + '</span><span class="h2side r"><img class="h2flag" src="' + esc(A.team.logo || "") + '" alt=""' + ferr + '><span class="h2ab">' + esc(ab[String(A.team.id)] || "") + '</span></span><span class="h2dt">' + dt + '</span></div>';
     }).join("");
     h2hSec = '<section class="fhsec h2hsec"><header class="fhhead"><span class="fhico fhico--h2h"><svg viewBox="0 0 24 24" width="11" height="11" aria-hidden="true"><path fill="currentColor" d="M4 7h6v2H4zM4 11h6v2H4zM14 7h6v2h-6zM14 11h6v2h-6zM11 4h2v16h-2z"/></svg></span><span class="fhttl">HEAD-TO-HEAD</span><span class="fhrule"></span><span class="fhmeta">' + tot + ' MET</span></header><div class="h2hagg"><div class="aggcol l"><img class="aggflag" src="' + esc(H.team.logo || "") + '" alt=""' + ferr + '><div class="aggnum"><b class="aggn">' + hw + '</b><i class="agglbl">WON</i></div></div><div class="aggcol mid' + (dr ? "" : " zero") + '"><b class="aggn">' + dr + '</b><i class="agglbl">' + (dr === 1 ? "DRAW" : "DRAWS") + '</i></div><div class="aggcol r"><div class="aggnum"><b class="aggn">' + aw + '</b><i class="agglbl">WON</i></div><img class="aggflag" src="' + esc(A.team.logo || "") + '" alt=""' + ferr + '></div></div><div class="aggbar">' + seg("h", hw) + seg("d", dr) + seg("a", aw) + '</div>' + rows + '</section>';
   }
@@ -3272,8 +3289,9 @@ async function loadRatings(ev) {
       Object.keys(byId).forEach(pid => { const x = byId[pid]; if (x.name && (!motm || x.rating > motm.rating)) motm = { pid, name: x.name, team: x.team, rating: x.rating, m: x.m, c: x.c }; });
     }
   };
-  try { await withTO(run(), 15000); } catch (e) {}   // MASTER timeout · any hang/slow path falls through to ready-or-retry, never stuck
-  if (Object.keys(byId).length) {
+  let _completed = false;
+  try { await withTO(run(), 15000); _completed = true; } catch (e) {}   // MASTER timeout · if it fires, run() did NOT finish → byId may be a partial roster
+  if (_completed && Object.keys(byId).length) {   // only mark ready / share a result that actually finished computing
     _ratings[id] = { ready: true, byId, motm };
     // publish to the shared store ONLY for a complete compute · motm set only when names resolved (summary was loaded).
     rtPersist(id, fromShared ? { byId, motm } : rtPayload(byId, motm), !fromShared && !!motm);
@@ -3409,7 +3427,7 @@ function evTimeline(ev, data) {
   const gc = (c.details || []).filter(d => (d.scoringPlay || /card/i.test((d.type && d.type.text) || "")) && !d.shootout);
   let hh = 0, aa = 0;
   gc.slice().sort((a, b) => minNum((a.clock || {}).displayValue) - minNum((b.clock || {}).displayValue)).forEach(d => {
-    if (d.scoringPlay) { if (isHomeId((d.team || {}).id)) hh++; else aa++; d._rs = scoreTag(hh, aa, "&#8211;"); }
+    if (d.scoringPlay) { if (isHomeId((d.team || {}).id)) hh++; else aa++; d._rs = scoreTag(hh, aa, "-"); }
   });
   const items = [];
   gc.forEach(d => {
@@ -3435,7 +3453,7 @@ function evTimeline(ev, data) {
   });
   if (!items.length) return "";
   items.sort((a, b) => b.m - a.m);
-  const _st = ev.status.type, fs = scoreTag(H.score != null ? H.score : 0, A.score != null ? A.score : 0, "&#8211;");
+  const _st = ev.status.type, fs = scoreTag(H.score != null ? H.score : 0, A.score != null ? A.score : 0, "-");
   const _top = _st.state === "post" ? ("FULL TIME &#183; " + fs + (/penalt/i.test(_st.description || "") ? " (PENS)" : /extra/i.test(_st.description || "") ? " (AET)" : ""))
     : _st.state === "in" ? (esc(ev.status.displayClock || "LIVE") + " &#183; " + fs) : fs;
   return '<div class="sech">TIMELINE</div><div class="tl"><div class="tlmark top">' + _top + '</div>' + items.map(i => i.html).join("") + '<div class="tlmark bot">KICK-OFF</div></div>';
@@ -3595,10 +3613,10 @@ function shareMatch(ev) {
   const txt = ar
     ? "كأس العالم 2026: " + tn(H.team.displayName) + " " +
         (pre ? "ضد " + tn(A.team.displayName) + " · " + dt
-             : (H.score ?? 0) + "–" + (A.score ?? 0) + " " + tn(A.team.displayName)) + " · " + FANS_URL
+             : (H.score ?? 0) + "-" + (A.score ?? 0) + " " + tn(A.team.displayName)) + " · " + FANS_URL
     : "World Cup 2026: " + H.team.displayName + " " +
         (pre ? "v " + A.team.displayName + " · " + dt
-             : (H.score ?? 0) + "–" + (A.score ?? 0) + " " + A.team.displayName) + " · " + FANS_URL;
+             : (H.score ?? 0) + "-" + (A.score ?? 0) + " " + A.team.displayName) + " · " + FANS_URL;
   if (navigator.share) navigator.share({ text: txt }).catch(() => {});
   else { if (navigator.clipboard) navigator.clipboard.writeText(txt); alert(ar ? "تم النسخ · الصقها في واتساب!" : "Copied · paste it in WhatsApp!"); }
 }
@@ -3627,8 +3645,8 @@ function lastCompletedWeek(evs) {
     .sort().pop();
   if (!wk) return null;
   const ds = byWeek[wk];
-  const lab = (fmt(new Date(ds[0].date), { day: "2-digit", month: "short" }) + " – " +
-               fmt(new Date(ds[ds.length - 1].date), { day: "2-digit", month: "short" })).toUpperCase();
+  const _dxb = d => new Intl.DateTimeFormat(LANG === "ar" ? "ar-u-nu-latn" : "en-GB", { timeZone: "Asia/Dubai", day: "2-digit", month: "short" }).format(d);
+  const lab = (_dxb(new Date(ds[0].date)) + " to " + _dxb(new Date(ds[ds.length - 1].date))).toUpperCase();
   return { wk, events: ds, lab };
 }
 async function announceChampion() {
@@ -3648,12 +3666,11 @@ async function announceChampion() {
     const names = winners.map(x => x.name).join(" & ");
     const plural = winners.length > 1;
     let mineLine = "";
-    if (cs_user) {
-      const mine = scores.find(s => s.uid === myId);
-      const myPts = mine ? mine.pts : 0;
+    const mine = cs_user ? scores.find(s => s.uid === myId) : null;
+    if (mine && mine.pts > 0) {   // only show YOUR line if you actually scored last week
       const _lbl = (typeof LANG !== "undefined" && LANG === "ar") ? "نتيجتك الأسبوع الماضي : " : "Your last week score was : ";
       const _pt  = (typeof LANG !== "undefined" && LANG === "ar") ? " نقطة" : " pts";
-      mineLine = '<span class="myscore">' + _lbl + myPts + _pt + '</span>';
+      mineLine = '<span class="myscore">' + _lbl + mine.pts + _pt + '</span>';
     }
     $("brkBox").innerHTML = '<div class="brk">&#127942; <b>PREDICTION CHAMPION' + (plural ? "S" : "") + '</b> &#183; ' +
       esc(names) + ' topped last week (' + w.lab + ') with ' + top + ' pts.' +
@@ -3747,7 +3764,7 @@ async function authGo() {
   const u = ($("auUser").value || "").trim(), p = $("auPass").value || "";
   const err = t => { $("authErr").textContent = t; };
   if (/\s/.test(u)) return err("No spaces in the username · letters, numbers or _ only");
-  if (!/^[A-Za-z0-9_]{3,15}$/.test(u)) return err("Username: 3–15 characters · letters, numbers or _ only (no spaces or symbols)");
+  if (!/^[A-Za-z0-9_]{3,15}$/.test(u)) return err("Username: 3 to 15 characters · letters, numbers or _ only (no spaces or symbols)");
   if (p.length < 4) return err("Password: at least 4 characters");
   let accts = {};
   try { accts = await readKey(ACCT_KEY, {}); } catch (_) { return err("Can't reach the club server · try again"); }
@@ -3755,7 +3772,7 @@ async function authGo() {
   if (window._am === "L") {
     const a = accts[k];
     if (!a) return err("No such username · create an account?");
-    if (await sha256(a.salt + p) !== a.hash) return err("Wrong password (ask Ahmed to reset)");
+    if (await sha256(a.salt + p) !== a.hash) return err("Wrong password · try again");
     finishAuth(a);
   } else {
     if (accts[k]) return err("Username taken · try LOG IN instead");
@@ -3764,12 +3781,24 @@ async function authGo() {
     const a = { uid: "u" + Math.random().toString(36).slice(2, 10), username: u, nation,
                 salt: Math.random().toString(36).slice(2, 10), hash: "" };
     a.hash = await sha256(a.salt + p);
-    accts[k] = a;
-    try {
-      await writeKey(ACCT_KEY, accts);
-      const chk = await readKey(ACCT_KEY, {});
-      if (!chk[k]) return err("Save failed · try again");
-    } catch (_) { return err("Save failed · try again"); }
+    let saved = false, seen = 0; try { seen = +localStorage.getItem("cs_acct_seen") || 0; } catch (_) {}
+    for (let t = 0; t < 3 && !saved; t++) {
+      try {
+        const fresh = await readKey(ACCT_KEY, {}, true);   // re-read fresh so a concurrent signup is not clobbered
+        if (!fresh || typeof fresh !== "object") { await new Promise(r => setTimeout(r, 400)); continue; }
+        const cnt = Object.keys(fresh).length;
+        if (cnt > seen) { seen = cnt; try { localStorage.setItem("cs_acct_seen", String(cnt)); } catch (_) {} }
+        if (cnt === 0 && seen > 0) { await new Promise(r => setTimeout(r, 400 + Math.random() * 400)); continue; }   // WIPE GUARD
+        if (fresh[k]) return err("Username taken · try LOG IN instead");
+        fresh[k] = a;
+        const want = Object.keys(fresh).length;
+        await writeKey(ACCT_KEY, fresh);
+        await new Promise(r => setTimeout(r, 300 + Math.random() * 300));
+        const chk = await readKey(ACCT_KEY, {}, true);
+        if (chk && chk[k] && Object.keys(chk).length >= want) saved = true;   // landed AND no existing account dropped
+      } catch (_) { await new Promise(r => setTimeout(r, 300)); }
+    }
+    if (!saved) return err("Save failed · try again");
     finishAuth(a);
   }
 }
@@ -3849,8 +3878,7 @@ async function saveNation(nationArg) {
 // ===== Follow-a-nation (the green card) · sign-in required · reuses the search list look =====
 function pickMyNation(ev) {
   if (ev) ev.stopPropagation();
-  if (!cs_user) { openAuth("L", { ctx: "nation" }); return; }   // following a nation is a signed-in feature
-  openNatPicker(function (name) { saveNation(name); });
+  openNatPicker(function (name) { saveNation(name); });   // guests can follow a nation too (saved locally via saveNation's guest branch); signed-in saves to the account
 }
 let _natPickCb = null;
 async function openNatPicker(onPick) {
@@ -3874,17 +3902,17 @@ function natPickRender() {
     : '<div class="natempty">' + (LANG === "ar" ? "لا يوجد منتخب مطابق." : "No nation matches that.") + '</div>';
 }
 function natPickChoose(n) { const cb = _natPickCb; closeNatPicker(); if (cb) cb(n); }
-async function readKey(key, fallback) {
-  const r = await fetch("https://textdb.online/" + key + "?t=" + Date.now(), { cache: "no-store" });
+async function readKey(key, fallback, strict) {
+  const r = await _fetchTO("https://textdb.online/" + key + "?t=" + Date.now(), { cache: "no-store" }, 10000);
   if (!r.ok) throw new Error("HTTP " + r.status);
   const t = (await r.text()).trim();
   if (!t) return fallback;
-  try { return JSON.parse(t); } catch (_) { return fallback; }
+  try { return JSON.parse(t); } catch (e) { if (strict) throw e; return fallback; }   // strict callers (write paths) must NOT treat a corrupt body as an empty store
 }
 async function writeKey(key, value) {
-  const r = await fetch(CHAT_WRITE, { method: "POST",
+  const r = await _fetchTO(CHAT_WRITE, { method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: "key=" + encodeURIComponent(key) + "&value=" + encodeURIComponent(JSON.stringify(value)) });
+    body: "key=" + encodeURIComponent(key) + "&value=" + encodeURIComponent(JSON.stringify(value)) }, 12000);
   if (!r.ok) throw new Error("HTTP " + r.status);
 }
 const readRoom = () => readKey(CHAT_KEY, []);
@@ -3963,6 +3991,7 @@ async function pollChat() {
   }
   updateChatBadge(human);
 }
+function _safeMid(id){ return /^[A-Za-z0-9_-]{1,64}$/.test(String(id == null ? "" : id)); }   // chat ids are public/untrusted; only our own m+ts+rand shape is allowed into inline onclick
 function emojiFlags(s) {
   return s.replace(/[\uD83C][\uDDE6-\uDDFF][\uD83C][\uDDE6-\uDDFF]/g, pair => {
     const cc = String.fromCharCode(pair.codePointAt(0) - 0x1F1E6 + 97) +
@@ -3973,7 +4002,7 @@ function emojiFlags(s) {
 function renderChat(msgs) {
   _chatMsgs = msgs;
   const atBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 160;
-  $("chatlog").innerHTML = msgs.slice(-100).map(m => `
+  $("chatlog").innerHTML = msgs.slice(-100).filter(m => _safeMid(m.id)).map(m => `
     <div class="msg${m.uid === myId ? " me" : ""}" onclick="openReact(event,'${m.id}')">
       <div class="who">${m.natf ? '<img class="natflag" src="' + esc(m.natf) + '" alt="" title="' + esc(m.nat || "") + '" onerror="this.style.display=&#39;none&#39;">' : ""}${esc(m.name || "?")}</div>
       <div class="txt" dir="auto">${emojiFlags(esc(m.text || ""))}</div>
@@ -4047,7 +4076,7 @@ function rxRow(m) {   // reaction chips under a message (emoji + count; gold if 
 function closeReact() { const b = $("reactbar"); if (b) b.remove(); }
 function openReact(ev, id) {   // tap a message → floating reaction bar (sign-in required; silent no-op for guests)
   ev.stopPropagation();
-  if (!cs_user) return;
+  if (!cs_user || !_safeMid(id)) return;
   closeReact();
   const bar = document.createElement("div"); bar.id = "reactbar"; bar.className = "reactbar";
   bar.innerHTML = REACTS.map(e => '<button type="button" onclick="event.stopPropagation();toggleReaction(\'' + id + '\',\'' + e + '\');closeReact()">' + e + '</button>').join("");
@@ -4059,6 +4088,7 @@ function openReact(ev, id) {   // tap a message → floating reaction bar (sign-
   setTimeout(() => document.addEventListener("click", closeReact, { once: true }), 0);
 }
 async function toggleReaction(id, emoji) {
+  if (!_safeMid(id)) return;
   if (!cs_user) { openAuth("C", { ctx: "chat" }); return; }
   closeReact();
   // optimistic local toggle for instant feel
@@ -4119,7 +4149,7 @@ async function aggInstant() {
     const hs = +H.score || 0, as = +A.score || 0;
     T.goals += hs + as;
     const _mar = Math.abs(hs - as);
-    if (_mar >= 1 && (!T.bigWin || _mar > T.bigWin.margin)) T.bigWin = { margin: _mar, label: Math.max(hs, as) + "–" + Math.min(hs, as) };
+    if (_mar >= 1 && (!T.bigWin || _mar > T.bigWin.margin)) T.bigWin = { margin: _mar, label: Math.max(hs, as) + "-" + Math.min(hs, as) };
     if (as === 0) addCS(H.team); if (hs === 0) addCS(A.team);
     (comp.details || []).forEach(d => {
       const tm = csTeamMeta(comp, (d.team || {}).id);
@@ -4409,7 +4439,7 @@ document.addEventListener("visibilitychange", () => {
   if (!document.hidden) {
     loadMatches();
     if (chatTimer) pollChat();
-    if (!$("paneG").classList.contains("hide")) loadStandings();  // returning to Groups → refresh now
+    if (!$("paneG").classList.contains("hide")) loadStandings(true);  // returning to Groups → refresh now
   }
 });
 </script>
