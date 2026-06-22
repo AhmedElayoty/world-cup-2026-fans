@@ -956,7 +956,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.33</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.34</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1003,10 +1003,10 @@ const STATS_KEY = "capriole_wc26_analytics";   // internal visitor counter (aggr
 const SEASON_RANGE = "20260611-20260719";
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.33";
+const APP_VERSION = "2.34";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-23-v234";
+const FORCE_RELOAD = "2026-06-23-v235";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -1673,7 +1673,7 @@ function renderMatches() {
       badge = pens ? `<span class="badge live">● PENALTY SHOOTOUT</span>`
             : half ? `<span class="badge ht">HALF-TIME</span>`
                    : `<span class="badge live">● LIVE ${esc(st.displayClock || "")}</span>`;
-      mid = `<div class="score islive">${scoreLine(H.score ?? 0, A.score ?? 0)}<small>${esc(st.displayClock || "")}</small></div>`;
+      mid = `<div class="score islive">${scoreLine(H.score ?? 0, A.score ?? 0)}<small>${esc(liveClk(st))}</small></div>`;
     } else if (state === "post") {
       const so = H.shootoutScore != null && A.shootoutScore != null && (H.shootoutScore !== 0 || A.shootoutScore !== 0);
       const aet = /extra|penalt/i.test(st.type.description || "") || /extra|penalt/i.test(st.type.detail || "");
@@ -1761,6 +1761,14 @@ function renderMatches() {
   renderLiveSummary();
 }
 const logo = c => `<img src="${c.team.logo || ""}" alt="" onerror="this.style.visibility='hidden'">`;
+// live minute, but show "HT" at half-time / "PENS" at a shootout (the clock is paused then, not a minute)
+function liveClk(st){
+  const d = (st && st.type && st.type.description) || "";
+  const ar = (typeof LANG !== "undefined" && LANG === "ar");
+  if (/penalt|shootout/i.test(d)) return ar ? "ترجيح" : "PENS";
+  if (/half/i.test(d) && /time/i.test(d)) return ar ? "استراحة" : "HT";
+  return (st && st.displayClock) || (ar ? "مباشر" : "LIVE");
+}
 // Compact LIVE NOW strip at the top of Matches: each in-progress match as flag · ABBR · score · ABBR · flag · minute.
 function renderLiveSummary() {
   const box = $("liveSummary"); if (!box) return;
@@ -1772,7 +1780,7 @@ function renderLiveSummary() {
   const rows = live.map(e => {
     const c = e.competitions[0];
     const H = c.competitors.find(x => x.homeAway === "home"), A = c.competitors.find(x => x.homeAway === "away");
-    const clk = esc(e.status.displayClock || (LANG === "ar" ? "مباشر" : "LIVE"));
+    const clk = esc(liveClk(e.status));
     return '<button type="button" class="lsrow" onclick="goLive(\'' + e.id + '\')">' +
       '<span class="lsside lshome">' + fl(H) + '<span class="lsteam">' + nm(H) + '</span></span>' +
       '<span class="lsmid"><span class="lsmin">' + clk + '</span><span class="lsscore">' + scoreLine(H.score != null ? H.score : 0, A.score != null ? A.score : 0) + '</span></span>' +
