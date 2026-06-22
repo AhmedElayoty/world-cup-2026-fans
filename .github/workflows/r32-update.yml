@@ -1,0 +1,39 @@
+name: R32 opponent precompute
+
+# Recompute every nation's Round-of-32 opponent and publish to textdb key capriole_wc26_r32.
+# Runs often so the value is fresh the MOMENT a group match finishes (live -> confirmed) — exactly
+# when people open the app to see who their nation now plays in the Round of 32, even if they were
+# offline during the match (the server is always online with ESPN access). The script is cheap and
+# self-throttling: it SKIPS while any match is live, and only WRITES when the result actually
+# changed, so the vast majority of runs are a no-op read.
+#
+# The fifa-rank.yml job ALSO runs this same script 3x/day as a baseline/fallback.
+# LONGEVITY: GitHub auto-disables schedules in a public repo after 60 days with no new commits; the
+# group stage is well within that. Set repo Variable HEALTHCHECK_URL_R32 for a dead-man's-switch.
+on:
+  schedule:
+    - cron: "*/10 * * * *"   # every ~10 min (best-effort); catches a match finishing within minutes
+  workflow_dispatch: {}      # manual run from the Actions tab
+
+permissions:
+  contents: read
+
+concurrency:
+  group: r32-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      - name: Update R32 opponents
+        env:
+          HEALTHCHECK_URL_R32: ${{ vars.HEALTHCHECK_URL_R32 }}
+        run: node .github/scripts/r32-update.mjs
