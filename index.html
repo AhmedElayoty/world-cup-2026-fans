@@ -956,7 +956,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.28</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.29</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1003,10 +1003,10 @@ const STATS_KEY = "capriole_wc26_analytics";   // internal visitor counter (aggr
 const SEASON_RANGE = "20260611-20260719";
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.28";
+const APP_VERSION = "2.29";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-22-v229";
+const FORCE_RELOAD = "2026-06-22-v230";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -3647,7 +3647,7 @@ function lastCompletedWeek(evs) {
   if (!wk) return null;
   const ds = byWeek[wk];
   const _dxb = d => new Intl.DateTimeFormat(LANG === "ar" ? "ar-u-nu-latn" : "en-GB", { timeZone: "Asia/Dubai", day: "2-digit", month: "short" }).format(d);
-  const lab = (_dxb(new Date(ds[0].date)) + " to " + _dxb(new Date(ds[ds.length - 1].date))).toUpperCase();
+  const lab = (_dxb(new Date(ds[0].date)) + ((typeof LANG !== "undefined" && LANG === "ar") ? " إلى " : " to ") + _dxb(new Date(ds[ds.length - 1].date))).toUpperCase();
   return { wk, events: ds, lab };
 }
 async function announceChampion() {
