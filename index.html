@@ -956,7 +956,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.29</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.30</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1003,10 +1003,10 @@ const STATS_KEY = "capriole_wc26_analytics";   // internal visitor counter (aggr
 const SEASON_RANGE = "20260611-20260719";
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.29";
+const APP_VERSION = "2.30";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-22-v230";
+const FORCE_RELOAD = "2026-06-22-v231";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -1863,7 +1863,21 @@ async function toggleM(id, noScroll) {
   fillDetail(openId);
   // Re-assert the top a few times across the async detail reflow (the prior open's tall detail collapses + this
   // detail loads, which shifts the card up OR down). All fire within ~0.8s of the tap, so it never fights a reader.
-  if (!noScroll) [60, 240, 480, 820].forEach(d => setTimeout(scrollTop, d));
+  const _scrollPitch = () => {   // live match: land on the STARTING XI / formation, not the card top
+    const card = document.getElementById("mc" + id), pitch = card && card.querySelector(".pitch");
+    if (!pitch) return false;
+    const tb = document.querySelector(".topbar"), off = (tb ? tb.getBoundingClientRect().height : 0) + 8;
+    window.scrollTo({ top: Math.max(0, pitch.getBoundingClientRect().top + window.scrollY - off), behavior: "auto" });
+    return true;
+  };
+  if (!noScroll) {
+    const _live = ev && ev.status && ev.status.type && ev.status.type.state === "in";
+    if (_live) {   // wait for the async lineup render, then jump to the formation (fall back to the card top if lineups never load)
+      let _n = 0; const _iv = setInterval(() => { if (openId !== id) { clearInterval(_iv); return; } if (_scrollPitch() || ++_n > 40) { clearInterval(_iv); if (_n > 40 && openId === id) scrollTop(); } }, 150);
+    } else {
+      [60, 240, 480, 820].forEach(d => setTimeout(scrollTop, d));
+    }
+  }
   // MOTM SELF-HEAL: a finished match computes player ratings async · re-render the open detail the instant they
   // resolve, so it never stays stuck on "Analyzing…" if loadRatings's own repaint raced with the 15s live-poll re-render.
   if (opening && ev && ev.status && ev.status.type && ev.status.type.state === "post") {
