@@ -1,0 +1,31 @@
+name: FIFA rank update
+
+# Refreshes the live FIFA world ranking into the app's data store 3x/day, with no PC involved.
+# The app reads that store at runtime, so this never needs a redeploy.
+on:
+  schedule:
+    # 3 runs/day at 00:17, 08:17, 16:17 UTC (= 04:17, 12:17, 20:17 Gulf time).
+    # Minute 17 (not :00) dodges GitHub's top-of-the-hour scheduler congestion. Cron is UTC.
+    - cron: "17 0,8,16 * * *"
+  workflow_dispatch: {}   # allow manual runs from the Actions tab
+
+permissions:
+  contents: read          # the job only makes outbound HTTP calls; it never writes to the repo
+
+concurrency:
+  group: fifa-rank-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Update FIFA ranks
+        run: node .github/scripts/fifa-rank-update.mjs
