@@ -324,9 +324,9 @@ html[dir="rtl"] .hero .he{letter-spacing:0}
 .hero .bdg.conf{color:#7bdcb0;background:rgba(0,168,90,.18);border:1px solid rgba(0,168,90,.42)}
 .hero .bdg.out{color:#c2ad88;background:rgba(194,173,136,.10);border:1px solid rgba(194,173,136,.38)}
 .hero .bdg.plain{color:#8aa094;padding:4px 0;background:none}
-.hero .matchup.fz{animation:heroFz 2.2s ease-in-out infinite}
+.hero .matchup.fz{animation:heroFz 1.6s ease-in-out infinite}
 @keyframes heroFz{0%,100%{opacity:1}50%{opacity:.5}}
-.hero .bdg.flick{animation:r32flick 1.2s ease-in-out infinite}
+.hero .bdg.flick{animation:heroFz 1.6s ease-in-out infinite}
 @keyframes r32flick{0%,100%{opacity:1}45%{opacity:.25}}
 @media (prefers-reduced-motion:reduce){.hero .bdg.flick{animation:none}}
 @media (prefers-reduced-motion:reduce){.hero .matchup.fz{animation:none;opacity:.85}}
@@ -956,7 +956,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.27</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.28</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1003,10 +1003,10 @@ const STATS_KEY = "capriole_wc26_analytics";   // internal visitor counter (aggr
 const SEASON_RANGE = "20260611-20260719";
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.27";
+const APP_VERSION = "2.28";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-22-v228";
+const FORCE_RELOAD = "2026-06-22-v229";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
