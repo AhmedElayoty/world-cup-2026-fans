@@ -1,11 +1,20 @@
 name: FIFA rank update
 
-# Refreshes the live FIFA world ranking into the app's data store 3x/day, with no PC involved.
+# Refreshes the live FIFA world ranking into the app's data store, with no PC involved.
 # The app reads that store at runtime, so this never needs a redeploy.
+#
+# LONGEVITY NOTE: GitHub auto-DISABLES scheduled workflows in a PUBLIC repo after 60 days with no
+# new commits (a green Actions tab does NOT prove it is still scheduled, and no red run is created).
+# Normal commits to this repo reset that 60-day clock. For unattended peace of mind set a repo
+# Variable named HEALTHCHECK_URL (a free healthchecks.io-style dead-man's-switch): the job pings it
+# on every success, and the monitor alerts you if updates ever stop — covering BOTH the 60-day
+# auto-disable and any run of dropped/failed runs. Left empty, the ping is simply skipped.
 on:
   schedule:
-    # 3 runs/day at 00:17, 08:17, 16:17 UTC (= 04:17, 12:17, 20:17 Gulf time).
-    # Minute 17 (not :00) dodges GitHub's top-of-the-hour scheduler congestion. Cron is UTC.
+    # Up to 3 runs/day at 00:17, 08:17, 16:17 UTC (= 04:17, 12:17, 20:17 Gulf time).
+    # GitHub's schedule is best-effort and may delay or skip a slot under load; the 8h spacing keeps
+    # a single miss harmless (the store retains the last good value). Minute :17 dodges top-of-hour
+    # scheduler congestion. Cron is always UTC.
     - cron: "17 0,8,16 * * *"
   workflow_dispatch: {}   # allow manual runs from the Actions tab
 
@@ -28,4 +37,6 @@ jobs:
         with:
           node-version: "20"
       - name: Update FIFA ranks
+        env:
+          HEALTHCHECK_URL: ${{ vars.HEALTHCHECK_URL }}   # optional; alerts you if updates ever stop
         run: node .github/scripts/fifa-rank-update.mjs
