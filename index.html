@@ -453,6 +453,9 @@ html[dir="rtl"] .lbr.egy{box-shadow:inset -3px 0 0 var(--green)}
 html[dir="rtl"] .gt tr.q1 td.pos{box-shadow:inset -3px 0 0 var(--cyan)}
 html[dir="rtl"] .gt tr.q3 td.pos{box-shadow:inset -3px 0 0 var(--gold)}
 html[dir="rtl"] .gt tr.qo td.pos{box-shadow:inset -3px 0 0 #46557f}
+/* the general RTL "td{text-align:right}" (line ~97) out-specifies .gt td.pos{center}, pushing the position
+   number onto the right-edge accent bar · re-centre it (and pad it off the bar) so it sits clear, like LTR */
+html[dir="rtl"] .gt td.pos{text-align:center;padding-left:6px}
 html[dir="rtl"] .t3row{padding-left:0;padding-right:9px}
 html[dir="rtl"] .t3row.in{box-shadow:inset -3px 0 0 var(--green)}
 html[dir="rtl"] .t3row.out{box-shadow:inset -3px 0 0 var(--red)}
@@ -926,7 +929,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.14</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.15</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -973,10 +976,10 @@ const STATS_KEY = "capriole_wc26_analytics";   // internal visitor counter (aggr
 const SEASON_RANGE = "20260611-20260719";
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.14";
+const APP_VERSION = "2.15";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-22-v214";
+const FORCE_RELOAD = "2026-06-22-v215";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
