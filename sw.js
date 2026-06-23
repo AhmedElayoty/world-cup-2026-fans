@@ -2,7 +2,7 @@
    NETWORK-FIRST for the app shell (HTML) so a new deploy ALWAYS shows when online;
    cache is only a fallback for offline. Live data (ESPN/textdb/etc.) never cached.
    Static assets (icons/logo/manifest) cache-first. */
-const CACHE = "wcfans-v54";   // v54: v2.48 · Knockout bracket venue now Arabic (stadium + city) in the AR version — added Estadio Azteca/Arrowhead to VENUE_AR + the bracket host-city names (Los Angeles/Boston/Dallas…) to CITY_AR; bracket cell shows venueAr(st)·cityAr(city). EN now shows stadium+city too (matches the cards).
+const CACHE = "wcfans-v55";   // v55: v2.49 · FIX: group-LETTER glyph (.glet) was being translated by the live AR translator — group D->تعادل, group L->خسر (collided with the standings W/D/L codes). _tNode now skips .glet (and a .notr opt-out). Standings W/D/L column headers still translate correctly.
 const SHELL = ["./", "./index.html", "./manifest.json", "./logo.png", "./trophy.png", "./icon-192-2.png", "./icon-512-2.png", "./icon-180-2.png", "./share-card.png"];
 
 self.addEventListener("install", e => {
