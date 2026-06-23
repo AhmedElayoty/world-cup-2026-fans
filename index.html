@@ -1057,7 +1057,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.47</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.48</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1380,10 +1380,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.47";
+const APP_VERSION = "2.48";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-23-v248";
+const FORCE_RELOAD = "2026-06-23-v249";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -2075,7 +2075,9 @@ const VENUE_AR = {
   "Mercedes-Benz Stadium": "ملعب مرسيدس-بنز",
   "Lumen Field": "ملعب لومن فيلد",
   "Hard Rock Stadium": "ملعب هارد روك",
-  "GEHA Field at Arrowhead Stadium": "ملعب أروهيد"
+  "GEHA Field at Arrowhead Stadium": "ملعب أروهيد",
+  "Estadio Azteca": "ملعب أزتيكا",
+  "Arrowhead Stadium": "ملعب أروهيد"
 };
 const CITY_AR = {
   "Mexico City": "مدينة مكسيكو",
@@ -2093,7 +2095,12 @@ const CITY_AR = {
   "Atlanta, Georgia": "أتلانتا، جورجيا",
   "Seattle, Washington": "سياتل، واشنطن",
   "Miami Gardens, Florida": "ميامي غاردنز، فلوريدا",
-  "Kansas City, Missouri": "كانساس سيتي، ميزوري"
+  "Kansas City, Missouri": "كانساس سيتي، ميزوري",
+  // knockout-bracket host-city labels (FIFA host-city names; differ from ESPN address cities)
+  "Los Angeles": "لوس أنجلوس", "Boston": "بوسطن", "Monterrey": "مونتيري", "Houston": "هيوستن",
+  "New York / New Jersey": "نيويورك / نيوجيرسي", "Dallas": "دالاس", "Atlanta": "أتلانتا",
+  "San Francisco Bay Area": "منطقة خليج سان فرانسيسكو", "Seattle": "سياتل", "Miami": "ميامي",
+  "Kansas City": "كانساس سيتي", "Philadelphia": "فيلادلفيا"
 };
 function venueAr(name){ return (typeof LANG !== "undefined" && LANG === "ar" && VENUE_AR[name]) ? VENUE_AR[name] : (name || ""); }
 function cityAr(name){ return (typeof LANG !== "undefined" && LANG === "ar" && CITY_AR[name]) ? CITY_AR[name] : (name || ""); }
@@ -2618,7 +2625,7 @@ function bracketCell(n) {
   return '<div class="brcell' + (egyCell ? " egy" : "") + '">' +
     '<div class="brh"><span>' + n.r + ' · MATCH ' + n.n + note + '</span><span class="brko">' + esc(ko) + '</span></div>' +
     brTeamRow(n, "h") + brTeamRow(n, "a") +
-    '<div class="brv">🏟️ ' + esc(n.city) + '</div></div>';
+    '<div class="brv">🏟️ ' + esc(venueAr(n.st)) + (n.city ? ' · ' + esc(cityAr(n.city)) : '') + '</div></div>';
 }
 function renderBracket() {
   const host = $("gPaneBracket"); if (!host) return;
