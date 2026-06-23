@@ -1038,7 +1038,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.37</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.38</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1361,10 +1361,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.37";
+const APP_VERSION = "2.38";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-23-v238";
+const FORCE_RELOAD = "2026-06-23-v239";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -1939,8 +1939,8 @@ async function loadMatches() {
     // a UAE day spans two ESPN (event-local) days · fetch both and filter
     const prev = ymdShift(day, -1);
     const reqs = [
-      getJSON(API + "/scoreboard?dates=" + prev).catch(() => ({ events: [] })),
-      getJSON(API + "/scoreboard?dates=" + day).catch(() => ({ events: [] })),
+      getJSON(API + "/scoreboard?dates=" + prev).catch(() => ({ events: [], _f: 1 })),
+      getJSON(API + "/scoreboard?dates=" + day).catch(() => ({ events: [], _f: 1 })),
     ];
     const needToday = day !== today;   // browsing another date → also pull today so the LIVE NOW strip stays tournament-wide
     if (needToday) {
@@ -1951,10 +1951,14 @@ async function loadMatches() {
     if (selDate !== day) return; // user moved on
     const a = res[0], b = res[1];
     const seen = new Set();
-    events = [...(a.events || []), ...(b.events || [])]
+    const merged = [...(a.events || []), ...(b.events || [])]
       .filter(e => !seen.has(e.id) && seen.add(e.id))
       .filter(e => uaeYMD(new Date(e.date)) === day)
       .sort((x, y) => new Date(x.date) - new Date(y.date));
+    if (!merged.length && (a._f || b._f) && events.length && $("mlist").querySelector(".mcard")) {   // resume/network blip returned nothing → keep the last-good matches (do not blank to "No matches this day"); flag offline + retry
+      setCon(false, "OFFLINE · RETRYING"); clearTimeout(matchTimer); matchTimer = setTimeout(loadMatches, 20000); return;
+    }
+    events = merged;
     // tournament-wide TODAY set → feeds the always-on LIVE NOW strip + the live poll cadence (independent of the browsed date)
     let liveSrc;
     if (needToday) {
@@ -2009,6 +2013,7 @@ async function loadMatches() {
     matchTimer = setTimeout(loadMatches, nextMs);
   } catch (err) {
     setCon(false, "OFFLINE · RETRYING");
+    if ($("mlist").querySelector(".mcard")) { clearTimeout(matchTimer); matchTimer = setTimeout(loadMatches, 20000); return; }   // keep the last-good matches on a transient blip (e.g. resuming from background); only show the error when nothing is rendered
     $("mlist").innerHTML = `<div class="empty"><div class="big">📡</div>Can't reach the live feed.<br>
       <span style="font-size:11px">${esc(String(err.message || err))} · retrying in 20s</span></div>`;
     clearTimeout(matchTimer);
@@ -4369,10 +4374,11 @@ async function pollChat() {
   let msgs;
   try { msgs = await readRoom(); }
   catch (e) {
-    if (!$("paneC").classList.contains("hide"))
+    if (!$("paneC").classList.contains("hide") && !$("chatlog").querySelector(".msg"))   // keep the last-good chat on a transient blip; only show the error when the log is empty
       $("chatlog").innerHTML = '<div class="empty">Chat room unreachable.<br><span style="font-size:11px">' + esc(String(e.message || e)) + '</span></div>';
     return;
   }
+  if (!Array.isArray(msgs) || msgs.length === 0) return;   // a live room always holds the seed message; an empty read is a transient blip → keep the last-good chat
   const human = msgs.filter(m => !isBot(m));
   const onChat = !$("paneC").classList.contains("hide");
   const latest = human.reduce((mx, m) => Math.max(mx, m.ts || 0), 0);
@@ -4839,6 +4845,7 @@ document.addEventListener("visibilitychange", () => {
     loadMatches();
     if (chatTimer) pollChat();
     if (!$("paneG").classList.contains("hide")) loadStandings(true);  // returning to Groups → refresh now
+    try{ if(typeof loadR32==="function") loadR32(); }catch(e){}   // refresh the R32 precompute on resume
   }
 });
 </script>
