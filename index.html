@@ -529,6 +529,7 @@ html[dir="rtl"] .fchip b{margin-left:0;margin-right:6px}
 .cmchip i{font-style:normal;font-size:8.5px;font-weight:700;letter-spacing:.8px;color:var(--dim)}
 .cmchip.tv i{color:var(--cyan)}
 .cmchip.ref i{color:var(--gold)}
+.ctvref{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:7px;margin:9px 0 1px}
 .metarow{display:flex;align-items:flex-start;gap:10px;margin-top:8px}
 .metarow>.cardmeta,.metarow>.mven{margin-top:0}
 .metarow>.mven{margin-left:auto}
@@ -1056,7 +1057,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.46</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.47</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1379,10 +1380,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.46";
+const APP_VERSION = "2.47";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-23-v247";
+const FORCE_RELOAD = "2026-06-23-v248";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -2227,6 +2228,7 @@ function renderMatches() {
       </div>
       ${goalSummary}
       <div class="metarow"><div class="cardmeta" id="cmeta${e.id}">${cardMetaHTML(e)}</div><div class="mven"><span>🏟️ ${esc(venueAr(c.venue ? c.venue.fullName : ""))}</span><b>${esc(cityAr(c.venue && c.venue.address ? (c.venue.address.city || "") : ""))}</b>${vt ? `<span>🕒 ${vt} local kick-off</span>` : ""}</div></div>
+      ${cardTvRefHTML(e)}
       ${predStrip}
       ${detailHint}
       <div class="mdetail" id="det${e.id}"><div class="dnote">Loading line-ups…</div></div>
@@ -2258,6 +2260,7 @@ function renderMatches() {
   // card TV comes straight from the scoreboard · no per-card /summary fetch (keeps the matches list light)
   renderLiveSummary();
   try{ fitNames($("mlist")); }catch(e){}   // shrink any player name that would clip, per-name
+  try{ warmRefs(); }catch(e){}   // background-fetch each visible match's referee so the card TV+REF row fills in
 }
 const logo = c => `<img src="${c.team.logo || ""}" alt="" onerror="this.style.visibility='hidden'">`;
 // match is paused/stopped (weather etc.) · ESPN reports this as STATUS_DELAYED/SUSPENDED with state still "in"
@@ -3642,10 +3645,27 @@ function cardTV(e) {
   }
   return null;
 }
-function cardMetaHTML(e) {   // card shows TV only (from the scoreboard · no per-card fetch); referee lives in the expanded detail
-  const tv = cardTV(e);
-  return tv ? '<span class="cmchip tv"><i>TV</i>' + esc(tv) + '</span>' : '';
+let _cardRef = {}, _warmingRefs = false;
+async function warmRefs(){
+  if (_warmingRefs) return;
+  const list = (typeof nationFilter !== "undefined" && nationFilter) ? (typeof _natMatches !== "undefined" ? _natMatches : []) : (typeof events !== "undefined" ? events : []);
+  const todo = (list || []).filter(e => e && e.id && !(e.id in _cardRef));
+  if (!todo.length) return;
+  _warmingRefs = true; let any = false;
+  await Promise.all(todo.map(async e => {
+    try { const fin = ((((e.status || {}).type || {}).state) === "post"); const sum = lineups[e.id] || await getJSON(API + "/summary?event=" + e.id); if (fin && !lineups[e.id]) lineups[e.id] = sum;   // cache the summary only for FINISHED matches (static); live/pre re-fetch fresh on expand
+      const ref = ((sum.gameInfo || {}).officials || [])[0]; _cardRef[e.id] = { name: (ref && ref.displayName) || "" }; if (ref && ref.displayName) any = true;
+    } catch (_) { _cardRef[e.id] = { name: "" }; } }));
+  _warmingRefs = false;
+  if (any && typeof renderMatches === "function") renderMatches();
 }
+function cardTvRefHTML(e){
+  const tv = cardTV(e); const r = (typeof _cardRef !== "undefined") && _cardRef[e.id]; const parts = [];
+  if (tv) parts.push('<span class="cmchip tv"><i>TV</i>' + esc(tv) + '</span>');
+  if (r && r.name) { const cc = (typeof REF_CC !== "undefined" && REF_CC[r.name]) || ""; const flag = cc ? ' <img class="reflag" src="https://flagcdn.com/20x15/' + cc + '.png" alt="" loading="lazy" onerror="this.style.display=&#39;none&#39;">' : ''; parts.push('<span class="cmchip ref"><i>REF</i>' + esc(pAR(r.name)) + flag + '</span>'); }
+  return parts.length ? '<div class="ctvref">' + parts.join('') + '</div>' : '';
+}
+function cardMetaHTML(e) { return ''; }
 // attendance stays in the expanded detail (it's a post-match figure)
 function matchMeta(data, ev) {   // referee + attendance, in the expanded detail (summary is already loaded here)
   const gi = data.gameInfo || {}, bits = [];
