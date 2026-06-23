@@ -2,7 +2,7 @@
    NETWORK-FIRST for the app shell (HTML) so a new deploy ALWAYS shows when online;
    cache is only a fallback for offline. Live data (ESPN/textdb/etc.) never cached.
    Static assets (icons/logo/manifest) cache-first. */
-const CACHE = "wcfans-v52";   // v52: v2.46 · Arabic position codes (حارس/قلب دفاع/بديل…) + Arabic team names in the ratings tab header (was FRA/IRQ). English unchanged. Celebration verified unaffected.
+const CACHE = "wcfans-v53";   // v53: v2.47 · Referee (name + nation flag, AR/EN) now on each match CARD in a centered TV+REF row right above the prediction; background warmRefs() fills it in. Summary cached only for finished matches. Celebration verified unaffected.
 const SHELL = ["./", "./index.html", "./manifest.json", "./logo.png", "./trophy.png", "./icon-192-2.png", "./icon-512-2.png", "./icon-180-2.png", "./share-card.png"];
 
 self.addEventListener("install", e => {
