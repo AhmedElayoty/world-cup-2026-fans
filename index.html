@@ -172,6 +172,21 @@ main{flex:1;padding:14px 14px calc(20px + env(safe-area-inset-bottom));overflow-
  white-space:nowrap;color:var(--gold);background:rgba(255,192,46,.12);border:1px solid rgba(255,192,46,.5);border-radius:999px;padding:0 7px}
 .team.away .frank{align-self:flex-end}
 .frank.egy{color:#6dffb5;background:rgba(0,210,106,.14);border-color:rgba(0,210,106,.5)}
+.mtopmid{flex:1;text-align:center;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mgroup{font-family:'Oswald';font-weight:600;font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:#cdd9ff}
+.lrank{align-self:flex-start;display:inline-block;margin-top:1px;font-family:'Oswald';font-weight:700;font-size:9.5px;letter-spacing:.5px;line-height:1.3;padding:1px 7px;border-radius:8px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.lrank.prov{animation:lrankBlink 1.4s ease-in-out infinite}
+.team.away .lrank{align-self:flex-end}
+.lrank.q1{background:var(--cyan);color:#04222e}
+.lrank.q3{background:var(--gold);color:#2e2407}
+.lrank.qo{background:#46557f;color:#eaf0ff}
+@keyframes lrankBlink{0%,100%{opacity:1}50%{opacity:.55}}
+[dir="rtl"] .mgroup,[dir="rtl"] .lrank{font-family:'Cairo',sans-serif;letter-spacing:normal}
+[dir="rtl"] .lrank{font-weight:800}
+.glet{font-family:'Oswald',sans-serif;unicode-bidi:isolate;letter-spacing:1.4px}
+.gnum{font-family:'Oswald',sans-serif;font-weight:700;letter-spacing:0}
+.grpar{display:inline-flex;direction:ltr;flex-direction:row;align-items:baseline;gap:.32em}
+@media (prefers-reduced-motion:reduce){.lrank.prov,.badge.live,.mcard.goal{animation:none!important}}
 .frmini{font-family:'Oswald';font-weight:700;font-size:9px;letter-spacing:.2px;color:var(--gold);background:rgba(255,192,46,.12);border:1px solid rgba(255,192,46,.42);border-radius:999px;padding:0 5px;line-height:1.55;white-space:nowrap;flex:none}
 .frmini.egy{color:#6dffb5;background:rgba(0,210,106,.14);border-color:rgba(0,210,106,.5)}
 .score{font-family:'Oswald';font-weight:700;font-size:26px;letter-spacing:1px;min-width:74px;text-align:center}
@@ -1040,7 +1055,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.40</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.41</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1363,10 +1378,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.40";
+const APP_VERSION = "2.41";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-23-v241";
+const FORCE_RELOAD = "2026-06-23-v242";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -1981,7 +1996,7 @@ async function loadMatches() {
       lastScores[e.id] = sc;
     });
     if (buzz && navigator.vibrate) navigator.vibrate([180, 90, 180]);
-    if (flashIds.size && !$("paneG").classList.contains("hide")) loadStandings(true);  // goal → refresh standings; chat stays human-only (no goal bot)
+    if (flashIds.size) loadStandings(true).then(() => { try{ if(!$("paneM").classList.contains("hide")) renderMatches(); }catch(_){} }).catch(()=>{});  // goal → refresh the live table so group standings + match-card rank badges update on every goal, on any tab
     renderMatches();
     if (openId) {                                   // open match is live → its cached detail is stale, refresh it
       const oe = events.find(x => x.id === openId);
@@ -2035,6 +2050,56 @@ function scoreLine(h, a, sep) { sep = sep || " - "; return (typeof LANG !== "und
 // by team columns, so it must always read "home-away". Wrap in an LTR isolate so Arabic's RTL flow
 // can't bidi-reverse the pair (bare "2-1" otherwise renders as "1-2" in an Arabic sentence).
 function scoreTag(h, a, sep) { return '<bdi dir="ltr">' + h + (sep || "-") + a + '</bdi>'; }
+// ===== match-card group label + live group-rank badge (group stage only; fed by the live _csGroups table) =====
+function matchGroup(e){
+  try{
+    const gs = (typeof _csGroups !== "undefined" && _csGroups) || null; if(!gs || !gs.length) return null;
+    const comp = e && e.competitions && e.competitions[0]; if(!comp) return null;
+    const cs = comp.competitors || [];
+    const H = cs.find(x => x.homeAway === "home"), A = cs.find(x => x.homeAway === "away"); if(!H || !A) return null;
+    const has = (ents, t) => ents.some(en => en.team && (String(en.team.id) === String(t.team.id) || en.team.displayName === t.team.displayName));
+    for(const g of gs){ const ents = (g.standings && g.standings.entries) || []; if(has(ents, H) && has(ents, A)) return g; }
+  }catch(_){}
+  return null;
+}
+function groupLetter(g){ return (((g && g.name) || "")).replace(/group\s*/i, "").trim(); }
+function teamGroupPos(t, g){
+  try{
+    const ents = (g.standings && g.standings.entries) || [];
+    const ranked = (typeof rankRows === "function") ? rankRows(ents) : ents;
+    const i = ranked.findIndex(en => en.team && (String(en.team.id) === String(t.team.id) || en.team.displayName === t.team.displayName));
+    return i >= 0 ? i + 1 : 0;
+  }catch(_){ return 0; }
+}
+function groupLabelHTML(e){
+  const g = matchGroup(e); if(!g) return "";
+  const L = groupLetter(g); if(!L) return "";
+  const ar = (typeof LANG !== "undefined" && LANG === "ar");
+  if (ar) {
+    const _code = L.toUpperCase().charCodeAt(0) - 64;
+    const _num = (L.length === 1 && _code >= 1 && _code <= 12) ? _code : L;   // A->1 ... L->12 (numbers in Arabic, per request)
+    return '<span class="mgroup grpar"><span class="gw">المجموعة</span><span class="gnum">' + _num + '</span></span>';
+  }
+  return '<span class="mgroup">Group <span class="glet" dir="ltr">' + esc(L) + '</span></span>';
+}
+function liveRankHTML(t, e){
+  try{
+    const g = matchGroup(e); if(!g) return "";   // group stage only — shows for scheduled, live AND finished matches
+    const state = e.status && e.status.type && e.status.type.state;                                    // group stage only
+    const pos = teamGroupPos(t, g); if(!pos) return "";
+    const ar = (typeof LANG !== "undefined" && LANG === "ar");
+    const en = {1:"1st",2:"2nd",3:"3rd",4:"4th"}[pos] || (pos + "th");
+    const arO = {1:"الأول",2:"الثاني",3:"الثالث",4:"الرابع"}[pos] || ("#" + pos);
+    const txt = ar ? arO : en;                                   // short visible label — the group is already named on the card
+    const full = ar ? (arO + " في المجموعة") : (en + " in Group"); // full phrase kept for the tooltip / screen readers
+    const zone = pos <= 2 ? "q1" : (pos === 3 ? "q3" : "qo");
+    let prov;
+    if(state === "in") prov = true;                                                 // this match live → flicker
+    else if(state === "post") prov = !!(g._liveMatch || (g._played && !g._inSync)); // finished → solid once the group is CONFIRMED
+    else prov = false;                                                              // scheduled → solid
+    return '<span class="lrank ' + zone + (prov ? " prov" : " solid") + '" aria-live="polite" title="' + esc(full) + '">' + esc(txt) + '</span>';
+  }catch(_){ return ""; }
+}
 function renderMatches() {
   const list = nationFilter ? _natMatches : events;
   if (!list.length) {
@@ -2109,11 +2174,11 @@ function renderMatches() {
       : '<div class="mhint">&#9662; Press for line-ups, formation &amp; stats</div>';
     const vt = venueTime(e);
     return `<div class="mcard${egy ? " egy" : ""}${flashIds.has(e.id) ? " goal" : ""}${openId === e.id ? " open" : ""}${liveCls}" id="mc${e.id}" onclick="toggleM('${e.id}')">
-      <div class="mtop">${badge}<span>${esc(note)}</span><span style="margin-left:auto">${dayw}</span></div>
+      <div class="mtop">${badge}<span class="mtopmid">${groupLabelHTML(e) || esc(note)}</span><span style="margin-left:auto">${dayw}</span></div>
       <div class="mrow">
-        <div class="${hCls}">${logo(H)}<span class="tcol"><span class="tname${H.team.displayName === myNation() ? " egy" : ""}">${esc(H.team.displayName)}</span>${rankChip(H)}</span></div>
+        <div class="${hCls}">${logo(H)}<span class="tcol"><span class="tname${H.team.displayName === myNation() ? " egy" : ""}">${esc(H.team.displayName)}</span>${rankChip(H)}${liveRankHTML(H, e)}</span></div>
         ${mid}
-        <div class="${aCls}">${logo(A)}<span class="tcol"><span class="tname${A.team.displayName === myNation() ? " egy" : ""}">${esc(A.team.displayName)}</span>${rankChip(A)}</span></div>
+        <div class="${aCls}">${logo(A)}<span class="tcol"><span class="tname${A.team.displayName === myNation() ? " egy" : ""}">${esc(A.team.displayName)}</span>${rankChip(A)}${liveRankHTML(A, e)}</span></div>
       </div>
       ${goalSummary}
       <div class="metarow"><div class="cardmeta" id="cmeta${e.id}">${cardMetaHTML(e)}</div><div class="mven"><span>🏟️ ${esc(c.venue ? c.venue.fullName : "")}</span><b>${esc(c.venue && c.venue.address ? (c.venue.address.city || "") : "")}</b>${vt ? `<span>🕒 ${vt} local kick-off</span>` : ""}</div></div>
@@ -2366,6 +2431,7 @@ async function loadStandings(force) {
     _slots = resolveSlots(groups);
     _csGroups = groups; computeNatR32(groups); drawHero();
     try{ if(typeof checkCelebration==="function") checkCelebration(); }catch(e){}
+    try{ if(typeof renderMatches==="function" && typeof events!=="undefined" && events.length && !$("paneM").classList.contains("hide")) renderMatches(); }catch(_){}   // refresh match-card group labels + live-rank badges from the fresh table
     if (groupsView === "B" && !$("paneG").classList.contains("hide")) renderBracket();
   } catch (e) {
     { const _g = $("ggrid"); if (_g && !_g.querySelector(".gcard")) _g.innerHTML = `<div class="empty">Couldn't load standings · retrying automatically.</div>`; }   // keep the last good render on a transient blip
