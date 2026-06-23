@@ -2,7 +2,7 @@
    NETWORK-FIRST for the app shell (HTML) so a new deploy ALWAYS shows when online;
    cache is only a fallback for offline. Live data (ESPN/textdb/etc.) never cached.
    Static assets (icons/logo/manifest) cache-first. */
-const CACHE = "wcfans-v46";   // v46: v2.40 · SW shell fetch bypasses the HTTP cache (cache:no-store) so deploys land on the next reload instead of up to 10 min later (GitHub Pages Cache-Control: max-age=600)
+const CACHE = "wcfans-v47";   // v47: v2.41 · match cards: group name (off-grey; AR shows number, number-on-right) + live group-rank badge beside each team (scheduled=solid, live=flicker, finished=solid-when-confirmed; short position label; Cairo for AR; reduced-motion safe). Group stage only.
 const SHELL = ["./", "./index.html", "./manifest.json", "./logo.png", "./trophy.png", "./icon-192-2.png", "./icon-512-2.png", "./icon-180-2.png", "./share-card.png"];
 
 self.addEventListener("install", e => {
