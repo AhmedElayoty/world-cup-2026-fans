@@ -2,7 +2,7 @@
    NETWORK-FIRST for the app shell (HTML) so a new deploy ALWAYS shows when online;
    cache is only a fallback for offline. Live data (ESPN/textdb/etc.) never cached.
    Static assets (icons/logo/manifest) cache-first. */
-const CACHE = "wcfans-v55";   // v55: v2.49 · FIX: group-LETTER glyph (.glet) was being translated by the live AR translator — group D->تعادل, group L->خسر (collided with the standings W/D/L codes). _tNode now skips .glet (and a .notr opt-out). Standings W/D/L column headers still translate correctly.
+const CACHE = "wcfans-v56";   // v56: v2.50 · AR time fix: ص/م now sits to the LEFT of the digits (correct RTL order) in every container — fmt()/venueTime() wrap each "HH:MM ص/م" run in a Unicode RTL isolate (RLI…PDI). Covers clock, kick-off, badge/score, bracket cells + poster, chat timestamp. EN/24h untouched.
 const SHELL = ["./", "./index.html", "./manifest.json", "./logo.png", "./trophy.png", "./icon-192-2.png", "./icon-512-2.png", "./icon-180-2.png", "./share-card.png"];
 
 self.addEventListener("install", e => {
