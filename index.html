@@ -1057,7 +1057,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.49</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.50</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1380,10 +1380,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.49";
+const APP_VERSION = "2.50";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-23-v250";
+const FORCE_RELOAD = "2026-06-23-v251";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -1430,7 +1430,12 @@ function myNation() { try { return (cs_user && cs_user.nation) || localStorage.g
 
 /* ================= HELPERS ================= */
 const $ = id => document.getElementById(id);
-const fmt = (d, o) => { let s = new Intl.DateTimeFormat(LANG==="ar"?"ar-u-nu-latn":"en-GB", Object.assign({ timeZone: TZ, hour12: HOUR12 }, o)).format(d); return (o && o.hour && HOUR12) ? s.replace(/\b([ap])\.?m\.?\b/i, m => m.toUpperCase()) : s; };
+const fmt = (d, o) => { let s = new Intl.DateTimeFormat(LANG==="ar"?"ar-u-nu-latn":"en-GB", Object.assign({ timeZone: TZ, hour12: HOUR12 }, o)).format(d); if (o && o.hour && HOUR12) s = s.replace(/\b([ap])\.?m\.?\b/i, m => m.toUpperCase()); return arTimeIso(s, o); };
+// In Arabic 12h, the ص/م marker must sit to the LEFT of the digits (correct RTL order) even inside LTR-forced
+// containers (clock, score, kick-off, bracket). Wrap each "HH:MM ص/م" run in a Unicode RTL isolate (RLI…PDI) so
+// the marker always renders left, digits intact, in any container — works in textContent, HTML, and SVG text.
+// Wrapping only the time run (not the whole string) keeps any surrounding date (e.g. chat timestamps) in order.
+function arTimeIso(s, o){ return (typeof LANG !== "undefined" && LANG === "ar" && HOUR12 && o && o.hour && /[صم]/.test(s)) ? s.replace(/\d{1,2}:\d{2}(?::\d{2})?\s*[صم]/g, m => "⁧" + m + "⁩") : s; }
 // kick-off time AT the stadium · the 16 WC2026 venues span 5 US/Canada/Mexico zones. Keyed by ESPN's stable
 // venue id (ESPN gives no timezone field). Intl handles US/Canada DST; Mexico has no DST since 2022.
 const VENUE_TZ = {
@@ -1443,7 +1448,8 @@ function venueTime(e) {
   const c = e && e.competitions && e.competitions[0]; const v = c && c.venue;
   const tz = v && VENUE_TZ[String(v.id)]; if (!tz || !e.date) return "";
   let s = new Intl.DateTimeFormat(LANG==="ar"?"ar-u-nu-latn":"en-GB", { timeZone: tz, hour: "2-digit", minute: "2-digit", hour12: HOUR12 }).format(new Date(e.date));
-  return HOUR12 ? s.replace(/\b([ap])\.?m\.?\b/i, m => m.toUpperCase()) : s;
+  if (HOUR12) s = s.replace(/\b([ap])\.?m\.?\b/i, m => m.toUpperCase());
+  return arTimeIso(s, { hour: 1, minute: 1 });
 }
 const uaeYMD = d => {
   const p = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" })
