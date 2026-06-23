@@ -181,7 +181,7 @@ main{flex:1;padding:14px 14px calc(20px + env(safe-area-inset-bottom));overflow-
 .lrank.q3{background:var(--gold);color:#2e2407}
 .lrank.qo{background:#46557f;color:#eaf0ff}
 @keyframes lrankBlink{0%,100%{opacity:1}50%{opacity:.55}}
-[dir="rtl"] .mgroup,[dir="rtl"] .lrank{font-family:'Cairo',sans-serif;letter-spacing:normal}
+[dir="rtl"] .mgroup,[dir="rtl"] .lrank,[dir="rtl"] .mven{font-family:'Cairo',sans-serif;letter-spacing:normal}
 [dir="rtl"] .lrank{font-weight:800}
 .glet{font-family:'Oswald',sans-serif;unicode-bidi:isolate;letter-spacing:1.4px}
 .gnum{font-family:'Oswald',sans-serif;font-weight:700;letter-spacing:0}
@@ -1055,7 +1055,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.42</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.43</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1378,10 +1378,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.42";
+const APP_VERSION = "2.43";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-23-v243";
+const FORCE_RELOAD = "2026-06-23-v244";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -2051,6 +2051,45 @@ function scoreLine(h, a, sep) { sep = sep || " - "; return (typeof LANG !== "und
 // can't bidi-reverse the pair (bare "2-1" otherwise renders as "1-2" in an Arabic sentence).
 function scoreTag(h, a, sep) { return '<bdi dir="ltr">' + h + (sep || "-") + a + '</bdi>'; }
 // ===== match-card group label + live group-rank badge (group stage only; fed by the live _csGroups table) =====
+// ===== Arabic stadium + city names (web-verified) · shown only in Arabic on the match cards =====
+const VENUE_AR = {
+  "Estadio Banorte": "ملعب أزتيكا",
+  "Estadio Akron": "ملعب أكرون",
+  "BMO Field": "ملعب بي إم أو فيلد",
+  "SoFi Stadium": "ملعب سوفاي",
+  "Levi's Stadium": "ملعب ليفايز",
+  "MetLife Stadium": "ملعب ميتلايف",
+  "Gillette Stadium": "ملعب جيليت",
+  "BC Place": "ملعب بي سي بليس",
+  "NRG Stadium": "ملعب إن آر جي",
+  "AT&T Stadium": "ملعب إيه تي آند تي",
+  "Lincoln Financial Field": "ملعب لينكولن فاينانشال فيلد",
+  "Estadio BBVA": "ملعب بي بي في إيه",
+  "Mercedes-Benz Stadium": "ملعب مرسيدس-بنز",
+  "Lumen Field": "ملعب لومن فيلد",
+  "Hard Rock Stadium": "ملعب هارد روك",
+  "GEHA Field at Arrowhead Stadium": "ملعب أروهيد"
+};
+const CITY_AR = {
+  "Mexico City": "مدينة مكسيكو",
+  "Guadalajara": "غوادالاخارا",
+  "Toronto": "تورونتو",
+  "Inglewood, California": "إنغلوود، كاليفورنيا",
+  "Santa Clara, California": "سانتا كلارا، كاليفورنيا",
+  "East Rutherford, New Jersey": "إيست راذرفورد، نيوجيرسي",
+  "Foxborough, Massachusetts": "فوكسبورو، ماساتشوستس",
+  "Vancouver": "فانكوفر",
+  "Houston, Texas": "هيوستن، تكساس",
+  "Arlington, Texas": "أرلينغتون، تكساس",
+  "Philadelphia, Pennsylvania": "فيلادلفيا، بنسلفانيا",
+  "Guadalupe": "غوادالوبي",
+  "Atlanta, Georgia": "أتلانتا، جورجيا",
+  "Seattle, Washington": "سياتل، واشنطن",
+  "Miami Gardens, Florida": "ميامي غاردنز، فلوريدا",
+  "Kansas City, Missouri": "كانساس سيتي، ميزوري"
+};
+function venueAr(name){ return (typeof LANG !== "undefined" && LANG === "ar" && VENUE_AR[name]) ? VENUE_AR[name] : (name || ""); }
+function cityAr(name){ return (typeof LANG !== "undefined" && LANG === "ar" && CITY_AR[name]) ? CITY_AR[name] : (name || ""); }
 function matchGroup(e){
   try{
     const gs = (typeof _csGroups !== "undefined" && _csGroups) || null; if(!gs || !gs.length) return null;
@@ -2075,11 +2114,7 @@ function groupLabelHTML(e){
   const g = matchGroup(e); if(!g) return "";
   const L = groupLetter(g); if(!L) return "";
   const ar = (typeof LANG !== "undefined" && LANG === "ar");
-  if (ar) {
-    const _code = L.toUpperCase().charCodeAt(0) - 64;
-    const _num = (L.length === 1 && _code >= 1 && _code <= 12) ? _code : L;   // A->1 ... L->12 (numbers in Arabic, per request)
-    return '<span class="mgroup grpar"><span class="gw">المجموعة</span><span class="gnum">' + _num + '</span></span>';
-  }
+  if (ar) return '<span class="mgroup">المجموعة <span class="glet" dir="ltr">' + esc(L) + '</span></span>';   // "المجموعة" + group LETTER (word right, letter left — natural RTL order)
   return '<span class="mgroup">Group <span class="glet" dir="ltr">' + esc(L) + '</span></span>';
 }
 function liveRankHTML(t, e){
@@ -2181,7 +2216,7 @@ function renderMatches() {
         <div class="${aCls}">${logo(A)}<span class="tcol"><span class="tname${A.team.displayName === myNation() ? " egy" : ""}">${esc(A.team.displayName)}</span>${rankChip(A)}${liveRankHTML(A, e)}</span></div>
       </div>
       ${goalSummary}
-      <div class="metarow"><div class="cardmeta" id="cmeta${e.id}">${cardMetaHTML(e)}</div><div class="mven"><span>🏟️ ${esc(c.venue ? c.venue.fullName : "")}</span><b>${esc(c.venue && c.venue.address ? (c.venue.address.city || "") : "")}</b>${vt ? `<span>🕒 ${vt} local kick-off</span>` : ""}</div></div>
+      <div class="metarow"><div class="cardmeta" id="cmeta${e.id}">${cardMetaHTML(e)}</div><div class="mven"><span>🏟️ ${esc(venueAr(c.venue ? c.venue.fullName : ""))}</span><b>${esc(cityAr(c.venue && c.venue.address ? (c.venue.address.city || "") : ""))}</b>${vt ? `<span>🕒 ${vt} local kick-off</span>` : ""}</div></div>
       ${predStrip}
       ${detailHint}
       <div class="mdetail" id="det${e.id}"><div class="dnote">Loading line-ups…</div></div>
