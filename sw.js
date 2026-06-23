@@ -2,7 +2,7 @@
    NETWORK-FIRST for the app shell (HTML) so a new deploy ALWAYS shows when online;
    cache is only a fallback for offline. Live data (ESPN/textdb/etc.) never cached.
    Static assets (icons/logo/manifest) cache-first. */
-const CACHE = "wcfans-v48";   // v48: v2.42 · FIX — load the live group table on page load so the group label + rank badge actually appear on the Matches tab (were blank until you opened Groups or waited 5 min)
+const CACHE = "wcfans-v49";   // v49: v2.43 · Arabic match cards — group name shows the LETTER (المجموعة I) not a number; stadium + city names translated to Arabic (web-verified, 16 venues + cities). English unchanged.
 const SHELL = ["./", "./index.html", "./manifest.json", "./logo.png", "./trophy.png", "./icon-192-2.png", "./icon-512-2.png", "./icon-180-2.png", "./share-card.png"];
 
 self.addEventListener("install", e => {
