@@ -2,7 +2,7 @@
    NETWORK-FIRST for the app shell (HTML) so a new deploy ALWAYS shows when online;
    cache is only a fallback for offline. Live data (ESPN/textdb/etc.) never cached.
    Static assets (icons/logo/manifest) cache-first. */
-const CACHE = "wcfans-v45";   // v45: v2.39 · chat: stop the celebration .msg rule from centering chat messages (scoped to #egyWin); fun-fact stays centered (.msg.fact), human messages back to normal left/right
+const CACHE = "wcfans-v46";   // v46: v2.40 · SW shell fetch bypasses the HTTP cache (cache:no-store) so deploys land on the next reload instead of up to 10 min later (GitHub Pages Cache-Control: max-age=600)
 const SHELL = ["./", "./index.html", "./manifest.json", "./logo.png", "./trophy.png", "./icon-192-2.png", "./icon-512-2.png", "./icon-180-2.png", "./share-card.png"];
 
 self.addEventListener("install", e => {
@@ -25,7 +25,9 @@ self.addEventListener("fetch", e => {
   if (req.mode === "navigate" || url.pathname === "/" || url.pathname.endsWith("/") || url.pathname.endsWith("index.html")) {
     const isShell = url.pathname === "/" || url.pathname.endsWith("/") || url.pathname.endsWith("index.html");
     e.respondWith(
-      fetch(req).then(r => { if (isShell) { const cp = r.clone(); caches.open(CACHE).then(c => c.put("./index.html", cp)); } return r; })
+      // bypass the HTTP cache for the shell so a new deploy shows on the NEXT load, not up to 10 min later
+      // (GitHub Pages serves HTML with Cache-Control: max-age=600). Offline still falls back to Cache Storage.
+      fetch(req.url, { cache: "no-store" }).then(r => { if (isShell) { const cp = r.clone(); caches.open(CACHE).then(c => c.put("./index.html", cp)); } return r; })
                 .catch(() => caches.match(isShell ? "./index.html" : req).then(r => r || caches.match("./index.html")))
     );
     return;
