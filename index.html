@@ -1057,7 +1057,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.48</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.49</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1380,10 +1380,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.48";
+const APP_VERSION = "2.49";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-23-v249";
+const FORCE_RELOAD = "2026-06-23-v250";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -1732,7 +1732,8 @@ function tAR(s){
   out = out.replace(AR_TEAM_RX, m => AR_TEAMS_LC[m.toLowerCase()] || m);   // nation names inside composite text (any case)
   return out;
 }
-function _tNode(n){ if(n.parentNode && n.parentNode.nodeType === 1 && n.parentNode.closest && n.parentNode.closest("#chatlog") && !n.parentNode.closest(".empty")) return;  // never translate chat MESSAGES (user content), but do translate the loading placeholder
+function _tNode(n){ if(n.parentNode && n.parentNode.nodeType === 1 && n.parentNode.closest){ if(n.parentNode.closest("#chatlog") && !n.parentNode.closest(".empty")) return;  // never translate chat MESSAGES (user content), but do translate the loading placeholder
+    if(n.parentNode.closest(".glet, .notr")) return; }   // group-LETTER glyph (A-L) + .notr opt-out: NEVER translate, else group D->تعادل & group L->خسر collide with the standings W/D/L codes
   const v = n.nodeValue; if(!v || !/[A-Za-z]/.test(v)) return; const t = tAR(v); if(t !== v) n.nodeValue = t; }
 function translateTree(root){
   if(!root) return; if(root.nodeType === 3){ _tNode(root); return; } if(root.nodeType !== 1) return;
