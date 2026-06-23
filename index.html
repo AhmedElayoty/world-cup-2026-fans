@@ -261,6 +261,8 @@ html[dir="rtl"] .team.away img{box-shadow:-3px 0 0 0 var(--cyan)}
  letter-spacing:1px;font-size:13px;border-radius:24px;padding:0 20px;cursor:pointer}
 .chatnote{font-size:10.5px;color:var(--dim);text-align:center;padding:4px 0 8px}
 .msg{cursor:pointer}
+.msg.fact{align-self:center;text-align:center;max-width:92%}
+.msg.fact .when{text-align:center}
 .natflag{width:17px;height:12px;border-radius:2px;object-fit:cover;vertical-align:-1px;margin-right:5px;box-shadow:0 1px 2px rgba(0,0,0,.5)}
 .rxrow{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
 .rxchip{display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:11px;padding:1px 7px 1px 6px;font-size:12.5px;line-height:1.6;cursor:pointer;color:var(--txt)}
@@ -906,7 +908,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
 .glint{position:absolute;width:7px;height:7px;border-radius:50%;background:#fff;box-shadow:0 0 8px 3px rgba(201,166,107,.9);opacity:0;pointer-events:none}
 .gEagle{left:calc(50% - 3.5px);top:calc(50% - 3.5px);animation:glint .6s 3500ms both}
 .gSalah{right:12%;top:13%;animation:glint .6s 4600ms both}
-.msg{margin-top:22px;text-align:center;max-width:92vw}
+#egyWin .msg{margin-top:22px;text-align:center;max-width:92vw}
 .msgAr{font-family:var(--ar);font-weight:800;font-size:clamp(26px,8.5vw,38px);line-height:1.25;color:#fff;text-shadow:0 2px 0 rgba(192,158,95,.45),0 0 22px rgba(206,17,38,.35);opacity:0;animation:msgIn .46s 3100ms both}
 .rule{width:84px;height:2px;background:var(--egy-gold);margin:10px auto;transform-origin:center;box-shadow:0 0 8px rgba(192,158,95,.6);transform:scaleX(0);animation:ruleIn .5s 3350ms ease-in-out both}
 .msgEn{font-family:var(--la);font-weight:600;font-size:clamp(15px,4.6vw,21px);letter-spacing:2.5px;text-transform:uppercase;color:var(--egy-gold);line-height:1.2;opacity:0;animation:msgIn .46s 3600ms both}
@@ -946,7 +948,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
 @keyframes sndAttn{0%,100%{transform:scale(1);box-shadow:0 6px 22px rgba(0,0,0,.45)}50%{transform:scale(1.06);box-shadow:0 8px 30px rgba(231,181,77,.9),0 0 0 6px rgba(231,181,77,.28)}}
 
 @media (max-height:740px){ .flag{width:min(66vw,300px)} .salah{width:min(44vw,172px)} }
-@media (max-height:660px){ .flag{width:min(58vw,260px)} .salah{width:min(40vw,156px);margin-top:12px} .msg{margin-top:11px} }
+@media (max-height:660px){ .flag{width:min(58vw,260px)} .salah{width:min(40vw,156px);margin-top:12px} #egyWin .msg{margin-top:11px} }
 @media (prefers-reduced-motion:reduce){
   .rays,.slamFlash,.glint,.sweep{display:none!important}
   .vignette,.glow,.flagFly,.flag,.salah,.salah.bob,.msgAr,.rule,.msgEn,.chant,.chant.pulse,.sndbtn{
@@ -1038,7 +1040,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.38</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.39</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1361,10 +1363,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.38";
+const APP_VERSION = "2.39";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-23-v239";
+const FORCE_RELOAD = "2026-06-23-v240";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -4407,7 +4409,7 @@ function renderChat(msgs) {
   _chatMsgs = msgs;
   const atBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 160;
   $("chatlog").innerHTML = msgs.slice(-100).filter(m => _safeMid(m.id)).map(m => `
-    <div class="msg${m.uid === myId ? " me" : ""}" onclick="openReact(event,'${m.id}')">
+    <div class="msg${m.uid === myId ? " me" : ""}${/^funbot/.test(m.uid || "") ? " fact" : ""}" onclick="openReact(event,'${m.id}')">
       <div class="who">${m.natf ? '<img class="natflag" src="' + esc(m.natf) + '" alt="" title="' + esc(m.nat || "") + '" onerror="this.style.display=&#39;none&#39;">' : ""}${esc(m.name || "?")}</div>
       <div class="txt" dir="auto">${emojiFlags(esc(m.text || ""))}</div>
       <div class="when">${fmt(new Date(m.ts || Date.now()), { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "short" })}</div>
