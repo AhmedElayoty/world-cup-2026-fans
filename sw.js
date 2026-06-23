@@ -2,7 +2,7 @@
    NETWORK-FIRST for the app shell (HTML) so a new deploy ALWAYS shows when online;
    cache is only a fallback for offline. Live data (ESPN/textdb/etc.) never cached.
    Static assets (icons/logo/manifest) cache-first. */
-const CACHE = "wcfans-v53";   // v53: v2.47 · Referee (name + nation flag, AR/EN) now on each match CARD in a centered TV+REF row right above the prediction; background warmRefs() fills it in. Summary cached only for finished matches. Celebration verified unaffected.
+const CACHE = "wcfans-v54";   // v54: v2.48 · Knockout bracket venue now Arabic (stadium + city) in the AR version — added Estadio Azteca/Arrowhead to VENUE_AR + the bracket host-city names (Los Angeles/Boston/Dallas…) to CITY_AR; bracket cell shows venueAr(st)·cityAr(city). EN now shows stadium+city too (matches the cards).
 const SHELL = ["./", "./index.html", "./manifest.json", "./logo.png", "./trophy.png", "./icon-192-2.png", "./icon-512-2.png", "./icon-180-2.png", "./share-card.png"];
 
 self.addEventListener("install", e => {
