@@ -1063,7 +1063,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.53</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.54</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1386,10 +1386,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.53";
+const APP_VERSION = "2.54";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-24-v254";
+const FORCE_RELOAD = "2026-06-24-v255";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -2589,13 +2589,17 @@ function resolveSlots(groups) {
     done[gl] = complete; if (!complete) allDone = false;
     const tm = r => ({ name: r.team.displayName, logo: (r.team.logos && r.team.logos[0]) ? r.team.logos[0].href : "" });
     if (started) { if (rows[0]) W[gl] = tm(rows[0]); if (rows[1]) R[gl] = tm(rows[1]); }   // CURRENT top-2 once kicked off; provisional until complete (bracket shows "not confirmed yet" until allDone)
-    if (rows[2]) thirds.push({ g: gl, s: statmap(rows[2]), team: tm(rows[2]) });
+    if (rows[2] && statmap(rows[2]).gamesPlayed > 0) thirds.push({ g: gl, s: statmap(rows[2]), team: tm(rows[2]) });
     const ei = rows.findIndex(r => r.team.displayName === myNation());
     if (ei > -1) egy = { g: gl, rank: ei };
   });
   thirds.sort((a, b) => (b.s.points - a.s.points) || (b.s.pointDifferential - a.s.pointDifferential) || (b.s.pointsFor - a.s.pointsFor));
+  const T = {}; thirds.forEach(t => T[t.g] = t.team);                                                      // group -> its 3rd-placed team
+  const set8 = thirds.slice(0, 8).map(t => t.g).sort().join("");                                           // 8 best thirds' groups (same ranking as the match-tab R32 box)
+  let thirdByCol = null;                                                                                   // winner-column -> assigned 3rd-place group, via the SAME Annexe-C table (NAT_ANNEXE) the green box uses
+  if (set8.length === 8 && typeof NAT_ANNEXE !== "undefined" && NAT_ANNEXE[set8] && typeof NAT_COLS !== "undefined") { const row = NAT_ANNEXE[set8]; thirdByCol = {}; NAT_COLS.forEach((c, i) => thirdByCol[c] = row[i]); }
   _egyTrack = egy;
-  return { W, R, done, allDone, thirds };
+  return { W, R, T, thirdByCol, done, allDone, thirds };
 }
 function slotTeam(slot) {
   if (!_slots) return null;
@@ -2603,7 +2607,7 @@ function slotTeam(slot) {
   if (slot.t === "R") return _slots.R[slot.g] || null;
   return null;   // 3rd-place + match-winner slots resolve from ESPN fixtures at R32 (phase 2)
 }
-function slotProvisional(slot) { return !!(_slots && (slot.t === "W" || slot.t === "R") && !(_slots.done || {})[slot.g]); }   // a CURRENT-standings projection: its group hasn't finished all 3 matches yet
+function slotProvisional(slot) { if (!_slots) return false; if (slot.t === "W" || slot.t === "R") return !(_slots.done || {})[slot.g]; if (slot.t === "3") return !_slots.allDone; return false; }   // a CURRENT-standings projection (W/R: group not finished · 3rd: Annexe-C assignment not locked until all groups done)
 function slotLabel(slot) {
   if (slot.t === "W") return { main: "Winner Group " + slot.g, sub: slot.g + "1" };
   if (slot.t === "R") return { main: "Runner-up Group " + slot.g, sub: slot.g + "2" };
@@ -2702,6 +2706,11 @@ function nodeTeam(node, side) {
   if (r) { const t = side === "h" ? r.ht : r.at; if (t && t.name) return t; }
   const slot = side === "h" ? node.h : node.a;
   const gt = slotTeam(slot); if (gt) return gt;
+  if (slot.t === "3" && _slots && _slots.thirdByCol && _slots.T) {   // best-3rd: same Annexe-C assignment as the match-tab R32 green box
+    const other = (node.h.t === "W") ? node.h : (node.a.t === "W" ? node.a : null);
+    const tg = other ? _slots.thirdByCol[other.g] : null;
+    if (tg && _slots.T[tg]) return _slots.T[tg];
+  }
   if (slot.t === "WM") return bpWinTeam(slot.m);
   if (slot.t === "LM") { const rr = _nodeResult[slot.m]; if (rr && rr.win) return rr.win === "h" ? rr.at : rr.ht; }
   return null;
