@@ -359,6 +359,7 @@ html[dir="rtl"] .hero .he{letter-spacing:0}
 .prow .pt img{width:24px;height:24px;object-fit:contain}
 .prow .pt span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .prow .pt.r{flex-direction:row-reverse;text-align:right}
+.prow .pt .lrank{align-self:center;flex:0 0 auto;margin-top:0}
 .pin{width:46px;height:42px;background:var(--navy2);border:1.5px solid var(--line);border-radius:10px;
  color:#fff;font-family:'Oswald';font-weight:700;font-size:19px;text-align:center;outline:none}
 .pin:focus{border-color:var(--rust)}
@@ -1065,7 +1066,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.55</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.56</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1388,10 +1389,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.55";
+const APP_VERSION = "2.56";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-24-v256";
+const FORCE_RELOAD = "2026-06-24-v257";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -3226,8 +3227,8 @@ function predCard(e, started) {
   }
   const guest = !cs_user;
   const dis = (started || done || guest) ? "disabled" : "";
-  const ptH = '<div class="pt"><img src="' + (H.team.logo || "") + '" alt="" onerror="this.style.visibility=&#39;hidden&#39;"><span>' + esc(H.team.displayName) + '</span></div>';
-  const ptA = '<div class="pt r"><img src="' + (A.team.logo || "") + '" alt="" onerror="this.style.visibility=&#39;hidden&#39;"><span>' + esc(A.team.displayName) + '</span></div>';
+  const ptH = '<div class="pt"><img src="' + (H.team.logo || "") + '" alt="" onerror="this.style.visibility=&#39;hidden&#39;"><span>' + esc(H.team.displayName) + '</span>' + liveRankHTML(H, e) + '</div>';
+  const ptA = '<div class="pt r"><img src="' + (A.team.logo || "") + '" alt="" onerror="this.style.visibility=&#39;hidden&#39;"><span>' + esc(A.team.displayName) + '</span>' + liveRankHTML(A, e) + '</div>';
   const scoreInputs =
     '<input class="pin" id="ph-' + e.id + '" type="number" min="0" max="20" inputmode="numeric" value="' + (p.h ?? "") + '" ' + dis + '>' +
     '<input class="pin" id="pa-' + e.id + '" type="number" min="0" max="20" inputmode="numeric" value="' + (p.a ?? "") + '" ' + dis + '>';
