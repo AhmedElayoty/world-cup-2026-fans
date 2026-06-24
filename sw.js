@@ -2,7 +2,7 @@
    NETWORK-FIRST for the app shell (HTML) so a new deploy ALWAYS shows when online;
    cache is only a fallback for offline. Live data (ESPN/textdb/etc.) never cached.
    Static assets (icons/logo/manifest) cache-first. */
-const CACHE = "wcfans-v60";   // v60: v2.54 · Bracket + poster now fill ALL 32 R32 slots provisionally — the 8 best-third spots use the SAME in-app Annexe-C system (NAT_ANNEXE) as the match-tab green box, so they agree (verified Egypt→Czechia M82). Still "NOT CONFIRMED YET" (italic) until every group plays all 3, then locks.
+const CACHE = "wcfans-v61";   // v61: v2.55 · "PREDICT THIS MATCH" on a match card now jumps to that EXACT match in the Predictions tab (gotoPredict sets _predTarget; renderPredict scrolls it to center + flashes it, re-asserting as logos reflow). Each predict card gets id="pcard-<eventId>".
 const SHELL = ["./", "./index.html", "./manifest.json", "./logo.png", "./trophy.png", "./icon-192-2.png", "./icon-512-2.png", "./icon-180-2.png", "./share-card.png"];
 
 self.addEventListener("install", e => {
