@@ -2,7 +2,7 @@
    NETWORK-FIRST for the app shell (HTML) so a new deploy ALWAYS shows when online;
    cache is only a fallback for offline. Live data (ESPN/textdb/etc.) never cached.
    Static assets (icons/logo/manifest) cache-first. */
-const CACHE = "wcfans-v67";   // v67: v2.61 · "(confirmed)" now means ESPN has LOCKED the team's EXACT knockout slot (opponent/venue/time fixed), not merely "clinched top-2" — a group leader like Colombia whose 1st-vs-2nd is still open is NOT confirmed. confirmedTeams() = real (non-placeholder) teams in ESPN knockout fixtures, identified by seasonType (13802=group, anything else=knockout); the earlier "ESPN lists 0-pt teams" worry was a date/venue mis-match sweeping 28-Jun GROUP games in. Now 4 confirmed (Arg/Ger/Mex/USA), Colombia correctly excluded. Inline bracket + poster, EN+AR.
+const CACHE = "wcfans-v68";   // v68: v2.62 · KNOCKOUTS is now its own top-level nav tab (Matches·Groups·Knockouts·Stats·Predict·Chat = 6 tabs). Groups tab = standings only; the bracket (R32/R16/QF/SF/FINAL chips + poster) moved to the new paneK. Removed the in-Groups GROUPS/KNOCKOUTS sub-toggle (setGroupsView gone). Nav font 11.5→10px so 6 tabs fit ≥320px in EN+AR (AR tab label "الإقصائيات"). Tab persists across reload; R32 hero card + swipe order route to the new tab.
 const SHELL = ["./", "./index.html", "./manifest.json", "./logo.png", "./trophy.png", "./icon-192-2.png", "./icon-512-2.png", "./icon-180-2.png", "./share-card.png"];
 
 self.addEventListener("install", e => {
