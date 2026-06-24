@@ -1071,7 +1071,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.59</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.60</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1394,10 +1394,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.59";
+const APP_VERSION = "2.60";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-24-v260";
+const FORCE_RELOAD = "2026-06-24-v261";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -2829,7 +2829,9 @@ function bpSlotR(node, side, x, top, w, sh, scale){
     o+='<image href="'+(team.logo||"")+'" x="'+fx+'" y="'+fy+'" width="'+tileW+'" height="'+tileH+'" preserveAspectRatio="xMidYMid meet" clip-path="url(#bpc'+node.n+side+')"'+(win&&!isWin?' opacity="0.6"':"")+'/>';
     const fill=egy?BPC.nat:(isWin?BPC.win:(win&&!isWin?BPC.lose:BPC.txt));
     if(isWin&&!egy&&node.n!==104) o+='<rect x="'+(x+2)+'" y="'+(top+4)+'" width="3" height="'+(sh-8)+'" rx="1.5" fill="'+BPC.win+'"/>';
-    o+='<text x="'+nameX+'" y="'+cy+'" dominant-baseline="central" font-family="Oswald" font-weight="'+(isWin?700:600)+'" font-size="'+ns+'"'+bpBidi()+' fill="'+fill+'">'+esc(bpTrunc(bpT(team.name),scale&&scale>1.2?16:18))+'</text>';
+    const _conf=!r && !(_slots&&_slots.allDone) && typeof _confirmedSet!=="undefined" && _confirmedSet.has(team.name);   // clinched top-2 (direct R32) — same lock as the inline bracket
+    o+='<text x="'+nameX+'" y="'+(_conf?cy-ns*0.30:cy)+'" dominant-baseline="central" font-family="Oswald" font-weight="'+(isWin?700:600)+'" font-size="'+ns+'"'+bpBidi()+' fill="'+fill+'">'+esc(bpTrunc(bpT(team.name),scale&&scale>1.2?16:18))+'</text>';
+    if(_conf){ const _ct=(typeof LANG!=="undefined"&&LANG==="ar")?"(مؤكد)":"(confirmed)"; o+='<text x="'+nameX+'" y="'+(cy+ns*0.52)+'" dominant-baseline="central" font-family="Oswald" font-weight="700" font-size="'+(ns*0.46).toFixed(1)+'" letter-spacing="0.4"'+bpBidi()+' fill="'+BPC.nat+'">'+esc(_ct)+'</text>'; }
     if(score!=null){ const sx=x+w-12;
       if(isWin) o+='<rect x="'+(sx-24)+'" y="'+(cy-12)+'" width="24" height="24" rx="5" fill="url(#bpGold)"/><text x="'+(sx-12)+'" y="'+cy+'" text-anchor="middle" dominant-baseline="central" font-family="Oswald" font-weight="700" font-size="17" fill="#2A1622">'+score+'</text>';
       else o+='<text x="'+sx+'" y="'+cy+'" text-anchor="end" dominant-baseline="central" font-family="Oswald" font-weight="700" font-size="16" fill="'+BPC.lose+'">'+score+'</text>'; }
@@ -2955,6 +2957,7 @@ function bpDefs(){
   '</defs>';
 }
 function bracketPosterSVG(){
+  try { _confirmedSet = confirmedTeams(); } catch(_){}   // fresh clinch set so the poster tags match the inline bracket
   const pos=bpBuildPos(), tro=new URL("trophy.png", location.href).href;
   let s=bpDefs();
   s+='<rect x="0" y="0" width="2400" height="1200" fill="url(#bpField)"/>';
