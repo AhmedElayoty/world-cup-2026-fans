@@ -2,7 +2,7 @@
    NETWORK-FIRST for the app shell (HTML) so a new deploy ALWAYS shows when online;
    cache is only a fallback for offline. Live data (ESPN/textdb/etc.) never cached.
    Static assets (icons/logo/manifest) cache-first. */
-const CACHE = "wcfans-v58";   // v58: v2.52 · (1) AR prediction score now away-home (matches scoreLine + RTL teams) so 2-1 reads 1-2, not flipped. (2) Reliable auto-update: SW passes sw.js through; page polls sw.js cache-busted + hard-navigates to a cache-busted URL on a new build (beats the ~10-min GitHub Pages CDN cache that was delaying the forced refresh).
+const CACHE = "wcfans-v59";   // v59: v2.53 · Knockouts bracket + poster now show the PROVISIONAL R32 (current top-2 of every group, italic) with a "NOT CONFIRMED YET" banner/badge (EN+AR); 8 best-third spots stay TBD; flips to "GROUPS COMPLETE · KNOCKOUTS CONFIRMED" (labels gone, teams solid) once every group plays all 3. resolveSlots fills W/R once a group has kicked off.
 const SHELL = ["./", "./index.html", "./manifest.json", "./logo.png", "./trophy.png", "./icon-192-2.png", "./icon-512-2.png", "./icon-180-2.png", "./share-card.png"];
 
 self.addEventListener("install", e => {
