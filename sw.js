@@ -2,7 +2,7 @@
    NETWORK-FIRST for the app shell (HTML) so a new deploy ALWAYS shows when online;
    cache is only a fallback for offline. Live data (ESPN/textdb/etc.) never cached.
    Static assets (icons/logo/manifest) cache-first. */
-const CACHE = "wcfans-v66";   // v66: v2.60 · The green "(confirmed)"/"(مؤكد)" clinched-top-2 tag now also renders in the full-tree POSTER (bpSlotR, 2-line layout), not just the inline R32 bracket — user couldn't see it in the tree. Same clinch math; verified 7 tags in both EN+AR poster builds, no cross-language leak.
+const CACHE = "wcfans-v67";   // v67: v2.61 · "(confirmed)" now means ESPN has LOCKED the team's EXACT knockout slot (opponent/venue/time fixed), not merely "clinched top-2" — a group leader like Colombia whose 1st-vs-2nd is still open is NOT confirmed. confirmedTeams() = real (non-placeholder) teams in ESPN knockout fixtures, identified by seasonType (13802=group, anything else=knockout); the earlier "ESPN lists 0-pt teams" worry was a date/venue mis-match sweeping 28-Jun GROUP games in. Now 4 confirmed (Arg/Ger/Mex/USA), Colombia correctly excluded. Inline bracket + poster, EN+AR.
 const SHELL = ["./", "./index.html", "./manifest.json", "./logo.png", "./trophy.png", "./icon-192-2.png", "./icon-512-2.png", "./icon-180-2.png", "./share-card.png"];
 
 self.addEventListener("install", e => {
