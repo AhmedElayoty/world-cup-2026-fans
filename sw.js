@@ -2,7 +2,7 @@
    NETWORK-FIRST for the app shell (HTML) so a new deploy ALWAYS shows when online;
    cache is only a fallback for offline. Live data (ESPN/textdb/etc.) never cached.
    Static assets (icons/logo/manifest) cache-first. */
-const CACHE = "wcfans-v56";   // v56: v2.50 · AR time fix: ص/م now sits to the LEFT of the digits (correct RTL order) in every container — fmt()/venueTime() wrap each "HH:MM ص/م" run in a Unicode RTL isolate (RLI…PDI). Covers clock, kick-off, badge/score, bracket cells + poster, chat timestamp. EN/24h untouched.
+const CACHE = "wcfans-v57";   // v57: v2.51 · Egypt celebration: "press here for sound" button moved from the top into the stage BETWEEN the flag and Salah (in-flow, original timing kept); #egyWin gains bottom padding so the centered stage rides up and the close pill no longer overlaps مبروك لرجالة مصر. Ported verbatim from the approved demo.
 const SHELL = ["./", "./index.html", "./manifest.json", "./logo.png", "./trophy.png", "./icon-192-2.png", "./icon-512-2.png", "./icon-180-2.png", "./share-card.png"];
 
 self.addEventListener("install", e => {
