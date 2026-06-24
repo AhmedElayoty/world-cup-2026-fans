@@ -1074,7 +1074,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.66</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.67</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1399,10 +1399,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.66";
+const APP_VERSION = "2.67";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-25-v267";
+const FORCE_RELOAD = "2026-06-25-v268";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -2179,7 +2179,7 @@ function fitText(el, min){ if(!el) return; const m = min || 8.5; let fs = parseF
 function fitNames(root){ if(!root) return; try{ root.querySelectorAll(".gln, .rtn2, .pl, .subln").forEach(function(e){ fitText(e, 8.5); }); }catch(_){} }
 function scheduleFit(){ if(_fitT) return; _fitT = setTimeout(function(){ _fitT = 0; fitNames(document); }, 0); }
 function renderMatches() {
-  const list = nationFilter ? _natMatches : events;
+  const list = (nationFilter ? (_natMatches || []) : (events || [])).filter(e => e && e.competitions && e.competitions[0] && Array.isArray(e.competitions[0].competitors) && e.status && e.status.type);   // defensive: skip any null/malformed feed entry so one bad event can't crash the whole list
   if (!list.length) {
     $("mlist").innerHTML = nationFilter
       ? `<div class="empty"><div class="big">🔎</div>No matches found for ${esc(nationFilter)}.</div>`
@@ -2189,6 +2189,7 @@ function renderMatches() {
   const _mhtml = list.map(e => {
     const c = e.competitions[0];
     const H = c.competitors.find(x => x.homeAway === "home"), A = c.competitors.find(x => x.homeAway === "away");
+    if (!H || !A || !H.team || !A.team) return "";   // defensive: skip a malformed fixture instead of throwing on it
     const st = e.status, state = st.type.state;
     const egy = [H, A].some(x => x.team.displayName === myNation());
     const note = (c.notes && c.notes[0] && c.notes[0].headline) || "";
