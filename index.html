@@ -353,6 +353,8 @@ html[dir="rtl"] .hero .he{letter-spacing:0}
 .pcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 13px;margin-bottom:10px}
 .pcard.lock{opacity:.78}
 .pgroup{text-align:center;margin:1px 0 9px}
+.pview{margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);text-align:center;font-family:'Oswald';font-weight:600;font-size:10.5px;letter-spacing:1px;color:var(--dim);cursor:pointer}
+.pview:active{color:var(--txt)}
 .pcard.pflash{animation:pflash 2.4s ease-out 1}
 @keyframes pflash{0%,15%{box-shadow:0 0 0 2px #e05a2b,0 0 22px rgba(224,90,43,.6)}100%{box-shadow:0 0 0 0 rgba(224,90,43,0)}}
 .prow{display:flex;align-items:center;gap:8px}
@@ -1067,7 +1069,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.57</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.58</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1390,10 +1392,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.57";
+const APP_VERSION = "2.58";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-24-v258";
+const FORCE_RELOAD = "2026-06-24-v259";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -3207,6 +3209,15 @@ async function renderPredict() {
   }
 }
 let _predTarget = null;
+function gotoMatch(id){   // predict card → Matches tab, jump to the match's day, OPEN its card (mirror of gotoPredict)
+  try { showTab("M"); } catch (_) {}
+  openId = null;
+  let ev = null;
+  try { ev = ((typeof seasonCache !== "undefined" && seasonCache.events) || []).find(x => String(x.id) === String(id)) || (typeof events !== "undefined" ? events : []).find(x => String(x.id) === String(id)); } catch (_) {}
+  if (ev && typeof uaeYMD === "function") { const k = uaeYMD(new Date(ev.date)); _userTouchedStrip = true; if (document.getElementById("dc" + k)) pickDate(k, true); }   // select that match's day (loads it)
+  let tries = 0;
+  (function seek(){ const card = document.getElementById("mc" + id); if (card) { if (openId !== id) { try { toggleM(id); } catch (_) {} } } else if (++tries < 50) setTimeout(seek, 120); })();   // wait for the day to load, then open + scroll the card
+}
 function gotoPredict(id){ _predTarget = id; try { showTab("P"); } catch (_) {} }   // match card → Predictions tab; renderPredict scrolls to + flashes pcard-<id> once it paints (no race with the async re-render)
 function predCard(e, started) {
   const c = e.competitions[0];
@@ -3252,7 +3263,7 @@ function predCard(e, started) {
     body = '<div class="prow">' + ptH + scoreInputs + ptA + '</div>';
   }
   const grp = groupLabelHTML(e);   // same group label as the match-tab key card · group stage only (empty for knockouts)
-  return '<div class="pcard' + ((started || done) ? " lock" : "") + '" id="pcard-' + e.id + '"><div class="pmeta">' + meta + '</div>' + (grp ? '<div class="pgroup">' + grp + '</div>' : '') + body + action + '</div>';
+  return '<div class="pcard' + ((started || done) ? " lock" : "") + '" id="pcard-' + e.id + '"><div class="pmeta">' + meta + '</div>' + (grp ? '<div class="pgroup">' + grp + '</div>' : '') + body + action + '<div class="pview" onclick="event.stopPropagation();gotoMatch(&quot;' + e.id + '&quot;)">' + (LANG === "ar" ? "عرض بطاقة المباراة ←" : "VIEW MATCH CARD →") + '</div></div>';
 }
 const FINAL_AFTER = "2026-07-19T10:00:00Z";   // the World Cup FINAL (kick-off ~19 Jul 19:00 UTC) is the only match on/after this instant → 10/4 scoring. Threshold sits MID-GAP: the 3rd-place match is ~18 Jul 21:00 UTC, so even a multi-hour slip/rollover (~9h margin each side) can't misclassify bronze as the final. (When ESPN adds the final to the feed, re-confirm its date stays after this.)
 function isKOEvent(e) { return !!(e && e.season && e.season.type && e.season.type !== 13802); }   // group stage = season.type 13802; anything else = knockout
