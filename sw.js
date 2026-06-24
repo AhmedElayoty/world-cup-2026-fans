@@ -2,7 +2,7 @@
    NETWORK-FIRST for the app shell (HTML) so a new deploy ALWAYS shows when online;
    cache is only a fallback for offline. Live data (ESPN/textdb/etc.) never cached.
    Static assets (icons/logo/manifest) cache-first. */
-const CACHE = "wcfans-v57";   // v57: v2.51 · Egypt celebration: "press here for sound" button moved from the top into the stage BETWEEN the flag and Salah (in-flow, original timing kept); #egyWin gains bottom padding so the centered stage rides up and the close pill no longer overlaps مبروك لرجالة مصر. Ported verbatim from the approved demo.
+const CACHE = "wcfans-v58";   // v58: v2.52 · (1) AR prediction score now away-home (matches scoreLine + RTL teams) so 2-1 reads 1-2, not flipped. (2) Reliable auto-update: SW passes sw.js through; page polls sw.js cache-busted + hard-navigates to a cache-busted URL on a new build (beats the ~10-min GitHub Pages CDN cache that was delaying the forced refresh).
 const SHELL = ["./", "./index.html", "./manifest.json", "./logo.png", "./trophy.png", "./icon-192-2.png", "./icon-512-2.png", "./icon-180-2.png", "./share-card.png"];
 
 self.addEventListener("install", e => {
@@ -18,6 +18,7 @@ self.addEventListener("fetch", e => {
   let url; try { url = new URL(req.url); } catch (_) { return; }
   // never touch live data / third-party APIs — let them hit the network normally
   if (/espn\.com|textdb\.online|flagcdn\.com|geojs\.io|ipapi\.co|googleapis\.com|gstatic\.com/.test(url.host)) return;
+  if (url.pathname.endsWith("sw.js")) return;   // never intercept/cache the SW script — lets the page's cache-busted version poll reach the network for fast update detection
   // app shell (navigation / index.html) -> network-first, cache fallback offline.
   // Only the REAL app shell (root or index.html) is stored under the index key. Other pages
   // (e.g. demo.html) are network-first but must NEVER be cached as the app's offline entry,
