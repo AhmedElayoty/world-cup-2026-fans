@@ -117,10 +117,12 @@ html[dir="rtl"] .hr-meta{text-align:left}
 .dot.bad{background:var(--red)}
 /* tabs */
 nav{display:flex;background:transparent;border-top:1px solid var(--line)}
-nav button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;line-height:1.12;background:none;border:none;color:var(--mut);font-family:'Oswald';font-weight:600;white-space:normal;
- font-size:10px;letter-spacing:.3px;padding:6px 2px;cursor:pointer;border-bottom:2.5px solid transparent;position:relative}
+nav button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;line-height:1.14;background:none;border:none;color:var(--mut);font-family:'Oswald';font-weight:600;white-space:normal;
+ font-size:11.5px;letter-spacing:.2px;padding:9px 2px;cursor:pointer;border-bottom:2.5px solid transparent;position:relative}
 nav button.on{color:#fff;border-bottom-color:var(--rust2)}
-nav button{min-height:46px}
+nav button{min-height:54px}
+@media (max-width:360px){nav button{font-size:10.5px}}
+@media (max-width:332px){nav button{font-size:9.5px;letter-spacing:0;padding:9px 1px}}
 .navbadge{position:absolute;top:5px;left:calc(50% + 13px);min-width:16px;height:16px;padding:0 4px;border-radius:9px;background:var(--rust2);color:#fff;font-family:'Inter';font-weight:700;font-size:9.5px;line-height:16px;text-align:center;display:none;box-shadow:0 0 0 2px var(--navy)}
 #toastWrap{position:fixed;top:calc(8px + env(safe-area-inset-top));left:0;right:0;z-index:200;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 10px}
 .ctoast{pointer-events:auto;width:100%;max-width:430px;background:rgba(16,26,60,.97);border:1px solid var(--line);border-left:3px solid var(--rust2);border-radius:14px;box-shadow:0 10px 34px rgba(0,0,0,.55);padding:10px 11px;display:flex;align-items:center;gap:10px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);animation:toastIn .26s cubic-bezier(.2,.9,.3,1)}
@@ -1072,7 +1074,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.63</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.64</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1395,10 +1397,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.63";
+const APP_VERSION = "2.64";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-24-v264";
+const FORCE_RELOAD = "2026-06-24-v265";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
