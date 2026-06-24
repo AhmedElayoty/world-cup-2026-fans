@@ -2,7 +2,7 @@
    NETWORK-FIRST for the app shell (HTML) so a new deploy ALWAYS shows when online;
    cache is only a fallback for offline. Live data (ESPN/textdb/etc.) never cached.
    Static assets (icons/logo/manifest) cache-first. */
-const CACHE = "wcfans-v70";   // v70: v2.64 · Nav tab labels made more readable (user: "headers too small"): bigger font + taller bar — font 10→11.5px (same as pre-split), nav min-height 46→54px. Responsive so 6 tabs never clip: @media ≤360px→10.5px, ≤332px→9.5px. Verified KNOCKOUTS/الأدوار الإقصائية fit clip-free at 320/360/375px, EN+AR.
+const CACHE = "wcfans-v71";   // v71: v2.65 · QA pass on future-state features + 2 changes. FIX: syncKnockout maps ESPN knockout RESULTS to BRACKET nodes by venue exact-OR-contains (was missing "GEHA Field at Arrowhead Stadium" vs our "Arrowhead Stadium" → R32 node 87 + QF node 100 now map; without it those results + R16/QF placement would have broken). NEW: Egypt celebration ALSO fires once when Egypt is in ESPN's officially-confirmed R32 (checkCelebration → confirmedTeams().has("Egypt"), id "egyR32", deduped). Verified: scorer 14/14 (group/KO/penalties/final 10-4), R16 fill, allDone disappearance, all KO fixtures map (0 unmapped).
 const SHELL = ["./", "./index.html", "./manifest.json", "./logo.png", "./trophy.png", "./icon-192-2.png", "./icon-512-2.png", "./icon-180-2.png", "./share-card.png"];
 
 self.addEventListener("install", e => {

@@ -1074,7 +1074,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.64</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.65</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1361,6 +1361,8 @@ function _celebFire(id){
 function checkCelebration(){
   try{
     if(overlay.dataset.open === "1") return;
+    // Egypt officially placed into an ESPN knockout fixture = qualified to the R32 → celebrate once (even if it came via other results, not a win)
+    try{ if(typeof confirmedTeams === "function" && confirmedTeams().has(CELEB_EGY)){ const qid = "egyR32"; if(!celebSeen(qid)){ _celebFire(qid); return; } } }catch(_){}
     const seen = new Set(), pool = [];
     (typeof events !== "undefined" ? events : []).concat((typeof seasonCache !== "undefined" && seasonCache.events) || [])
       .forEach(function(e){ if(e && !seen.has(e.id)){ seen.add(e.id); pool.push(e); } });
@@ -1397,10 +1399,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.64";
+const APP_VERSION = "2.65";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-24-v265";
+const FORCE_RELOAD = "2026-06-24-v266";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -2717,7 +2719,7 @@ function syncKnockout(evs) {
       const stt = e.status && e.status.type && e.status.type.state; if (stt === "pre") return;
       const comp = e.competitions && e.competitions[0]; if (!comp) return;
       const ymd = fixedYMD(new Date(e.date)), vn = norm((comp.venue || {}).fullName), vc = norm(((comp.venue || {}).address || {}).city);
-      let node = BRACKET.find(n => { const nd = uaeStrToDate(n.uae); return nd && fixedYMD(nd) === ymd && ((vn && vn === norm(n.st)) || (vc && vc === norm(n.city))); });
+      let node = BRACKET.find(n => { const nd = uaeStrToDate(n.uae); if (!nd || fixedYMD(nd) !== ymd) return false; const sn = norm(n.st); return (vn && sn && (vn === sn || vn.includes(sn) || sn.includes(vn))) || (vc && vc === norm(n.city)); });   // venue: exact OR contains either direction (ESPN "GEHA Field at Arrowhead Stadium" vs our "Arrowhead Stadium")
       if (!node) { const sd = BRACKET.filter(n => { const nd = uaeStrToDate(n.uae); return nd && fixedYMD(nd) === ymd; }); if (sd.length === 1) node = sd[0]; }   // venue/city naming drift → unique same-day knockout node
       if (!node) { try { console.warn("syncKnockout: unmatched knockout event", e.id, ymd, vn || vc); } catch (_) {} return; }
       const cs = comp.competitors || [], H = cs.find(x => x.homeAway === "home"), A = cs.find(x => x.homeAway === "away");
