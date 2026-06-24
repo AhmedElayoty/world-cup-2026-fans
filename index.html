@@ -1074,7 +1074,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.65</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.66</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1399,10 +1399,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.65";
+const APP_VERSION = "2.66";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-24-v266";
+const FORCE_RELOAD = "2026-06-25-v267";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -2010,15 +2010,13 @@ async function loadMatches() {
       setCon(false, "OFFLINE · RETRYING"); clearTimeout(matchTimer); matchTimer = setTimeout(loadMatches, 20000); return;
     }
     events = merged;
-    // tournament-wide TODAY set → feeds the always-on LIVE NOW strip + the live poll cadence (independent of the browsed date)
-    let liveSrc;
-    if (needToday) {
-      const ts = new Set();
-      liveSrc = [...(res[2].events || []), ...(res[3].events || [])]
-        .filter(e => !ts.has(e.id) && ts.add(e.id))
-        .filter(e => uaeYMD(new Date(e.date)) === today);
-    } else { liveSrc = events; }
-    _liveNow = liveSrc.filter(e => e.status && e.status.type && e.status.type.state === "in")
+    // tournament-wide live set → feeds the always-on LIVE NOW strip + the live poll cadence (independent of the browsed date).
+    // Spans BOTH today and the prior UAE day: a match that kicks off late and is still playing past UAE midnight has a
+    // scheduled date of "yesterday", so a today-only filter dropped it from the strip at the rollover even while live.
+    let liveSrc; { const ts = new Set();
+      liveSrc = (needToday ? [...(res[2].events || []), ...(res[3].events || [])] : [...(a.events || []), ...(b.events || [])])
+        .filter(e => !ts.has(e.id) && ts.add(e.id)); }
+    _liveNow = liveSrc.filter(e => e.status && e.status.type && e.status.type.state === "in")   // ANY currently-live match, gated on state only (never date) → survives the midnight rollover
       .sort((x, y) => new Date(x.date) - new Date(y.date));
     flashIds.clear();
     let buzz = false;
