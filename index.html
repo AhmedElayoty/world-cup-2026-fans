@@ -904,7 +904,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
 @media (prefers-reduced-motion:reduce){ .celebar{animation:none!important} }
 
 /* ---------- celebration overlay v2 ---------- */
-#egyWin{position:fixed;inset:0;z-index:9000;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px 16px;background:rgba(7,9,15,.93);opacity:0;transition:opacity .42s ease-out;touch-action:none;overflow:hidden}
+#egyWin{position:fixed;inset:0;z-index:9000;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px 16px calc(108px + env(safe-area-inset-bottom,0));background:rgba(7,9,15,.93);opacity:0;transition:opacity .42s ease-out;touch-action:none;overflow:hidden}
 #egyWin.go{opacity:1}
 #egyWin.bye{opacity:0;transition:opacity .34s ease-in}
 .vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 50% 42%,transparent 55%,rgba(0,0,0,.55));opacity:0;animation:fadeIn .5s 300ms both}
@@ -931,7 +931,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
 .msgEn{font-family:var(--la);font-weight:600;font-size:clamp(15px,4.6vw,21px);letter-spacing:2.5px;text-transform:uppercase;color:var(--egy-gold);line-height:1.2;opacity:0;animation:msgIn .46s 3600ms both}
 .cfx{position:absolute;inset:0;pointer-events:none;z-index:4}
 .chantRow{position:absolute;left:0;right:0;bottom:calc(22px + env(safe-area-inset-bottom,0));z-index:6;display:flex;flex-direction:column;align-items:center;gap:7px;padding:0 18px}
-.sndbtn{position:absolute;top:calc(15px + env(safe-area-inset-top,0));left:0;right:0;margin:0 auto;width:max-content;max-width:92vw;z-index:8;display:flex;align-items:center;gap:8px;cursor:pointer;background:linear-gradient(90deg,#e7b54d,#caa043);border:2px solid #ffe9b0;border-radius:999px;color:#2a1c05;font-family:var(--la);font-weight:700;font-size:12px;letter-spacing:.3px;text-transform:uppercase;white-space:nowrap;padding:8px 15px;box-shadow:0 5px 18px rgba(0,0,0,.4);animation:sndIn .45s 250ms both,sndAttn 1.7s 950ms ease-in-out infinite}
+.sndbtn{position:relative;margin-top:16px;width:max-content;max-width:92vw;z-index:8;display:flex;align-items:center;gap:8px;cursor:pointer;background:linear-gradient(90deg,#e7b54d,#caa043);border:2px solid #ffe9b0;border-radius:999px;color:#2a1c05;font-family:var(--la);font-weight:700;font-size:12px;letter-spacing:.3px;text-transform:uppercase;white-space:nowrap;padding:8px 15px;box-shadow:0 5px 18px rgba(0,0,0,.4);animation:sndIn .45s 250ms both,sndAttn 1.7s 950ms ease-in-out infinite}
 .sndbtn:active{transform:scale(.96)}
 .sndbtn.playing{font-size:12px;letter-spacing:.3px;text-transform:none;padding:7px 13px;background:rgba(20,16,10,.66);border:1px solid rgba(192,158,95,.6);color:#f3e6c8;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:0 3px 12px rgba(0,0,0,.4)}
 .sndic{font-size:15px;line-height:1}
@@ -1057,7 +1057,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.50</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.51</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1127,6 +1127,8 @@ function buildOverlay(){
         '<img class="flagimg" alt="Flag of Egypt">' +
         '<div class="sweep"></div><div class="glint gEagle"></div>' +
       '</div></div>' +
+      '<button class="sndbtn" aria-label="Play the celebration song from the start">' +
+        '<span class="sndic">🔊</span><span class="sndtx">اضغط للصوت · press here for sound</span></button>' +
       '<div class="salah">' +
         '<img alt="Mohamed Salah celebrating Egypt\'s win">' +
         '<div class="sweep"></div><div class="glint gSalah"></div>' +
@@ -1137,8 +1139,6 @@ function buildOverlay(){
       '</div>' +
     '</div>' +
     '<canvas class="cfx" aria-hidden="true"></canvas>' +
-    '<button class="sndbtn" aria-label="Play the celebration song from the start">' +
-      '<span class="sndic">🔊</span><span class="sndtx">اضغط للصوت · press here for sound</span></button>' +
     '<audio class="cheer" preload="auto"></audio>' +
     '<div class="chantRow">' +
       '<button class="chant" dir="rtl" aria-label="Close celebration. Ya habibti ya Masr.">' +
@@ -1380,10 +1380,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.50";
+const APP_VERSION = "2.51";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-23-v251";
+const FORCE_RELOAD = "2026-06-23-v252";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
