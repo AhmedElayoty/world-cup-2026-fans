@@ -785,6 +785,12 @@ html[dir="rtl"] .fchip b{margin-left:0;margin-right:6px}
 .brteam.egy .bn{color:#6dffb5}
 .brteam .bsc{font-family:'Oswald';font-weight:700;font-size:16px;color:#f4f6fb;font-variant-numeric:tabular-nums}
 .brv{font-size:9.5px;color:var(--dim);margin-top:6px;letter-spacing:.3px}
+.brteam.prov{opacity:.94}
+.brteam.prov .bn{font-style:italic}
+.brstatus{margin:8px 0 4px;padding:7px 11px;border-radius:9px;font-family:'Oswald';font-weight:600;font-size:11px;letter-spacing:.4px;text-align:center;line-height:1.45}
+.brstatus.prov{background:#3a2a0e;border:1px solid #6b4718;color:#f0c674}
+.brstatus.ok{background:#0a2e1d;border:1px solid var(--green);color:#7fe0a0}
+[dir="rtl"] .brstatus{font-family:'Cairo','Oswald',sans-serif}
 .brteam.win .bn{color:var(--gold)}
 .brteam.win .bsc{color:var(--gold)}
 .brteam.lose{opacity:.5}
@@ -1057,7 +1063,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.52</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.53</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1380,10 +1386,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.52";
+const APP_VERSION = "2.53";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-24-v253";
+const FORCE_RELOAD = "2026-06-24-v254";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -2579,9 +2585,10 @@ function resolveSlots(groups) {
     const gl = (g.name || "").replace("Group ", "").trim();
     if (!rows.length) { allDone = false; return; }
     const complete = rows.length >= 4 && rows.every(r => statmap(r).gamesPlayed >= 3);
+    const started = rows.some(r => statmap(r).gamesPlayed > 0);
     done[gl] = complete; if (!complete) allDone = false;
     const tm = r => ({ name: r.team.displayName, logo: (r.team.logos && r.team.logos[0]) ? r.team.logos[0].href : "" });
-    if (complete) { if (rows[0]) W[gl] = tm(rows[0]); if (rows[1]) R[gl] = tm(rows[1]); }
+    if (started) { if (rows[0]) W[gl] = tm(rows[0]); if (rows[1]) R[gl] = tm(rows[1]); }   // CURRENT top-2 once kicked off; provisional until complete (bracket shows "not confirmed yet" until allDone)
     if (rows[2]) thirds.push({ g: gl, s: statmap(rows[2]), team: tm(rows[2]) });
     const ei = rows.findIndex(r => r.team.displayName === myNation());
     if (ei > -1) egy = { g: gl, rank: ei };
@@ -2596,6 +2603,7 @@ function slotTeam(slot) {
   if (slot.t === "R") return _slots.R[slot.g] || null;
   return null;   // 3rd-place + match-winner slots resolve from ESPN fixtures at R32 (phase 2)
 }
+function slotProvisional(slot) { return !!(_slots && (slot.t === "W" || slot.t === "R") && !(_slots.done || {})[slot.g]); }   // a CURRENT-standings projection: its group hasn't finished all 3 matches yet
 function slotLabel(slot) {
   if (slot.t === "W") return { main: "Winner Group " + slot.g, sub: slot.g + "1" };
   if (slot.t === "R") return { main: "Runner-up Group " + slot.g, sub: slot.g + "2" };
@@ -2617,7 +2625,8 @@ function brTeamRow(node, side) {
   const isWin = !!(r && r.win && r.win === side), isLose = !!(r && r.win && r.win !== side);
   if (t) {
     const egy = t.name === myNation();
-    return '<div class="brteam' + (egy ? " egy" : "") + (isWin ? " win" : "") + (isLose ? " lose" : "") + '"><img src="' + (t.logo || "") + '" alt="" onerror="this.style.visibility=&#39;hidden&#39;"><span class="bn">' + esc(t.name) + rankMini(t) + '</span><span class="bsc">' + (sc != null ? sc : "") + '</span></div>';
+    const prov = !r && slotProvisional(slot);   // shown from the live table, group not yet decided
+    return '<div class="brteam' + (egy ? " egy" : "") + (isWin ? " win" : "") + (isLose ? " lose" : "") + (prov ? " prov" : "") + '"><img src="' + (t.logo || "") + '" alt="" onerror="this.style.visibility=&#39;hidden&#39;"><span class="bn">' + esc(t.name) + rankMini(t) + '</span><span class="bsc">' + (sc != null ? sc : "") + '</span></div>';
   }
   const L = slotLabel(slot), prov = egyProvisional(slot);
   return '<div class="brteam ph' + (prov ? " egy" : "") + '"><span class="phc"></span><span class="bn">' + esc(L.main) +
@@ -2650,7 +2659,11 @@ function renderBracket() {
       if (bz) body += '<div class="brhalf">THIRD-PLACE PLAY-OFF</div>' + bracketCell(bz);
     }
   }
-  host.innerHTML = '<div class="rchips">' + chips + '</div>' +
+  const _allDone = !!(_slots && _slots.allDone);
+  const statusHTML = _allDone
+    ? '<div class="brstatus ok">' + (LANG === "ar" ? "✓ المجموعات اكتملت · الأدوار الإقصائية مؤكَّدة" : "✓ GROUPS COMPLETE · KNOCKOUTS CONFIRMED") + '</div>'
+    : '<div class="brstatus prov">' + (LANG === "ar" ? "⚠ غير مؤكَّد بعد · دور الـ32 مبدئي حسب الترتيب الحالي، ويُعتمد بعد أن تُكمل كل المجموعات مبارياتها الثلاث" : "⚠ NOT CONFIRMED YET · provisional R32 from the current standings · locks once every group finishes its 3 matches") + '</div>';
+  host.innerHTML = '<div class="rchips">' + chips + '</div>' + statusHTML +
     '<div class="brdlrow"><button class="brdl" onclick="openBracketPoster()">⤢ OPEN FULL TREE</button>' +
     '<button class="brdl alt" onclick="downloadBracketPNG(this)">⬇ DOWNLOAD (PNG)</button></div>' +
     '<div class="brlegend">' + (_egyTrack ? '<span class="egl">★ Your nation · ' + esc(myNation().toUpperCase()) + '</span>' : '<span></span>') +
@@ -2810,7 +2823,7 @@ function bpHeader(){
   return '<text x="120" y="116" font-family="Oswald" font-weight="700" font-size="54" letter-spacing="3" fill="'+BPC.txt+'">FIFA WORLD CUP 2026</text>'+
     '<text x="122" y="146" font-family="Oswald" font-weight="500" font-size="17" letter-spacing="5" fill="url(#bpGold)">ROAD TO THE FINAL · KNOCKOUT BRACKET</text>'+
     '<text x="2336" y="92" text-anchor="end" font-family="Oswald" font-weight="500" font-size="13" letter-spacing="2" fill="'+BPC.plat+'">48 TEAMS · 16 HOST CITIES</text>'+
-    '<text x="2336" y="120" text-anchor="end" font-family="Oswald" font-weight="500" font-size="13" letter-spacing="2" fill="'+BPC.plat+'">'+bpT('ALL TIMES')+' <tspan fill="'+BPC.gold+'">'+esc(tzAbbr())+'</tspan> · '+esc(bpT(tzOffset(TZ)))+'</text>';
+    '<text x="2336" y="120" text-anchor="end" font-family="Oswald" font-weight="500" font-size="13" letter-spacing="2" fill="'+BPC.plat+'">'+bpT('ALL TIMES')+' <tspan fill="'+BPC.gold+'">'+esc(tzAbbr())+'</tspan> · '+esc(bpT(tzOffset(TZ)))+'</text>'+(!(_slots && _slots.allDone) ? '<text x="2336" y="148" text-anchor="end" font-family="Oswald" font-weight="700" font-size="13" letter-spacing="1.5"'+bpBidi()+' fill="#f0c674">'+(LANG==="ar"?"⚠ غير مؤكَّد بعد · دور الـ32 مبدئي":"⚠ NOT CONFIRMED YET · PROVISIONAL R32")+'</text>' : '');
 }
 function bpRoundHeaders(){
   const cols=[[176,"ROUND OF 32","28 JUN - 1 JUL",BPC.plat],[424,"ROUND OF 16","4 - 8 JUL",BPC.plat],[672,"QUARTER-FINAL","10 - 12 JUL","g"],[920,"SEMI-FINAL","14 - 15 JUL","g"],[2224,"ROUND OF 32","28 JUN - 1 JUL",BPC.plat],[1976,"ROUND OF 16","4 - 8 JUL",BPC.plat],[1728,"QUARTER-FINAL","10 - 12 JUL","g"],[1480,"SEMI-FINAL","14 - 15 JUL","g"]];
