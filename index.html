@@ -118,7 +118,7 @@ html[dir="rtl"] .hr-meta{text-align:left}
 /* tabs */
 nav{display:flex;background:transparent;border-top:1px solid var(--line)}
 nav button{flex:1;background:none;border:none;color:var(--mut);font-family:'Oswald';font-weight:600;white-space:nowrap;
- font-size:11.5px;letter-spacing:.6px;padding:12px 2px 10px;cursor:pointer;border-bottom:2.5px solid transparent;position:relative}
+ font-size:10px;letter-spacing:.3px;padding:12px 1px 10px;cursor:pointer;border-bottom:2.5px solid transparent;position:relative}
 nav button.on{color:#fff;border-bottom-color:var(--rust2)}
 nav button{min-height:46px}
 .navbadge{position:absolute;top:5px;left:calc(50% + 13px);min-width:16px;height:16px;padding:0 4px;border-radius:9px;background:var(--rust2);color:#fff;font-family:'Inter';font-weight:700;font-size:9.5px;line-height:16px;text-align:center;display:none;box-shadow:0 0 0 2px var(--navy)}
@@ -1017,6 +1017,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
 <nav>
  <button id="tabM" class="on" onclick="showTab('M')">MATCHES</button>
  <button id="tabG" onclick="showTab('G')">GROUPS</button>
+ <button id="tabK" onclick="showTab('K')">KNOCKOUTS</button>
  <button id="tabS" onclick="showTab('S')">STATS</button>
  <button id="tabP" onclick="showTab('P')">PREDICT</button>
  <button id="tabC" onclick="showTab('C')">CHAT<span class="navbadge" id="chatBadge"></span></button>
@@ -1051,15 +1052,15 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
   <div id="predList"><div class="empty">Loading…</div></div>
  </section>
  <section id="paneG" class="hide">
-  <div class="sttoggle"><button id="gvT" class="on" onclick="setGroupsView('T')">GROUPS</button><button id="gvB" onclick="setGroupsView('B')">KNOCKOUTS</button></div>
   <div id="gPaneTables">
-   <div class="brhint">Knockout bracket inside &#8593; &#183; fills in as groups finish</div>
    <div class="secrow"><span class="sect">GROUP STANDINGS</span>
     <span style="margin-left:auto;font-size:10px;color:var(--dim);font-family:'Oswald';letter-spacing:1px">&#9679; LIVE &#183; UPDATES EVERY 20s</span></div>
    <div class="ggrid" id="ggrid"><div class="empty">Loading standings…</div></div>
    <div id="thirdsBox"></div>
   </div>
-  <div id="gPaneBracket" class="hide"></div>
+ </section>
+ <section id="paneK" class="hide">
+  <div id="gPaneBracket"></div>
  </section>
  <section id="paneC" class="hide">
   <div class="chatnote">Shared team room · be nice, it's football 🏆</div>
@@ -1071,7 +1072,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.61</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.62</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1394,10 +1395,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.61";
+const APP_VERSION = "2.62";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-24-v262";
+const FORCE_RELOAD = "2026-06-24-v263";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -1557,7 +1558,7 @@ const AR = {
   "NEXT WEEK'S PREDICTIONS":"توقّعات الأسبوع القادم","PREDICT NOW ⚽":"توقّع الآن ⚽","NICE ⚽":"تمام ⚽","GOT IT ⚽":"حسناً ⚽","LET'S GO ⚽":"يلا بينا ⚽",
   "🏆 LEADING THE TABLE":"🏆 متصدّر الترتيب","🏆 OVERALL CHAMPION":"🏆 البطل العام","World Cup 2026 Prediction Champion!":"برنس توقّعات كأس العالم 2026!","the final still decides the overall winner":"النهائي هو من يحسم البطل العام",
   // groups
-  "KNOCKOUTS":"الأدوار الإقصائية","GROUP STANDINGS":"ترتيب المجموعات","Loading standings…":"جارٍ تحميل الترتيب…",
+  "KNOCKOUTS":"الإقصائيات","GROUP STANDINGS":"ترتيب المجموعات","Loading standings…":"جارٍ تحميل الترتيب…",
   "QUALIFY":"يتأهّل","BEST THIRD":"أفضل ثالث","OUT":"خارج","DRAW":"تعادل","DRAWS":"تعادلات","DRAWN":"تعادل",
   // chat
   "Loading chat…":"جارٍ تحميل الدردشة…","Message the team…":"راسل الفريق…","SEND":"إرسال","SIGN IN":"تسجيل الدخول",
@@ -1780,7 +1781,7 @@ function setHour12(v) { if (HOUR12 === v) return; HOUR12 = v; try { localStorage
 function showTab(t) {
   try { sessionStorage.setItem("cs_tab", t); } catch (_) {}   // remember tab → a reload / pull-to-refresh stays here (only the logo→goHome resets to M)
   if (t !== "M" && openId) { openId = null; renderMatches(); }   // leaving Matches → collapse the open match
-  ["M", "G", "S", "P", "C"].forEach(x => {
+  ["M", "G", "K", "S", "P", "C"].forEach(x => {
     $("tab" + x).classList.toggle("on", x === t);
     $("pane" + x).classList.toggle("hide", x !== t);
   });
@@ -1790,8 +1791,9 @@ function showTab(t) {
     const toBottom = () => { if (!$("paneC").classList.contains("hide")) window.scrollTo(0, document.body.scrollHeight); };
     toBottom(); [150, 450, 900].forEach(d => setTimeout(toBottom, d));   // re-assert to the latest message as the chat loads async
   }
-  if (t === "G") { loadStandings(true); groupsTimer = groupsTimer || setInterval(loadStandings, 20000); }
+  if (t === "G" || t === "K") { loadStandings(true); groupsTimer = groupsTimer || setInterval(loadStandings, 20000); }
   else if (groupsTimer) { clearInterval(groupsTimer); groupsTimer = null; }
+  if (t === "K") renderBracket();   // paint the bracket immediately; loadStandings re-renders it as fresh data lands
   if (t === "P") { renderPredict(); if (!cs_user && !window._predSkipped) openAuth("C", { ctx: "predict" }); }
   if (t === "S") { renderStats(); statsTimer = statsTimer || setInterval(() => { if (!$("paneS").classList.contains("hide")) renderStats(); }, 30000); }
   else if (statsTimer) { clearInterval(statsTimer); statsTimer = null; }
@@ -1801,7 +1803,7 @@ function showTab(t) {
 // Ignores gestures that begin inside a horizontally-scrollable element (date strip, wide tables/bracket).
 (function () {
   const main = document.querySelector("main"); if (!main) return;
-  const ORDER = ["M", "G", "S", "P", "C"];
+  const ORDER = ["M", "G", "K", "S", "P", "C"];
   let sx = 0, sy = 0, st = 0, on = false;
   function scrollableX(el) {
     while (el && el !== main) {
@@ -2509,7 +2511,7 @@ async function loadStandings(force) {
     _csGroups = groups; computeNatR32(groups); drawHero();
     try{ if(typeof checkCelebration==="function") checkCelebration(); }catch(e){}
     try{ if(typeof renderMatches==="function" && typeof events!=="undefined" && events.length && !$("paneM").classList.contains("hide")) renderMatches(); }catch(_){}   // refresh match-card group labels + live-rank badges from the fresh table
-    if (groupsView === "B" && !$("paneG").classList.contains("hide")) renderBracket();
+    if (!$("paneK").classList.contains("hide")) renderBracket();
   } catch (e) {
     { const _g = $("ggrid"); if (_g && !_g.querySelector(".gcard")) _g.innerHTML = `<div class="empty">Couldn't load standings · retrying automatically.</div>`; }   // keep the last good render on a transient blip
   }
@@ -2576,15 +2578,7 @@ function uaeStrToDate(s){ const p=String(s||"").trim().split(/\s+/); if(p.length
 function koWhen(s){ const d=uaeStrToDate(s); if(!d){ const p=String(s||"").split(" "); return {dt:null,day:p.slice(1,3).join(" "),dayW:p.slice(0,3).join(" "),time:p[p.length-1]}; } return { dt:d, day:fmt(d,{day:"2-digit",month:"short"}), dayW:fmt(d,{weekday:"short",day:"2-digit",month:"short"}), time:fmt(d,{hour:"2-digit",minute:"2-digit"}) }; }
 function koRange(code){ const ds=BRACKET.filter(n=>n.r===code).map(n=>uaeStrToDate(n.uae)).filter(Boolean).sort((a,b)=>a-b); if(!ds.length) return ""; const f=d=>fmt(d,{day:"2-digit",month:"short"}).toUpperCase(); const lo=f(ds[0]), hi=f(ds[ds.length-1]); return lo===hi?lo:lo+" - "+hi; }
 function koRangeByName(nm){ const m={"ROUND OF 32":"R32","ROUND OF 16":"R16","QUARTER-FINAL":"QF","SEMI-FINAL":"SF","FINAL":"FINAL"}; return koRange(m[nm]||""); }
-let groupsView = "T", bracketRound = "R32", _slots = null, _egyTrack = null;
-function setGroupsView(v) {
-  groupsView = v;
-  $("gvT").classList.toggle("on", v === "T");
-  $("gvB").classList.toggle("on", v === "B");
-  $("gPaneTables").classList.toggle("hide", v !== "T");
-  $("gPaneBracket").classList.toggle("hide", v !== "B");
-  if (v === "B") renderBracket();
-}
+let bracketRound = "R32", _slots = null, _egyTrack = null;
 function setBracketRound(r) { bracketRound = r; renderBracket(); }
 function resolveSlots(groups) {
   const W = {}, R = {}, done = {}, thirds = []; let allDone = groups.length >= 12, egy = null;
@@ -3085,7 +3079,7 @@ function _heroR32Sec(nation){
   if(!_r32all) _r32load();
   const r=_r32all.nations[nation];
   const frozen=_r32frozenNow;
-  const open='onclick="event.stopPropagation();showTab(&#39;G&#39;);if(typeof setGroupsView===&#39;function&#39;)setGroupsView(&#39;B&#39;)"';
+  const open='onclick="event.stopPropagation();showTab(&#39;K&#39;)"';
   const eye='<span>'+HT("ROUND OF 32","دور الـ32")+'</span>';
   if(!r || r.status==="tbd"){
     return '<div class="heroSec r32" '+open+'><div class="he">'+eye+'</div>'
@@ -5026,7 +5020,7 @@ if (cs_user) {
 newWeekPopup();   // signed-in users → one-time "next week's predictions are open" nudge during the early-open window
 applyLangInit();   // EN default; if AR saved → RTL + translate the UI and keep translating re-renders
 // Restore the tab the user was on before a reload / pull-to-refresh (logo→goHome still resets to Matches).
-try { const _rt = sessionStorage.getItem("cs_tab"); if (_rt && _rt !== "M" && ["G","S","P","C"].indexOf(_rt) !== -1) { window._predSkipped = true; showTab(_rt); } } catch (_) {}
+try { const _rt = sessionStorage.getItem("cs_tab"); if (_rt && _rt !== "M" && ["G","K","S","P","C"].indexOf(_rt) !== -1) { window._predSkipped = true; showTab(_rt); } } catch (_) {}
 refreshCalIcons();   // swap the fixed 📅 glyph for a live calendar showing TODAY's date
 updateAuthTog();   // header Sign in / Sign out pill
 try { updateNatLock(); } catch (_) {}
