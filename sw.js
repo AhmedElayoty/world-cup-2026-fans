@@ -2,7 +2,7 @@
    NETWORK-FIRST for the app shell (HTML) so a new deploy ALWAYS shows when online;
    cache is only a fallback for offline. Live data (ESPN/textdb/etc.) never cached.
    Static assets (icons/logo/manifest) cache-first. */
-const CACHE = "wcfans-v69";   // v69: v2.63 · Arabic KNOCKOUTS tab label restored to the full proper term "الأدوار الإقصائية" (per user). Nav buttons now flex-center + wrap (white-space:normal), so that 2-word label wraps to 2 lines INSIDE its tab while every single-word label (EN incl. "KNOCKOUTS") stays 1 line. Verified at 320px + 375px, EN+AR: no clipping, nav height stays 46px. (v2.62 had split KNOCKOUTS into its own 6th tab.)
+const CACHE = "wcfans-v70";   // v70: v2.64 · Nav tab labels made more readable (user: "headers too small"): bigger font + taller bar — font 10→11.5px (same as pre-split), nav min-height 46→54px. Responsive so 6 tabs never clip: @media ≤360px→10.5px, ≤332px→9.5px. Verified KNOCKOUTS/الأدوار الإقصائية fit clip-free at 320/360/375px, EN+AR.
 const SHELL = ["./", "./index.html", "./manifest.json", "./logo.png", "./trophy.png", "./icon-192-2.png", "./icon-512-2.png", "./icon-180-2.png", "./share-card.png"];
 
 self.addEventListener("install", e => {
