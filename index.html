@@ -352,6 +352,7 @@ html[dir="rtl"] .hero .he{letter-spacing:0}
 @media (prefers-reduced-motion:reduce){.hero .matchup.fz{animation:none;opacity:.85}}
 .pcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 13px;margin-bottom:10px}
 .pcard.lock{opacity:.78}
+.pgroup{text-align:center;margin:1px 0 9px}
 .pcard.pflash{animation:pflash 2.4s ease-out 1}
 @keyframes pflash{0%,15%{box-shadow:0 0 0 2px #e05a2b,0 0 22px rgba(224,90,43,.6)}100%{box-shadow:0 0 0 0 rgba(224,90,43,0)}}
 .prow{display:flex;align-items:center;gap:8px}
@@ -1066,7 +1067,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.56</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.57</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1389,10 +1390,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.56";
+const APP_VERSION = "2.57";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-24-v257";
+const FORCE_RELOAD = "2026-06-24-v258";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -3250,7 +3251,8 @@ function predCard(e, started) {
   } else {
     body = '<div class="prow">' + ptH + scoreInputs + ptA + '</div>';
   }
-  return '<div class="pcard' + ((started || done) ? " lock" : "") + '" id="pcard-' + e.id + '"><div class="pmeta">' + meta + '</div>' + body + action + '</div>';
+  const grp = groupLabelHTML(e);   // same group label as the match-tab key card · group stage only (empty for knockouts)
+  return '<div class="pcard' + ((started || done) ? " lock" : "") + '" id="pcard-' + e.id + '"><div class="pmeta">' + meta + '</div>' + (grp ? '<div class="pgroup">' + grp + '</div>' : '') + body + action + '</div>';
 }
 const FINAL_AFTER = "2026-07-19T10:00:00Z";   // the World Cup FINAL (kick-off ~19 Jul 19:00 UTC) is the only match on/after this instant → 10/4 scoring. Threshold sits MID-GAP: the 3rd-place match is ~18 Jul 21:00 UTC, so even a multi-hour slip/rollover (~9h margin each side) can't misclassify bronze as the final. (When ESPN adds the final to the feed, re-confirm its date stays after this.)
 function isKOEvent(e) { return !!(e && e.season && e.season.type && e.season.type !== 13802); }   // group stage = season.type 13802; anything else = knockout
