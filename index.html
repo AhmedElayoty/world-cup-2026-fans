@@ -1074,7 +1074,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.67</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.68</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1399,10 +1399,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.67";
+const APP_VERSION = "2.68";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-25-v268";
+const FORCE_RELOAD = "2026-06-25-v269";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -3032,7 +3032,10 @@ async function loadR32(){ try{
   const r=await readKey(R32_KEY,null);
   if(r && typeof r==="object" && r.nations && Object.keys(r.nations).length>=24){
     if(!_r32all) _r32load();
-    _r32all.nations=Object.assign({}, _r32all.nations, r.nations); _r32all.updated=r.updated||Date.now(); _r32save();
+    const _myNat=(typeof myNation==="function")?myNation():null, _localMine=_myNat?_r32all.nations[_myNat]:null;
+    _r32all.nations=Object.assign({}, _r32all.nations, r.nations);
+    if(_myNat && _localMine) _r32all.nations[_myNat]=_localMine;   // never let the lagging 3x/day server precompute clobber the user's OWN nation — keep its fresher locally-computed value (kills the stale↔live flicker)
+    _r32all.updated=r.updated||Date.now(); _r32save();
     if(typeof drawHero==="function") drawHero();
   }
 }catch(_){ } }
@@ -3074,13 +3077,16 @@ function computeNatR32(groups){
   if(!_r32all) _r32load();
   const anyLive=groups.some(g=>g._liveMatch || (g._played && !g._inSync));
   _r32frozenNow=anyLive;
-  const have=_r32all.nations[nation];
-  if(!anyLive || !have){ const fresh=_freshNatR32(groups, nation); if(fresh){ _r32all.nations[nation]=fresh; _r32all.updated=Date.now(); } }
+  const fresh=_freshNatR32(groups, nation);   // ALWAYS recompute the user's nation from CURRENT standings — never hold a stale cached/server value (was: froze on the cached value while live, which could be a lagging server projection → Czechia↔Cape Verde flicker)
+  if(fresh){ _r32all.nations[nation]=fresh; _r32all.updated=Date.now(); }
   _r32save();
 }
 function _heroR32Sec(nation){
   if(!_r32all) _r32load();
-  const r=_r32all.nations[nation];
+  let r=_r32all.nations[nation];
+  // the user's OWN nation: always show a FRESH live projection from the current standings when we have them — the
+  // server-precomputed cache lags (3x/day) and caused a stale↔live flicker (e.g. Czechia↔Cape Verde) on refresh.
+  try{ if(nation===myNation() && typeof _csGroups!=="undefined" && _csGroups && _csGroups.length && typeof _freshNatR32==="function"){ const live=_freshNatR32(_csGroups, nation); if(live){ r=live; _r32all.nations[nation]=live; } } }catch(_){}
   const frozen=_r32frozenNow;
   const open='onclick="event.stopPropagation();showTab(&#39;K&#39;)"';
   const eye='<span>'+HT("ROUND OF 32","دور الـ32")+'</span>';
@@ -3103,8 +3109,7 @@ function _heroR32Sec(nation){
   if(node){ const w=koWhen(node.uae); when=esc((w.dayW||"").toUpperCase()+" · "+w.time+" "+tzAbbr()); }
   const badge = _r32updating ? '<div class="bdg plain flick">&#8635; '+HT("Updating…","يُحدّث الآن…")+'</div>'
     : r.status==="conf" ? '<div class="bdg conf">&#10003; '+HT("Confirmed","مؤكد")+'</div>'
-    : frozen ? '<div class="bdg plain flick">'+HT("Updates After Live Matches Finish","يُحدّث بعد انتهاء المباريات المباشرة")+'</div>'
-    : '<div class="bdg prov">&#9888; '+HT("Still provisional","غير مؤكد بعد")+'</div>';
+    : '<div class="bdg prov">&#9888; '+HT("Still provisional","غير مؤكد بعد")+'</div>';   // value now updates live during matches, so it's simply "provisional" (no more "updates after live finish" — that implied a held/frozen value)
   return '<div class="heroSec r32" '+open+'><div class="he">'+eye+'<span class="when">'+when+'</span></div>'
     + '<div class="row"><div class="matchup'+((frozen||_r32updating)?" fz":"")+'"><span class="vs">'+HT("vs","ضد")+'</span>'
     + '<img class="heroFlag sm" src="'+esc(r.oppLogo||"")+'" alt="" onerror="this.style.visibility=&#39;hidden&#39;">'
