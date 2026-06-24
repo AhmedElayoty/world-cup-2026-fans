@@ -1057,7 +1057,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.51</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.52</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1380,10 +1380,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.51";
+const APP_VERSION = "2.52";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-23-v252";
+const FORCE_RELOAD = "2026-06-24-v253";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -2063,7 +2063,7 @@ function scoreLine(h, a, sep) { sep = sep || " - "; return (typeof LANG !== "und
 // A scoreline shown as STANDALONE text (prediction, FT result, timeline running score) — NOT flanked
 // by team columns, so it must always read "home-away". Wrap in an LTR isolate so Arabic's RTL flow
 // can't bidi-reverse the pair (bare "2-1" otherwise renders as "1-2" in an Arabic sentence).
-function scoreTag(h, a, sep) { return '<bdi dir="ltr">' + h + (sep || "-") + a + '</bdi>'; }
+function scoreTag(h, a, sep) { sep = sep || "-"; return '<bdi dir="ltr">' + ((typeof LANG !== "undefined" && LANG === "ar") ? (a + sep + h) : (h + sep + a)) + '</bdi>'; }   // Arabic: away-home to match scoreLine + the RTL team order (home on the right)
 // ===== match-card group label + live group-rank badge (group stage only; fed by the live _csGroups table) =====
 // ===== Arabic stadium + city names (web-verified) · shown only in Arabic on the match cards =====
 const VENUE_AR = {
@@ -4977,6 +4977,23 @@ if ("serviceWorker" in navigator) {
     document.addEventListener("visibilitychange", () => { if (!document.hidden) check(); });
   }).catch(() => {}));
 }
+// RELIABLE auto-update (belt-and-braces over the SW controllerchange above). GitHub Pages' CDN caches the shell +
+// sw.js for up to ~10 min, so the SW-based reload can lag (this is why a deploy sometimes needs a manual refresh).
+// Poll sw.js with a cache-buster (a unique URL bypasses the CDN edge cache) and, if the deployed build changes WHILE
+// the app is open, hard-NAVIGATE to a cache-busted URL so the fresh shell loads at once — a plain reload would just
+// re-fetch the still-cached CDN copy. _liveBuild resets on the fresh load, so it can't loop.
+let _liveBuild = null;
+function _checkBuild(){
+  fetch("sw.js?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.text() : "").then(t => {
+    const m = t.match(/CACHE\s*=\s*"([^"]+)"/); if (!m) return;
+    const v = m[1];
+    if (_liveBuild === null) { _liveBuild = v; return; }                 // baseline this session
+    if (v !== _liveBuild) { _liveBuild = v; try { location.replace(location.pathname + "?b=" + Date.now()); } catch (_) { location.reload(); } }
+  }).catch(() => {});
+}
+setTimeout(_checkBuild, 3000);
+setInterval(_checkBuild, 60000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) _checkBuild(); });
 maybeShowInstall();   // "Install to phone" bar (hidden if already installed / on home screen)
 updateInstallIcon();   // permanent header install icon (always available while not installed)
 renderHero();
