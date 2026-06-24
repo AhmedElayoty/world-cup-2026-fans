@@ -1071,7 +1071,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.60</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.61</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1394,10 +1394,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.60";
+const APP_VERSION = "2.61";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-24-v261";
+const FORCE_RELOAD = "2026-06-24-v262";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -2638,7 +2638,7 @@ function brTeamRow(node, side) {
   if (t) {
     const egy = t.name === myNation();
     const allDone = !!(_slots && _slots.allDone);
-    const conf = !r && !allDone && _confirmedSet.has(t.name);   // this team has mathematically clinched a top-2 (direct R32) spot
+    const conf = !r && !allDone && _confirmedSet.has(t.name);   // ESPN has locked this team into its exact knockout slot (opponent/venue/time fixed)
     const prov = !r && !conf && slotProvisional(slot);   // shown from the live table, position not yet locked
     const tag = conf ? ' <i class="bconf">(' + (LANG === "ar" ? "مؤكد" : "confirmed") + ')</i>' : '';
     return '<div class="brteam' + (egy ? " egy" : "") + (isWin ? " win" : "") + (isLose ? " lose" : "") + (prov ? " prov" : "") + (conf ? " conf" : "") + '"><img src="' + (t.logo || "") + '" alt="" onerror="this.style.visibility=&#39;hidden&#39;"><span class="bn">' + esc(t.name) + rankMini(t) + tag + '</span><span class="bsc">' + (sc != null ? sc : "") + '</span></div>';
@@ -2658,43 +2658,26 @@ function bracketCell(n) {
     brTeamRow(n, "h") + brTeamRow(n, "a") +
     '<div class="brv">🏟️ ' + esc(venueAr(n.st)) + (n.city ? ' · ' + esc(cityAr(n.city)) : '') + '</div></div>';
 }
-// Teams that have MATHEMATICALLY clinched a top-2 (direct R32) finish in their group — we mark these with a green
-// "(confirmed)" tag while the group stage is still running (once every group finishes, EVERY slot is confirmed and
-// the tag is dropped). NB: we do NOT trust ESPN's knockout fixtures for this — that feed is a stale seed bracket
-// (it lists 0-point teams like Jordan/Panama in the R32). We compute the lock ourselves from the live group tables.
+// Teams ESPN has LOCKED into a specific knockout slot — its exact group position (and therefore its R32 opponent,
+// venue and kickoff) is fixed. ESPN fills a knockout fixture with a REAL team only once that slot is decided; until
+// then the slot shows a placeholder ("Group C Winner", "Third Place Group …"). So a real team in a knockout event =
+// confirmed. We mark these with a green "(confirmed)" tag during the group stage; once every group finishes, EVERY
+// slot is confirmed so the tag is dropped (the banner flips to CONFIRMED instead). KEY: identify knockout events by
+// ESPN seasonType (`e.season.type` === 13802 is the WC2026 GROUP stage; ANY other type is a knockout round) — NOT by
+// matching our own BRACKET nodes: some GROUP games are played on 28 Jun and a date/venue match wrongly swept them in,
+// which made it look like ESPN listed 0-point teams (e.g. "Jordan vs Argentina" is their 3rd GROUP game, not an R32).
 let _confirmedSet = new Set();
+const _GROUP_STAGE_TYPE = 13802;   // ESPN e.season.type for the WC2026 group stage; everything else is a knockout round
 function confirmedTeams(){
   const set = new Set();
   try {
-    const groups = (typeof _csGroups !== "undefined" && _csGroups) ? _csGroups : null;
-    if (!groups || !groups.length) return set;
     const evs = (typeof seasonCache !== "undefined" && seasonCache.events) || [];
-    groups.forEach(g => {
-      const rows = rankRows((g.standings && g.standings.entries) || []);
-      if (rows.length < 4) return;                                   // need the full 4-team group to reason about it
-      const teams = rows.map(r => ({ id: (r.team || {}).id, name: (r.team || {}).displayName, p: statmap(r).points | 0, gp: statmap(r).gamesPlayed | 0 }));
-      if (teams.some(t => !t.id || !t.name)) return;
-      const ids = teams.map(t => t.id), idset = new Set(ids);
-      // remaining games = the round-robin pairs NOT yet decided in a finished (post) match. Reading only POST group
-      // results (both teams in this group) ignores the phantom knockout fixtures entirely, so the count is honest.
-      const playedPair = new Set();
-      evs.forEach(e => {
-        if (((((e.status || {}).type || {}).state)) !== "post") return;
-        const c = e.competitions && e.competitions[0]; if (!c) return;
-        const cs = (c.competitors || []).map(x => (x.team || {}).id).filter(Boolean);
-        if (cs.length === 2 && idset.has(cs[0]) && idset.has(cs[1])) playedPair.add([cs[0], cs[1]].sort().join("~"));
-      });
-      const remaining = [];
-      for (let i = 0; i < 4; i++) for (let j = i + 1; j < 4; j++) { if (!playedPair.has([ids[i], ids[j]].sort().join("~"))) remaining.push([i, j]); }
-      // brute-force every W/D/L combination of the remaining games. A team is "confirmed" (locked top-2) only if in
-      // EVERY scenario at most one other team finishes with >= its points (ties counted against it → never over-claims).
-      const base = teams.map(t => t.p), k = remaining.length, clinched = [true, true, true, true], combos = Math.pow(3, k);
-      for (let mask = 0; mask < combos; mask++) {
-        const pts = base.slice(); let m = mask;
-        for (let r = 0; r < k; r++) { const o = m % 3; m = (m - o) / 3; const a = remaining[r][0], b = remaining[r][1]; if (o === 0) pts[a] += 3; else if (o === 1) pts[b] += 3; else { pts[a] += 1; pts[b] += 1; } }
-        for (let x = 0; x < 4; x++) { if (!clinched[x]) continue; let ge = 0; for (let y = 0; y < 4; y++) if (y !== x && pts[y] >= pts[x]) ge++; if (ge > 1) clinched[x] = false; }
-      }
-      teams.forEach((t, i) => { if (clinched[i]) set.add(t.name); });
+    const ph = /\b(group|place|winner|runner|loser|tbd|1st|2nd|3rd|third|to be|qualif|seed)\b/i;   // placeholder labels, never a real country
+    evs.forEach(e => {
+      const st = (e.season || {}).type;
+      if (st == null || st === _GROUP_STAGE_TYPE) return;   // knockout-round fixtures only (skip group games + untyped, to be safe)
+      const c = e.competitions && e.competitions[0]; if (!c) return;
+      (c.competitors || []).forEach(x => { const nm = x.team && x.team.displayName; if (nm && !ph.test(nm)) set.add(nm); });   // a REAL team placed in a knockout fixture = ESPN has locked its exact slot
     });
   } catch (_) {}
   return set;
@@ -2829,7 +2812,7 @@ function bpSlotR(node, side, x, top, w, sh, scale){
     o+='<image href="'+(team.logo||"")+'" x="'+fx+'" y="'+fy+'" width="'+tileW+'" height="'+tileH+'" preserveAspectRatio="xMidYMid meet" clip-path="url(#bpc'+node.n+side+')"'+(win&&!isWin?' opacity="0.6"':"")+'/>';
     const fill=egy?BPC.nat:(isWin?BPC.win:(win&&!isWin?BPC.lose:BPC.txt));
     if(isWin&&!egy&&node.n!==104) o+='<rect x="'+(x+2)+'" y="'+(top+4)+'" width="3" height="'+(sh-8)+'" rx="1.5" fill="'+BPC.win+'"/>';
-    const _conf=!r && !(_slots&&_slots.allDone) && typeof _confirmedSet!=="undefined" && _confirmedSet.has(team.name);   // clinched top-2 (direct R32) — same lock as the inline bracket
+    const _conf=!r && !(_slots&&_slots.allDone) && typeof _confirmedSet!=="undefined" && _confirmedSet.has(team.name);   // ESPN-locked into its exact knockout slot (same set as the inline bracket)
     o+='<text x="'+nameX+'" y="'+(_conf?cy-ns*0.30:cy)+'" dominant-baseline="central" font-family="Oswald" font-weight="'+(isWin?700:600)+'" font-size="'+ns+'"'+bpBidi()+' fill="'+fill+'">'+esc(bpTrunc(bpT(team.name),scale&&scale>1.2?16:18))+'</text>';
     if(_conf){ const _ct=(typeof LANG!=="undefined"&&LANG==="ar")?"(مؤكد)":"(confirmed)"; o+='<text x="'+nameX+'" y="'+(cy+ns*0.52)+'" dominant-baseline="central" font-family="Oswald" font-weight="700" font-size="'+(ns*0.46).toFixed(1)+'" letter-spacing="0.4"'+bpBidi()+' fill="'+BPC.nat+'">'+esc(_ct)+'</text>'; }
     if(score!=null){ const sx=x+w-12;
