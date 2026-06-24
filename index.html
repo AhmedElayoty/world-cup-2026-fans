@@ -117,8 +117,8 @@ html[dir="rtl"] .hr-meta{text-align:left}
 .dot.bad{background:var(--red)}
 /* tabs */
 nav{display:flex;background:transparent;border-top:1px solid var(--line)}
-nav button{flex:1;background:none;border:none;color:var(--mut);font-family:'Oswald';font-weight:600;white-space:nowrap;
- font-size:10px;letter-spacing:.3px;padding:12px 1px 10px;cursor:pointer;border-bottom:2.5px solid transparent;position:relative}
+nav button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;line-height:1.12;background:none;border:none;color:var(--mut);font-family:'Oswald';font-weight:600;white-space:normal;
+ font-size:10px;letter-spacing:.3px;padding:6px 2px;cursor:pointer;border-bottom:2.5px solid transparent;position:relative}
 nav button.on{color:#fff;border-bottom-color:var(--rust2)}
 nav button{min-height:46px}
 .navbadge{position:absolute;top:5px;left:calc(50% + 13px);min-width:16px;height:16px;padding:0 4px;border-radius:9px;background:var(--rust2);color:#fff;font-family:'Inter';font-weight:700;font-size:9.5px;line-height:16px;text-align:center;display:none;box-shadow:0 0 0 2px var(--navy)}
@@ -1072,7 +1072,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.62</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.63</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1395,10 +1395,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.62";
+const APP_VERSION = "2.63";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-24-v263";
+const FORCE_RELOAD = "2026-06-24-v264";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -1558,7 +1558,7 @@ const AR = {
   "NEXT WEEK'S PREDICTIONS":"توقّعات الأسبوع القادم","PREDICT NOW ⚽":"توقّع الآن ⚽","NICE ⚽":"تمام ⚽","GOT IT ⚽":"حسناً ⚽","LET'S GO ⚽":"يلا بينا ⚽",
   "🏆 LEADING THE TABLE":"🏆 متصدّر الترتيب","🏆 OVERALL CHAMPION":"🏆 البطل العام","World Cup 2026 Prediction Champion!":"برنس توقّعات كأس العالم 2026!","the final still decides the overall winner":"النهائي هو من يحسم البطل العام",
   // groups
-  "KNOCKOUTS":"الإقصائيات","GROUP STANDINGS":"ترتيب المجموعات","Loading standings…":"جارٍ تحميل الترتيب…",
+  "KNOCKOUTS":"الأدوار الإقصائية","GROUP STANDINGS":"ترتيب المجموعات","Loading standings…":"جارٍ تحميل الترتيب…",
   "QUALIFY":"يتأهّل","BEST THIRD":"أفضل ثالث","OUT":"خارج","DRAW":"تعادل","DRAWS":"تعادلات","DRAWN":"تعادل",
   // chat
   "Loading chat…":"جارٍ تحميل الدردشة…","Message the team…":"راسل الفريق…","SEND":"إرسال","SIGN IN":"تسجيل الدخول",
