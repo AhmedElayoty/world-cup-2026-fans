@@ -1074,7 +1074,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.68</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.69</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1399,10 +1399,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.68";
+const APP_VERSION = "2.69";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-25-v269";
+const FORCE_RELOAD = "2026-06-25-v270";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -2313,7 +2313,11 @@ function liveClk(st){
 // Compact LIVE NOW strip at the top of Matches: each in-progress match as flag · ABBR · score · ABBR · flag · minute.
 function renderLiveSummary() {
   const box = $("liveSummary"); if (!box) return;
-  const live = (_liveNow || []).filter(e => e.status && e.status.type && e.status.type.state === "in");   // tournament-wide live set · persists across date browsing (never tied to the selected date)
+  const live = (_liveNow || []).filter(e => {   // tournament-wide live set · persists across date browsing (never tied to the selected date) · defensive: only renderable in-progress matches so a null/malformed entry can't crash the strip
+    if (!e || !e.competitions || !e.competitions[0] || !e.status || !e.status.type || e.status.type.state !== "in") return false;
+    const cs = e.competitions[0].competitors || [], H = cs.find(x => x.homeAway === "home"), A = cs.find(x => x.homeAway === "away");
+    return H && A && H.team && A.team;
+  });
   if (!live.length) { box.className = ""; box.style.display = "none"; box.innerHTML = ""; return; }
   const nm = t => { const dn = t.team.displayName || t.team.shortDisplayName || t.team.abbreviation || ""; return esc((typeof LANG !== "undefined" && LANG === "ar") ? tAR(dn) : dn); };   // FULL names · translated to Arabic in Arabic mode
   const fl = t => { const u = t.team.logo || (t.team.logos && t.team.logos[0] && t.team.logos[0].href) || ""; return u ? '<img src="' + esc(u) + '" alt="" onerror="this.style.visibility=\'hidden\'">' : ''; };
@@ -3128,7 +3132,10 @@ function drawHero() {
     + '<span class="heroChange" onclick="event.stopPropagation();pickMyNation(event)">'+HT("CHANGE NATION","تغيير المنتخب")+' ⚙</span></div>';
   let nextSec;
   const e=heroEvent;
-  if(!e){
+  const _hc=(e&&e.competitions&&e.competitions[0]&&e.competitions[0].competitors)||null;
+  const _hH=_hc&&_hc.find(x=>x.homeAway==="home"), _hA=_hc&&_hc.find(x=>x.homeAway==="away");
+  const _eOK=!!(e && _hH && _hA && _hH.team && _hA.team && e.status && e.status.type && !isNaN(new Date(e.date).getTime()));   // defensive: a malformed heroEvent falls back to "no upcoming match" instead of throwing on the home screen
+  if(!_eOK){
     nextSec='<div class="heroSec"><div class="he"><span>'+HT("NEXT MATCH","المباراة القادمة")+'</span></div>'
       + '<div class="row"><div class="r32sub">'+HT("No upcoming match","لا مباراة قادمة")+'</div></div></div>';
   } else {
@@ -3255,8 +3262,10 @@ function gotoMatch(id){   // predict card → Matches tab, jump to the match's d
 }
 function gotoPredict(id){ _predTarget = id; try { showTab("P"); } catch (_) {} }   // match card → Predictions tab; renderPredict scrolls to + flashes pcard-<id> once it paints (no race with the async re-render)
 function predCard(e, started) {
+  if (!e || !e.competitions || !e.competitions[0] || !e.competitions[0].competitors) return "";   // defensive: skip a malformed event instead of throwing (the finished/recent section isn't pre-filtered)
   const c = e.competitions[0];
   const H = c.competitors.find(x => x.homeAway === "home"), A = c.competitors.find(x => x.homeAway === "away");
+  if (!H || !A || !H.team || !A.team) return "";   // defensive: skip a fixture missing a competitor/team
   const p = myPreds[e.id] || {};
   const done = p.locked === true;
   const ko = new Date(e.date);
