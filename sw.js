@@ -2,7 +2,7 @@
    NETWORK-FIRST for the app shell (HTML) so a new deploy ALWAYS shows when online;
    cache is only a fallback for offline. Live data (ESPN/textdb/etc.) never cached.
    Static assets (icons/logo/manifest) cache-first. */
-const CACHE = "wcfans-v63";   // v63: v2.57 · Prediction cards now also show the GROUP NAME (Group X / المجموعة X) centered above the two teams, same groupLabelHTML as the match-tab key card — group-stage only (hidden for knockouts). New .pgroup centered row.
+const CACHE = "wcfans-v64";   // v64: v2.58 · Prediction cards get a "VIEW MATCH CARD" link (gotoMatch) — opens the Matches tab on that match's day with the card expanded + scrolled (mirror of the match-tab "PREDICT THIS MATCH" → gotoPredict). Verified round-trip both ways, EN+AR.
 const SHELL = ["./", "./index.html", "./manifest.json", "./logo.png", "./trophy.png", "./icon-192-2.png", "./icon-512-2.png", "./icon-180-2.png", "./share-card.png"];
 
 self.addEventListener("install", e => {
