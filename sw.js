@@ -2,7 +2,7 @@
    NETWORK-FIRST for the app shell (HTML) so a new deploy ALWAYS shows when online;
    cache is only a fallback for offline. Live data (ESPN/textdb/etc.) never cached.
    Static assets (icons/logo/manifest) cache-first. */
-const CACHE = "wcfans-v59";   // v59: v2.53 · Knockouts bracket + poster now show the PROVISIONAL R32 (current top-2 of every group, italic) with a "NOT CONFIRMED YET" banner/badge (EN+AR); 8 best-third spots stay TBD; flips to "GROUPS COMPLETE · KNOCKOUTS CONFIRMED" (labels gone, teams solid) once every group plays all 3. resolveSlots fills W/R once a group has kicked off.
+const CACHE = "wcfans-v60";   // v60: v2.54 · Bracket + poster now fill ALL 32 R32 slots provisionally — the 8 best-third spots use the SAME in-app Annexe-C system (NAT_ANNEXE) as the match-tab green box, so they agree (verified Egypt→Czechia M82). Still "NOT CONFIRMED YET" (italic) until every group plays all 3, then locks.
 const SHELL = ["./", "./index.html", "./manifest.json", "./logo.png", "./trophy.png", "./icon-192-2.png", "./icon-512-2.png", "./icon-180-2.png", "./share-card.png"];
 
 self.addEventListener("install", e => {
