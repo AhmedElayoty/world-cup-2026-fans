@@ -1,0 +1,56 @@
+name: Push send
+
+# Sends Web Push notifications to the app's subscribers (kick-off reminders + manual
+# broadcasts). FREE: this is a PUBLIC repo, so GitHub Actions minutes are unlimited.
+# A best-effort schedule of ~every 10 min is plenty for a 30-40 min-before kick-off
+# reminder (each alert is de-duplicated by id, so it goes out only once).
+#
+# Subscriptions live in textdb key  capriole_wc26_push_subs , written by the app's
+# Settings -> "Match alerts" toggle. The VAPID PRIVATE key is the repo secret
+# VAPID_PRIVATE_KEY (the public half + subject are constants in the script).
+#
+# Manual TEST:      Actions tab -> "Push send" -> Run workflow -> tick "test" -> Run.
+# Manual BROADCAST: set textdb key  capriole_wc26_push_broadcast  to
+#   {"id":"any-unique-id","title":"Your title","body":"Your message","url":"./index.html"}
+#   and it goes out on the next tick (change the id to send again).
+#
+# LONGEVITY: GitHub auto-disables scheduled workflows in a public repo after 60 days
+# with no new commits. The tournament ends well before that; if you keep using it,
+# any commit resets the clock. Set repo Variable HEALTHCHECK_URL_PUSH for a free
+# dead-man's-switch ping on every success (left empty, the ping is skipped).
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+    inputs:
+      test:
+        description: "Send a one-off test notification to all subscribers"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: push-send
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      - name: Install web-push
+        run: npm install web-push@3 --no-audit --no-fund
+      - name: Send push
+        env:
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          PUSH_TEST: ${{ inputs.test }}
+          HEALTHCHECK_URL_PUSH: ${{ vars.HEALTHCHECK_URL_PUSH }}
+        run: node .github/scripts/push-send.mjs
