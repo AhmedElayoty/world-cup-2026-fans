@@ -307,8 +307,8 @@ html[dir="rtl"] .team.away img{box-shadow:-3px 0 0 0 var(--cyan)}
  color:var(--txt);font-size:15px;padding:12px 14px;outline:none;text-align:center;margin-bottom:12px}
 #nameModal button{width:100%;background:var(--rust);border:none;color:#fff;font-family:'Oswald';
  font-weight:600;letter-spacing:1.5px;font-size:14px;border-radius:12px;padding:13px;cursor:pointer}
-.secrow{display:flex;align-items:center;gap:8px;margin:2px 0 12px}
-.sect{font-family:'Oswald';font-weight:600;font-size:13px;letter-spacing:2px;color:var(--mut)}
+.secrow{display:flex;flex-wrap:nowrap;align-items:center;gap:8px;margin:2px 0 12px;overflow:hidden}
+.sect{font-family:'Oswald';font-weight:600;font-size:13px;letter-spacing:2px;color:var(--mut);white-space:nowrap;flex:0 0 auto}
 .scorekey{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:-4px 0 13px;font-family:'Oswald'}
 .scorekey .sklbl{font-size:10px;letter-spacing:1.4px;color:var(--mut);font-weight:600}
 .skpill{display:inline-flex;align-items:center;gap:6px;font-size:11px;letter-spacing:.6px;color:var(--txt);background:var(--card2);border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-weight:500}
@@ -1077,7 +1077,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.75</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.76</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1402,10 +1402,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.75";
+const APP_VERSION = "2.76";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-25-v276";
+const FORCE_RELOAD = "2026-06-25-v277";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -3229,10 +3229,10 @@ async function renderPredict() {
     const isClosed = e => (new Date(e.date) - now) < 1800000;                                  // within 30 min of kick-off → prediction closed
     const todo = predictable.filter(e => !isClosed(e) && !hasPred(myPreds[e.id])).sort(byDate); // OPEN and not yet predicted → your to-do, first
     const done = predictable.filter(e =>  isClosed(e) ||  hasPred(myPreds[e.id])).sort(byDate);  // predicted (or closed) → sink below
-    const note = '<span style="margin-left:auto;font-size:10px;color:var(--dim);font-family:Oswald;letter-spacing:1px">ONE SUBMISSION · CLOSES 30 MIN BEFORE KICK-OFF</span>';
+    const note = '<span style="margin-left:auto;font-size:10px;color:var(--dim);font-family:Oswald;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">CLOSES 30 MIN BEFORE KICK-OFF</span>';
     let html = "";
     if (todo.length) {
-      const lab = (typeof LANG !== "undefined" && LANG === "ar") ? "⚽ توقّعها الآن" : ("⚽ PREDICT NOW · " + todo.length + " LEFT");
+      const lab = (typeof LANG !== "undefined" && LANG === "ar") ? "توقّعها الآن" : ("PREDICT NOW · " + todo.length + " LEFT");
       html += '<div class="secrow" style="margin-top:2px"><span class="sect" style="color:var(--gold)">' + lab + '</span>' + note + '</div>' +
         todo.map(e => predCard(e, false)).join("");
     }
