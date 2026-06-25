@@ -397,6 +397,7 @@ html[dir="rtl"] .hero .he{letter-spacing:0}
 .infomodal .irow div{font-size:12.5px;color:#cdd8f5;line-height:1.45}
 .infomodal .irow b{color:#fff}
 .infomodal .igo{width:100%;margin-top:10px;background:var(--rust);border:none;color:#fff;font-family:'Oswald';font-weight:700;letter-spacing:1px;font-size:14px;padding:13px;border-radius:12px;cursor:pointer}
+.infomodal .ino{width:100%;margin-top:8px;background:none;border:none;color:var(--mut);font-family:'Oswald';font-weight:600;letter-spacing:1px;font-size:13px;padding:10px;border-radius:12px;cursor:pointer}
 .infomodal .cfrow{display:flex;gap:10px;margin-top:8px}
 .infomodal .cfrow button{flex:1;font-family:'Oswald';font-weight:700;letter-spacing:.8px;font-size:13.5px;padding:13px;border-radius:12px;cursor:pointer}
 .infomodal .cfno{background:var(--navy2);border:1px solid var(--line);color:var(--txt)}
@@ -1087,7 +1088,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.84</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.85</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1413,10 +1414,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.84";
+const APP_VERSION = "2.85";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-25-v285";
+const FORCE_RELOAD = "2026-06-25-v286";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -3579,6 +3580,26 @@ function maybeShowPushBar(force){
     bar.style.display = "flex";
   }catch(_){ bar.style.display = "none"; }
 }
+/* First-open "Allow notifications" POPUP (center modal, Allow + Not now). Shows itself once; after that the quiet bottom bar handles any gentle re-ask. */
+function showPushPopup(){
+  const ar = (typeof LANG !== "undefined" && LANG === "ar");
+  showInfo(ar
+    ? '<h3>🔔 فعّل تنبيهات المباريات</h3><p>تذكير قبل انطلاق المباريات، الأهداف، نتيجة منتخبك، وبطل التوقّعات الأسبوعي.</p><p style="font-size:12px;color:var(--mut);margin-top:-4px">الأهداف تصل متأخّرة 3 دقائق حتى لا تُفسد متعة البث البطيء · يمكنك الإيقاف في أي وقت من الإعدادات.</p><button class="igo" onclick="pushPromptAllow()">تفعيل التنبيهات</button><button class="ino" onclick="pushPromptCancel()">ليس الآن</button>'
+    : '<h3>🔔 Turn on match alerts</h3><p>A heads-up before kick-off, goals, your nation\'s results, and the weekly Prediction Champion.</p><p style="font-size:12px;color:var(--mut);margin-top:-4px">Goals arrive 3 min late so slow streams aren\'t spoiled · turn off anytime in Settings.</p><button class="igo" onclick="pushPromptAllow()">Allow alerts</button><button class="ino" onclick="pushPromptCancel()">Not now</button>');
+}
+function pushPromptAllow(){ try{ localStorage.setItem("cs_push_popupSeen","1"); }catch(_){} try{ closeInfo(); }catch(_){} enablePush(); }   // their tap → fires the real system permission dialog
+function pushPromptCancel(){ try{ localStorage.setItem("cs_push_popupSeen","1"); }catch(_){} try{ closeInfo(); }catch(_){} }   // declined → quiet bottom bar may re-ask later; no more modal
+function maybeShowPushPrompt(force){
+  try{
+    if(force){ showPushPopup(); return; }   // ?bar=push test trigger → preview the popup
+    if(typeof pushSupported !== "function" || !pushSupported() || !isStandaloneApp()) return;   // installed / home-screen app only
+    if(Notification.permission !== "default") return;                 // already allowed (granted) or blocked (denied) → never prompt
+    if(localStorage.getItem("cs_push_optout") === "1") return;          // turned off in Settings / dismissed the bar → never again
+    if(localStorage.getItem("cs_push_popupSeen") === "1"){ maybeShowPushBar(); return; }   // already saw the popup once → fall back to the quiet bottom bar
+    try{ localStorage.setItem("cs_push_popupSeen","1"); }catch(_){}    // the center popup auto-appears exactly ONCE
+    showPushPopup();
+  }catch(_){}
+}
 function installApp(){ showInfo(installInstructionsHtml()); }
 function installInstructionsHtml(){
   const ar = (typeof LANG !== "undefined" && LANG === "ar");
@@ -5237,7 +5258,7 @@ setTimeout(_checkBuild, 3000);
 setInterval(_checkBuild, 60000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) _checkBuild(); });
 maybeShowInstall();   // "Install to phone" bar (hidden if already installed / on home screen)
-setTimeout(function(){ try{ var _fb=false; try{ _fb = new URLSearchParams(location.search||"").get("bar")==="push"; }catch(_){} maybeShowPushBar(_fb); }catch(_){} }, 1200);   // "Allow notifications" bar · installed users who haven't decided yet (mutually exclusive with the install bar). ?bar=push force-shows it for testing.
+setTimeout(function(){ try{ var _fb=false; try{ _fb = new URLSearchParams(location.search||"").get("bar")==="push"; }catch(_){} maybeShowPushPrompt(_fb); }catch(_){} }, 1200);   // first-open "Allow notifications" popup for installed users who haven't decided (then a quiet bottom bar). ?bar=push force-shows it for testing.
 updateInstallIcon();   // permanent header install icon (always available while not installed)
 renderHero();
 setInterval(renderHero, 300000);
