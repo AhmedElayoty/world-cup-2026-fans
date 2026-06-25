@@ -1,9 +1,13 @@
 name: Push send
 
-# Sends Web Push notifications to the app's subscribers (kick-off reminders + manual
-# broadcasts). FREE: this is a PUBLIC repo, so GitHub Actions minutes are unlimited.
-# A best-effort schedule of ~every 10 min is plenty for a 30-40 min-before kick-off
-# reminder (each alert is de-duplicated by id, so it goes out only once).
+# Sends Web Push notifications to the app's subscribers: chat, prediction reminders,
+# kick-off (30/5 min), line-ups, goals (delayed >=3 min), final score, nation qualified,
+# next-week-open, knockout-confirmed, weekly champion, and manual broadcasts.
+# FREE: this is a PUBLIC repo, so GitHub Actions minutes are unlimited.
+# Runs every ~5 min so goal alerts can land in the 3-5 min window. Each alert is
+# de-duplicated by id (capriole_wc26_push_sent), so it goes out exactly once.
+# First run with an empty sent-log SEEDS the current state (sends nothing) so a cold
+# start never backfills old results.
 #
 # Subscriptions live in textdb key  capriole_wc26_push_subs , written by the app's
 # Settings -> "Match alerts" toggle. The VAPID PRIVATE key is the repo secret
@@ -20,7 +24,7 @@ name: Push send
 # dead-man's-switch ping on every success (left empty, the ping is skipped).
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
     inputs:
       test:
