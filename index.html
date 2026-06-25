@@ -1082,7 +1082,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.80</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.81</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1407,10 +1407,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.80";
+const APP_VERSION = "2.81";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-25-v281";
+const FORCE_RELOAD = "2026-06-25-v282";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -3631,7 +3631,12 @@ async function disablePush(){
 }
 async function savePushSub(sub){
   const j = sub.toJSON ? sub.toJSON() : sub;
-  const rec = { endpoint:j.endpoint, keys:j.keys, nat:(typeof myNation==="function"?(myNation()||""):""), ts:Date.now(), ua:(navigator.userAgent||"").slice(0,120) };
+  const rec = { endpoint:j.endpoint, keys:j.keys,
+    nat:(typeof myNation==="function"?(myNation()||""):""),
+    uid:((typeof cs_user!=="undefined"&&cs_user&&cs_user.uid)||(typeof myId!=="undefined"?myId:"")||""),
+    name:((typeof cs_user!=="undefined"&&cs_user&&cs_user.username)||""),
+    lang:(typeof LANG!=="undefined"?LANG:"en"),
+    ts:Date.now(), ua:(navigator.userAgent||"").slice(0,120) };   // uid+name+lang let the sender personalise (your predictions, your nation, your language) and skip your own chat messages
   for(let t=0;t<3;t++){
     let list; try{ list = await readKey(PUSH_SUBS_KEY, [], true); }catch(_){ list=null; }
     if(!Array.isArray(list)) list = [];
@@ -5154,6 +5159,15 @@ applyLangInit();   // EN default; if AR saved → RTL + translate the UI and kee
 try { const _rt = sessionStorage.getItem("cs_tab"); if (_rt && _rt !== "M" && ["G","K","S","P","C"].indexOf(_rt) !== -1) { window._predSkipped = true; showTab(_rt); } } catch (_) {}
 refreshCalIcons();   // swap the fixed 📅 glyph for a live calendar showing TODAY's date
 try{ refreshPushUI(); }catch(_){}   // reflect the current Match-alerts on/off state in the Settings sheet
+// Notification deep-link: when the app is opened from a push (?go=chat|predict|match|leaderboard[&m=<id>]) jump to the right place.
+setTimeout(function(){ try{
+  const p = new URLSearchParams(location.search||""); const go = p.get("go"); if(!go) return; const m = p.get("m");
+  const tab = ({chat:"C",predict:"P",match:"M",leaderboard:"P"})[go];
+  if(tab && typeof showTab==="function") showTab(tab);
+  if(go==="predict" && m && typeof gotoPredict==="function") gotoPredict(m);
+  else if(go==="match" && m && typeof goLive==="function") goLive(m);
+  try{ history.replaceState(null,"",location.pathname); }catch(_){}   // clean the URL so a later refresh does not re-trigger
+}catch(_){} }, 250);
 updateAuthTog();   // header Sign in / Sign out pill
 try { updateNatLock(); } catch (_) {}
 postFunFactBots();   // daily: 2 chat posts (AR + EN) of today's On This Day facts (dedup by id → once/day)
