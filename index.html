@@ -1017,6 +1017,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
   <div class="sheet" id="setSheet" role="dialog" aria-label="Display settings" hidden>
    <div class="sheet__top"><span class="sheet__ttl">Settings</span><button type="button" class="sheet__x" onclick="closeSettings()" aria-label="Close settings">&#215;</button></div>
    <button type="button" class="sheet__install" id="installRow" onclick="installApp()" aria-label="Install app"><span class="sheet__install-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 3v10m0 0l-4-4m4 4l4-4M5 19h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="sheet__install-txt"><span class="sheet__install-title">Install app</span><span class="sheet__install-sub">Add to your home screen</span></span><svg class="sheet__install-caret" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+   <div class="sheet__row" id="alertsRow"><span class="sheet__lab" id="alertsLab">&#128276; Match alerts</span><div class="seg" id="alertsTog" role="radiogroup" aria-labelledby="alertsLab"><button class="seg__btn is-on" type="button" id="alertsOff" onclick="setPush(false)">OFF</button><button class="seg__btn" type="button" id="alertsOn" onclick="setPush(true)">ON</button></div></div>
    <div class="sheet__row"><label class="sheet__lab" for="tzSel">Time zone</label><div class="sheet__ctrl"><select class="tzsel" id="tzSel" onchange="setTZ(this.value)" aria-label="Time zone"></select></div></div>
    <div class="sheet__row"><span class="sheet__lab" id="fmtLab">Time format</span><div class="seg" id="fmtTog" role="radiogroup" aria-labelledby="fmtLab"><button class="seg__btn is-on" type="button" data-h12="1" onclick="setHour12(true)">AM·PM</button><button class="seg__btn" type="button" data-h12="0" onclick="setHour12(false)">24H</button></div></div>
    <div class="sheet__row"><span class="sheet__lab" id="langLab">Language</span><div class="seg" id="langTog" role="radiogroup" aria-labelledby="langLab"><button class="seg__btn is-on" type="button" data-lang="en" onclick="setLang('en')">EN</button><button class="seg__btn seg__btn--ar" type="button" data-lang="ar" onclick="setLang('ar')">عربي</button></div></div>
@@ -1081,7 +1082,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.79</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.80</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1406,10 +1407,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.79";
+const APP_VERSION = "2.80";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-25-v280";
+const FORCE_RELOAD = "2026-06-25-v281";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -2360,7 +2361,7 @@ function updateAuthTog() {   // header auth button: Sign in (logged out → logi
   try { updateNatLock(); } catch (_) {}   // keep the nation-search placeholder language-correct
 }
 // settings sheet (timezone / format / language) opened from the TZ chip
-function toggleSettings(e){ if(e) e.stopPropagation(); const sh=$("setSheet"); if(!sh) return; if(sh.hasAttribute("hidden")){ sh.removeAttribute("hidden"); const b=$("setBtn"); if(b) b.setAttribute("aria-expanded","true"); } else closeSettings(); }
+function toggleSettings(e){ if(e) e.stopPropagation(); const sh=$("setSheet"); if(!sh) return; if(sh.hasAttribute("hidden")){ sh.removeAttribute("hidden"); const b=$("setBtn"); if(b) b.setAttribute("aria-expanded","true"); try{ refreshPushUI(); }catch(_){} } else closeSettings(); }
 function closeSettings(){ const sh=$("setSheet"); if(sh && !sh.hasAttribute("hidden")){ sh.setAttribute("hidden",""); const b=$("setBtn"); if(b) b.setAttribute("aria-expanded","false"); } }
 addEventListener("click", e => { const sh=$("setSheet"); if(sh && !sh.hasAttribute("hidden") && e.target && e.target.closest && !e.target.closest("#setSheet") && !e.target.closest("#setBtn")) closeSettings(); });
 addEventListener("keydown", e => { if(e.key === "Escape") closeSettings(); });
@@ -3577,6 +3578,87 @@ function installInstructionsHtml(){
     steps + btn;
 }
 function updateInstallIcon(){ const sh = $("setSheet"); if(sh) sh.classList.toggle("is-installable", !isStandaloneApp()); }   // shows the "Install app" row inside the Settings sheet whenever not installed (iOS too → Safari steps)
+
+/* ===== Web Push: subscribe / unsubscribe + store the subscription in textdb (sent by the GitHub Action) ===== */
+const PUSH_SUBS_KEY = "capriole_wc26_push_subs";   // textdb array of {endpoint, keys:{p256dh,auth}, nat, ts, ua} · shared by both site instances · the push-send.mjs Action reads + prunes it
+const VAPID_PUBLIC  = "BI4pbMHsPCfia1nngQUbb_LpBT6BjrULPMbQ-p5qfSNrGrbuBzr2vrMm3MuluKZ-oiA-OuOQ0TmrVDTpSRg2p2I";   // public half only · the private key lives ONLY as a GitHub Actions secret in world-cup-2026-fans
+function _urlB64ToU8(b64){ const pad="=".repeat((4-b64.length%4)%4); const s=(b64+pad).replace(/-/g,"+").replace(/_/g,"/"); const raw=atob(s); const u=new Uint8Array(raw.length); for(let i=0;i<raw.length;i++) u[i]=raw.charCodeAt(i); return u; }
+const pushSupported = () => ("serviceWorker" in navigator) && ("PushManager" in window) && ("Notification" in window);
+const _isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent||"") || ((navigator.platform==="MacIntel") && (navigator.maxTouchPoints||0)>1);
+function setPush(on){ if(on) enablePush(); else disablePush(); }
+async function enablePush(){
+  const ar = (typeof LANG!=="undefined" && LANG==="ar");
+  if(!pushSupported()){
+    if(_isIOS() && !isStandaloneApp())
+      showInfo(ar
+        ? '<h3>&#128276; تفعيل التنبيهات على الآيفون</h3><p>على الآيفون تعمل الإشعارات فقط بعد إضافة التطبيق إلى الشاشة الرئيسية. اضغط زر المشاركة &#11014;&#65039; ثم «إضافة إلى الشاشة الرئيسية»، وافتح التطبيق من تلك الأيقونة، ثم فعّل التنبيهات من هنا.</p><button class="igo" onclick="closeInfo()">حسناً</button>'
+        : '<h3>&#128276; Turn on alerts (iPhone)</h3><p>On iPhone, notifications only work after the app is on your Home Screen. Tap the Share button &#11014;&#65039;, choose <b>Add to Home Screen</b>, open the app from that icon, then switch alerts on here.</p><button class="igo" onclick="closeInfo()">GOT IT</button>');
+    else
+      showInfo(ar
+        ? '<h3>&#128276; التنبيهات غير مدعومة</h3><p>متصفّحك لا يدعم إشعارات الويب. جرّب Chrome على أندرويد، أو ثبّت التطبيق على الشاشة الرئيسية.</p><button class="igo" onclick="closeInfo()">حسناً</button>'
+        : '<h3>&#128276; Notifications not supported</h3><p>This browser can\'t show web notifications. Try Chrome on Android, or install the app to your Home Screen.</p><button class="igo" onclick="closeInfo()">GOT IT</button>');
+    refreshPushUI(); return;
+  }
+  let perm; try{ perm = await Notification.requestPermission(); }catch(_){ perm = Notification.permission; }
+  if(perm!=="granted"){
+    showInfo(ar
+      ? '<h3>&#128276; التنبيهات محظورة</h3><p>التنبيهات مرفوضة في إعدادات المتصفّح. فعّلها من إعدادات الموقع لتصلك تنبيهات المباريات.</p><button class="igo" onclick="closeInfo()">حسناً</button>'
+      : '<h3>&#128276; Notifications blocked</h3><p>Notifications are turned off in your browser settings. Enable them for this site to get match alerts.</p><button class="igo" onclick="closeInfo()">GOT IT</button>');
+    refreshPushUI(); return;
+  }
+  try{
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if(!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:_urlB64ToU8(VAPID_PUBLIC) });
+    await savePushSub(sub);
+    localStorage.setItem("cs_push_on","1");
+    showInfo(ar
+      ? '<h3>&#128276; تم تفعيل التنبيهات</h3><p>سنذكّرك قبل انطلاق المباريات وبالأخبار المهمّة. يمكنك الإيقاف في أي وقت من الإعدادات.</p><button class="igo" onclick="closeInfo()">رائع</button>'
+      : '<h3>&#128276; Alerts on!</h3><p>You\'ll get a heads-up before kick-off and for big updates. Turn it off anytime in Settings.</p><button class="igo" onclick="closeInfo()">NICE</button>');
+  }catch(e){
+    showInfo('<h3>&#128276; Couldn\'t enable alerts</h3><p>'+esc((e&&e.message)||"Unknown error")+'</p><button class="igo" onclick="closeInfo()">OK</button>');
+  }
+  refreshPushUI();
+}
+async function disablePush(){
+  try{
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    if(sub){ const ep=sub.endpoint; try{ await sub.unsubscribe(); }catch(_){} await removePushSub(ep); }
+  }catch(_){}
+  localStorage.removeItem("cs_push_on");
+  refreshPushUI();
+}
+async function savePushSub(sub){
+  const j = sub.toJSON ? sub.toJSON() : sub;
+  const rec = { endpoint:j.endpoint, keys:j.keys, nat:(typeof myNation==="function"?(myNation()||""):""), ts:Date.now(), ua:(navigator.userAgent||"").slice(0,120) };
+  for(let t=0;t<3;t++){
+    let list; try{ list = await readKey(PUSH_SUBS_KEY, [], true); }catch(_){ list=null; }
+    if(!Array.isArray(list)) list = [];
+    const i = list.findIndex(s=>s && s.endpoint===rec.endpoint);
+    if(i>=0) list[i]=rec; else list.push(rec);
+    try{ await writeKey(PUSH_SUBS_KEY, list); }catch(_){ await new Promise(r=>setTimeout(r,300)); continue; }
+    try{ const chk = await readKey(PUSH_SUBS_KEY, [], true); if(Array.isArray(chk) && chk.some(s=>s&&s.endpoint===rec.endpoint)) return; }catch(_){}
+    await new Promise(r=>setTimeout(r,300));
+  }
+}
+async function removePushSub(ep){
+  for(let t=0;t<3;t++){
+    let list; try{ list = await readKey(PUSH_SUBS_KEY, [], true); }catch(_){ list=null; }
+    if(!Array.isArray(list)) return;
+    const next = list.filter(s=>s && s.endpoint!==ep);
+    try{ await writeKey(PUSH_SUBS_KEY, next); return; }catch(_){ await new Promise(r=>setTimeout(r,300)); }
+  }
+}
+async function refreshPushUI(){
+  const row = $("alertsRow"); if(!row) return;
+  const ar = (typeof LANG!=="undefined" && LANG==="ar");
+  const lab = $("alertsLab"); if(lab) lab.textContent = ar ? "🔔 تنبيهات المباريات" : "🔔 Match alerts";
+  let on=false;
+  try{ if(pushSupported() && Notification.permission==="granted"){ const reg=await navigator.serviceWorker.ready; const sub=await reg.pushManager.getSubscription(); on=!!sub; } }catch(_){}
+  const onB=$("alertsOn"), offB=$("alertsOff");
+  if(onB&&offB){ onB.classList.toggle("is-on",on); offB.classList.toggle("is-on",!on); onB.textContent=ar?"تشغيل":"ON"; offB.textContent=ar?"إيقاف":"OFF"; }
+}
 addEventListener("beforeinstallprompt", e => { e.preventDefault(); _installPrompt = e; maybeShowInstall(); updateInstallIcon(); });
 addEventListener("appinstalled", () => { _installPrompt = null; hideInstallBar(); updateInstallIcon(); });
 function predictPopups(koUp) {   // one-time per user, on opening the Predict tab
@@ -5071,6 +5153,7 @@ applyLangInit();   // EN default; if AR saved → RTL + translate the UI and kee
 // Restore the tab the user was on before a reload / pull-to-refresh (logo→goHome still resets to Matches).
 try { const _rt = sessionStorage.getItem("cs_tab"); if (_rt && _rt !== "M" && ["G","K","S","P","C"].indexOf(_rt) !== -1) { window._predSkipped = true; showTab(_rt); } } catch (_) {}
 refreshCalIcons();   // swap the fixed 📅 glyph for a live calendar showing TODAY's date
+try{ refreshPushUI(); }catch(_){}   // reflect the current Match-alerts on/off state in the Settings sheet
 updateAuthTog();   // header Sign in / Sign out pill
 try { updateNatLock(); } catch (_) {}
 postFunFactBots();   // daily: 2 chat posts (AR + EN) of today's On This Day facts (dedup by id → once/day)
