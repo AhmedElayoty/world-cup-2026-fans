@@ -1074,7 +1074,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.69</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.70</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1399,10 +1399,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.69";
+const APP_VERSION = "2.70";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-25-v270";
+const FORCE_RELOAD = "2026-06-25-v271";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -3205,6 +3205,8 @@ async function renderPredict() {
     await syncMyPreds(allPreds);
     const evs = await seasonEvents();
     const now = Date.now();
+    const _predNeed = e => (((new Date(e.date) - now) < 1800000) || hasPred(myPreds[e.id])) ? 1 : 0;   // 0 = still OPEN and NOT predicted yet (your to-do → top) · 1 = already predicted, or closed (sink to bottom)
+    const _predOrd = (a, b) => _predNeed(a) - _predNeed(b) || (new Date(a.date) - new Date(b.date));     // un-predicted/actionable matches first, then chronological within each group
     const up = evs.filter(e => e.status.type.state === "pre" && new Date(e.date) > now && ((e.competitions[0] || {}).competitors || []).every(c => c.team && c.team.logo));   // real-team fixtures only (skip knockout placeholders)
     const isKO = e => !!(e.season && e.season.type && e.season.type !== 13802);   // group stage = season.type 13802; anything else = knockout
     const grpUp = up.filter(e => !isKO(e));
@@ -3224,7 +3226,7 @@ async function renderPredict() {
     const note = '<span style="margin-left:auto;font-size:10px;color:var(--dim);font-family:Oswald;letter-spacing:1px">ONE SUBMISSION · CLOSES 30 MIN BEFORE KICK-OFF</span>';
     let html = "";
     Object.keys(byWeek).sort().forEach(w => {
-      const ms = byWeek[w];
+      const ms = byWeek[w].slice().sort(_predOrd);   // within each week: matches you haven't predicted yet rise to the top
       const range = (fmt(new Date(ms[0].date), { day: "2-digit", month: "short" }) + " - " +
                      fmt(new Date(ms[ms.length - 1].date), { day: "2-digit", month: "short" })).toUpperCase();
       const label = w === curWk ? "THIS WEEK" : "NEXT WEEK · PREDICT EARLY";
@@ -3235,7 +3237,7 @@ async function renderPredict() {
     });
     if (koUp.length) {   // knockout fixtures whose teams are now confirmed · open immediately, regardless of week
       html += '<div class="secrow" style="margin-top:' + (html ? "14px" : "2px") + '"><span class="sect" style="color:var(--gold)">⚽ KNOCKOUTS · TEAMS CONFIRMED · PREDICT NOW</span></div>' +
-        koUp.map(e => predCard(e, new Date(e.date) - now < 1800000)).join("");
+        koUp.slice().sort(_predOrd).map(e => predCard(e, new Date(e.date) - now < 1800000)).join("");
     }
     if (!html) html = '<div class="empty">No matches open yet · next week\u2019s fixtures open 2 days before it starts.</div>';
     const recent = evs.filter(e => e.status.type.state !== "pre").slice(-6).reverse();
