@@ -755,8 +755,9 @@ html[dir="rtl"] .fchip b{margin-left:0;margin-right:6px}
 .lbexp{width:100%;background:none;border:none;border-top:1px solid rgba(255,255,255,.08);margin-top:2px;padding:13px 0 5px;color:var(--mut);font-family:'Oswald';font-weight:600;font-size:11px;letter-spacing:1.1px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
 .lbexp .chev{font-size:9px;opacity:.8}
 .lbexp:active{color:#fff}
-.lbmore{display:block;width:100%;text-align:center;margin-top:10px;padding:11px;color:var(--cyan);background:rgba(25,200,255,.12);border:1px solid rgba(25,200,255,.4);border-radius:9px;font-family:'Oswald';font-weight:700;font-size:12px;letter-spacing:.6px;cursor:pointer}
-.lbmore:hover,.lbmore:active{background:rgba(25,200,255,.22);color:#fff}
+.lbmore{text-align:center;color:var(--dim);font-size:11px;padding:9px 0 3px;font-family:'Oswald';letter-spacing:.5px}
+.predmore{display:block;width:100%;text-align:center;margin-top:10px;padding:11px;color:var(--cyan);background:rgba(25,200,255,.12);border:1px solid rgba(25,200,255,.4);border-radius:9px;font-family:'Oswald';font-weight:700;font-size:12px;letter-spacing:.6px;cursor:pointer}
+.predmore:hover,.predmore:active{background:rgba(25,200,255,.22);color:#fff}
 .lbempty{text-align:center;color:var(--dim);font-size:12px;padding:18px 0}
 .cards2{display:flex;gap:11px;align-items:center;justify-content:flex-end}
 .cc{font-family:'Oswald';font-weight:700;font-size:15px;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:4px;color:#f4f6fb}
@@ -1076,7 +1077,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.74</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.75</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1401,10 +1402,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.74";
+const APP_VERSION = "2.75";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-25-v275";
+const FORCE_RELOAD = "2026-06-25-v276";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -3674,7 +3675,7 @@ function lbBoard(rows, key) {
   const moreLab = ar ? ("▾ أفضل 10 · عرض " + n + " آخرين") : ("▾ TOP 10 · VIEW " + n + " MORE");
   return rows.slice(0, 10).map(row).join("") +
     '<div id="lbrest-' + key + '" class="hide">' + rows.slice(10).map((r, i) => row(r, i + 10)).join("") + '</div>' +   // rest keeps its TRUE rank (11,12,…) — was restarting at 1
-    '<div class="lbmore" id="lbmore-' + key + '" data-more="' + n + '" role="button" tabindex="0" onclick="lbToggle(\'' + key + '\')">' + moreLab + '</div>';
+    '<div class="predmore" id="lbmore-' + key + '" data-more="' + n + '" role="button" tabindex="0" onclick="lbToggle(\'' + key + '\')">' + moreLab + '</div>';
 }
 function lbToggle(key) {
   const rest = document.getElementById("lbrest-" + key), btn = document.getElementById("lbmore-" + key);
