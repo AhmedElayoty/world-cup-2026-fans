@@ -755,8 +755,8 @@ html[dir="rtl"] .fchip b{margin-left:0;margin-right:6px}
 .lbexp{width:100%;background:none;border:none;border-top:1px solid rgba(255,255,255,.08);margin-top:2px;padding:13px 0 5px;color:var(--mut);font-family:'Oswald';font-weight:600;font-size:11px;letter-spacing:1.1px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
 .lbexp .chev{font-size:9px;opacity:.8}
 .lbexp:active{color:#fff}
-.lbmore{display:block;text-align:center;margin:11px auto 3px;padding:8px 14px;max-width:230px;color:var(--gold);background:rgba(255,192,46,.1);border:1px solid var(--gold);border-radius:9px;font-family:'Oswald';font-weight:700;font-size:11.5px;letter-spacing:.6px;cursor:pointer}
-.lbmore:hover,.lbmore:active{background:rgba(255,192,46,.2);color:#fff}
+.lbmore{display:block;width:100%;text-align:center;margin-top:10px;padding:11px;color:var(--cyan);background:rgba(25,200,255,.12);border:1px solid rgba(25,200,255,.4);border-radius:9px;font-family:'Oswald';font-weight:700;font-size:12px;letter-spacing:.6px;cursor:pointer}
+.lbmore:hover,.lbmore:active{background:rgba(25,200,255,.22);color:#fff}
 .lbempty{text-align:center;color:var(--dim);font-size:12px;padding:18px 0}
 .cards2{display:flex;gap:11px;align-items:center;justify-content:flex-end}
 .cc{font-family:'Oswald';font-weight:700;font-size:15px;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:4px;color:#f4f6fb}
@@ -1076,7 +1076,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.73</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.74</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1401,10 +1401,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.73";
+const APP_VERSION = "2.74";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-25-v274";
+const FORCE_RELOAD = "2026-06-25-v275";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -3681,6 +3681,10 @@ function lbToggle(key) {
   if (!rest || !btn) return;
   const nowHidden = rest.classList.toggle("hide"), n = btn.getAttribute("data-more") || "", ar = (typeof LANG !== "undefined" && LANG === "ar");
   btn.textContent = nowHidden ? (ar ? ("▾ أفضل 10 · عرض " + n + " آخرين") : ("▾ TOP 10 · VIEW " + n + " MORE")) : (ar ? "▴ عرض أقل" : "▴ VIEW LESS");
+  if (nowHidden) {   // collapsed via VIEW LESS → jump back to the top of the leaderboard (the long list left the page scrolled down). VIEW MORE stays put.
+    const card = btn.closest(".lb") || btn.parentElement;
+    if (card) { const tb = document.querySelector(".topbar"); const off = (tb ? tb.offsetHeight : 0) + 8; const y = card.getBoundingClientRect().top + window.scrollY - off; window.scrollTo({ top: Math.max(0, y), behavior: "smooth" }); }
+  }
 }
 async function loadLeaderboard(evs, preAll) {
   try {
