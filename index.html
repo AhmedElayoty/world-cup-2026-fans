@@ -1074,7 +1074,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.70</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.71</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1399,10 +1399,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.70";
+const APP_VERSION = "2.71";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-25-v271";
+const FORCE_RELOAD = "2026-06-25-v272";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -3205,12 +3205,10 @@ async function renderPredict() {
     await syncMyPreds(allPreds);
     const evs = await seasonEvents();
     const now = Date.now();
-    const _predNeed = e => (((new Date(e.date) - now) < 1800000) || hasPred(myPreds[e.id])) ? 1 : 0;   // 0 = still OPEN and NOT predicted yet (your to-do → top) · 1 = already predicted, or closed (sink to bottom)
-    const _predOrd = (a, b) => _predNeed(a) - _predNeed(b) || (new Date(a.date) - new Date(b.date));     // un-predicted/actionable matches first, then chronological within each group
     const up = evs.filter(e => e.status.type.state === "pre" && new Date(e.date) > now && ((e.competitions[0] || {}).competitors || []).every(c => c.team && c.team.logo));   // real-team fixtures only (skip knockout placeholders)
     const isKO = e => !!(e.season && e.season.type && e.season.type !== 13802);   // group stage = season.type 13802; anything else = knockout
     const grpUp = up.filter(e => !isKO(e));
-    const koUp = up.filter(isKO).sort((a, b) => new Date(a.date) - new Date(b.date));   // knockouts open the instant their teams are confirmed · no week gate
+    const koUp = up.filter(isKO);   // knockouts open the instant their teams are confirmed · no week gate
     const curWk = weekStartKey(new Date());
     const nextWk = weekKeyAddDays(curWk, 7);
     const nextOpen = grpUp.some(e => weekStartKey(new Date(e.date)) === nextWk && (new Date(e.date) - now) <= 2 * 86400000);  // next week opens 2 days before its first match
@@ -3221,23 +3219,24 @@ async function renderPredict() {
       const nxt = weekStartKey(new Date(grpUp[0].date));
       pool = grpUp.filter(e => weekStartKey(new Date(e.date)) === nxt);
     }
-    const byWeek = {};
-    pool.forEach(e => { const w = weekStartKey(new Date(e.date)); (byWeek[w] = byWeek[w] || []).push(e); });
+    // GLOBAL ordering (user request): every match currently open for prediction, with the ones you HAVEN'T predicted
+    // yet on top (group + knockout together, by date), then the ones you've already predicted (or that have closed) below.
+    const predictable = pool.concat(koUp);
+    const byDate = (a, b) => new Date(a.date) - new Date(b.date);
+    const isClosed = e => (new Date(e.date) - now) < 1800000;                                  // within 30 min of kick-off → prediction closed
+    const todo = predictable.filter(e => !isClosed(e) && !hasPred(myPreds[e.id])).sort(byDate); // OPEN and not yet predicted → your to-do, first
+    const done = predictable.filter(e =>  isClosed(e) ||  hasPred(myPreds[e.id])).sort(byDate);  // predicted (or closed) → sink below
     const note = '<span style="margin-left:auto;font-size:10px;color:var(--dim);font-family:Oswald;letter-spacing:1px">ONE SUBMISSION · CLOSES 30 MIN BEFORE KICK-OFF</span>';
     let html = "";
-    Object.keys(byWeek).sort().forEach(w => {
-      const ms = byWeek[w].slice().sort(_predOrd);   // within each week: matches you haven't predicted yet rise to the top
-      const range = (fmt(new Date(ms[0].date), { day: "2-digit", month: "short" }) + " - " +
-                     fmt(new Date(ms[ms.length - 1].date), { day: "2-digit", month: "short" })).toUpperCase();
-      const label = w === curWk ? "THIS WEEK" : "NEXT WEEK · PREDICT EARLY";
-      html += '<div class="secrow" style="margin-top:' + (html ? "14px" : "2px") + '">' +
-        '<span class="sect" style="color:var(--gold)">' + label + ' · ' + range + '</span>' +
-        (html ? "" : note) + '</div>' +
-        ms.map(e => predCard(e, new Date(e.date) - now < 1800000)).join("");
-    });
-    if (koUp.length) {   // knockout fixtures whose teams are now confirmed · open immediately, regardless of week
-      html += '<div class="secrow" style="margin-top:' + (html ? "14px" : "2px") + '"><span class="sect" style="color:var(--gold)">⚽ KNOCKOUTS · TEAMS CONFIRMED · PREDICT NOW</span></div>' +
-        koUp.slice().sort(_predOrd).map(e => predCard(e, new Date(e.date) - now < 1800000)).join("");
+    if (todo.length) {
+      const lab = (typeof LANG !== "undefined" && LANG === "ar") ? "⚽ توقّعها الآن" : ("⚽ PREDICT NOW · " + todo.length + " LEFT");
+      html += '<div class="secrow" style="margin-top:2px"><span class="sect" style="color:var(--gold)">' + lab + '</span>' + note + '</div>' +
+        todo.map(e => predCard(e, false)).join("");
+    }
+    if (done.length) {
+      const lab = (typeof LANG !== "undefined" && LANG === "ar") ? "✓ توقّعاتك" : "✓ YOUR PICKS";
+      html += '<div class="secrow" style="margin-top:' + (html ? "14px" : "2px") + '"><span class="sect">' + lab + '</span></div>' +
+        done.map(e => predCard(e, isClosed(e))).join("");
     }
     if (!html) html = '<div class="empty">No matches open yet · next week\u2019s fixtures open 2 days before it starts.</div>';
     const recent = evs.filter(e => e.status.type.state !== "pre").slice(-6).reverse();
