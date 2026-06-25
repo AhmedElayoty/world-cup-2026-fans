@@ -101,6 +101,11 @@ html[dir="rtl"] .metarow>.mven{margin-left:0;margin-right:auto}
 #installBar .ibtxt{flex:1;color:var(--txt);font-family:'Oswald';font-weight:600;font-size:13px;letter-spacing:.3px}
 #installBar .ibgo{background:var(--gold);color:#16110a;border:none;font-family:'Oswald';font-weight:700;font-size:13px;letter-spacing:.5px;padding:9px 18px;border-radius:10px;cursor:pointer;white-space:nowrap}
 #installBar .ibx{background:none;border:none;color:var(--mut);font-size:20px;cursor:pointer;padding:0 4px;line-height:1}
+#pushBar{position:fixed;left:0;right:0;bottom:0;z-index:131;display:none;align-items:center;gap:10px;background:rgba(10,14,33,.97);backdrop-filter:blur(8px);border-top:1px solid var(--cyan);padding:10px 14px;padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+#pushBar .pbtxt{flex:1;min-width:0;color:var(--txt);font-family:'Oswald';font-weight:600;font-size:12.5px;letter-spacing:.2px;line-height:1.25}
+#pushBar .pbtxt small{display:block;font-family:'Inter',sans-serif;font-weight:400;font-size:10.5px;letter-spacing:0;color:var(--mut);margin-top:3px;line-height:1.35}
+#pushBar .pbgo{background:var(--cyan);color:#04222e;border:none;font-family:'Oswald';font-weight:700;font-size:13px;letter-spacing:.5px;padding:9px 18px;border-radius:10px;cursor:pointer;white-space:nowrap}
+#pushBar .pbx{background:none;border:none;color:var(--mut);font-size:20px;cursor:pointer;padding:0 4px;line-height:1;align-self:flex-start}
 .hright{margin-left:auto;display:flex;align-items:center;gap:9px}
 .hr-meta{text-align:right}
 html[dir="rtl"] .hr-meta{text-align:left}
@@ -1082,9 +1087,10 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.82</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.83</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
+<div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
 </div>
 
 <div id="nameModal" class="hide">
@@ -1407,10 +1413,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.82";
+const APP_VERSION = "2.83";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-25-v283";
+const FORCE_RELOAD = "2026-06-25-v284";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -3553,6 +3559,24 @@ function maybeShowInstall(){
   }
 }
 function doInstallPrompt(){ const p = _installPrompt; if(p){ _installPrompt = null; try { p.prompt(); } catch(_) {} } closeInfo(); hideInstallBar(); }
+/* "Allow notifications" bottom bar · shows once for installed / home-screen users who have not decided yet. */
+function hidePushBar(){ const b = $("pushBar"); if(b) b.style.display = "none"; }
+function dismissPushBar(){ try { localStorage.setItem("cs_push_optout","1"); } catch(_) {} hidePushBar(); }   // dismissed → don't nag again
+async function allowPushFromBar(){ hidePushBar(); try { await enablePush(); } catch(_) {} }
+function maybeShowPushBar(){
+  const bar = $("pushBar"); if(!bar) return;
+  try{
+    if(typeof pushSupported !== "function" || !pushSupported() || !isStandaloneApp()) { bar.style.display = "none"; return; }   // only the installed / home-screen app can use push
+    if(Notification.permission !== "default") { bar.style.display = "none"; return; }      // already allowed (granted) or blocked (denied) → never prompt
+    if(localStorage.getItem("cs_push_optout") === "1") { bar.style.display = "none"; return; }   // dismissed, or turned off in Settings → never again
+    const ar = (typeof LANG !== "undefined" && LANG === "ar");
+    bar.querySelector(".pbtxt").innerHTML = ar
+      ? '🔔 فعّل تنبيهات المباريات<small>الأهداف تصل متأخّرة 3 دقائق حتى لا تُفسد متعة البث البطيء · يمكنك الإيقاف في أي وقت من الإعدادات</small>'
+      : '🔔 Turn on match alerts<small>Goals arrive 3 min late so slow streams aren\'t spoiled · turn off anytime in Settings</small>';
+    bar.querySelector(".pbgo").textContent = ar ? "تفعيل" : "Allow";
+    bar.style.display = "flex";
+  }catch(_){ bar.style.display = "none"; }
+}
 function installApp(){ showInfo(installInstructionsHtml()); }
 function installInstructionsHtml(){
   const ar = (typeof LANG !== "undefined" && LANG === "ar");
@@ -3611,7 +3635,7 @@ async function enablePush(){
     let sub = await reg.pushManager.getSubscription();
     if(!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:_urlB64ToU8(VAPID_PUBLIC) });
     await savePushSub(sub);
-    localStorage.setItem("cs_push_on","1");
+    localStorage.setItem("cs_push_on","1"); try{ hidePushBar(); }catch(_){}
     showInfo(ar
       ? '<h3>&#128276; تم تفعيل التنبيهات</h3><p>سنذكّرك قبل انطلاق المباريات وبالأخبار المهمّة. يمكنك الإيقاف في أي وقت من الإعدادات.</p><button class="igo" onclick="closeInfo()">رائع</button>'
       : '<h3>&#128276; Alerts on!</h3><p>You\'ll get a heads-up before kick-off and for big updates. Turn it off anytime in Settings.</p><button class="igo" onclick="closeInfo()">NICE</button>');
@@ -3627,6 +3651,8 @@ async function disablePush(){
     if(sub){ const ep=sub.endpoint; try{ await sub.unsubscribe(); }catch(_){} await removePushSub(ep); }
   }catch(_){}
   localStorage.removeItem("cs_push_on");
+  try{ localStorage.setItem("cs_push_optout","1"); }catch(_){}   // turned off in Settings → never auto-prompt with the bar again
+  try{ hidePushBar(); }catch(_){}
   refreshPushUI();
 }
 async function savePushSub(sub){
@@ -5209,6 +5235,7 @@ setTimeout(_checkBuild, 3000);
 setInterval(_checkBuild, 60000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) _checkBuild(); });
 maybeShowInstall();   // "Install to phone" bar (hidden if already installed / on home screen)
+setTimeout(function(){ try{ maybeShowPushBar(); }catch(_){} }, 1200);   // "Allow notifications" bar · installed users who haven't decided yet (mutually exclusive with the install bar)
 updateInstallIcon();   // permanent header install icon (always available while not installed)
 renderHero();
 setInterval(renderHero, 300000);
