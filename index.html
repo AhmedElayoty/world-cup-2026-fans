@@ -1077,7 +1077,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.76</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.77</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1402,10 +1402,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.76";
+const APP_VERSION = "2.77";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-25-v277";
+const FORCE_RELOAD = "2026-06-25-v278";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -3389,7 +3389,13 @@ async function submitPred(btn, ev) {
     const hEl = document.getElementById("ph-" + id), aEl = document.getElementById("pa-" + id);
     const h = (hEl.value || "").trim(), a = (aEl.value || "").trim();
     if (h === "" || a === "" || isNaN(+h) || isNaN(+a)) { reset("ENTER BOTH SCORES FIRST", 1800); return; }
-    if (koMatch && +h === +a) { reset("NO DRAWS · TAP THE PENALTIES BUTTON BELOW", 2600); return; }
+    if (koMatch && +h === +a) {   // knockouts can't be a draw → a clear POPUP (button text alone was too easy to miss, esp. for older users)
+      const ar = (typeof LANG !== "undefined" && LANG === "ar");
+      try { showInfo(ar
+        ? '<div style="font-size:38px;line-height:1;margin-bottom:4px">⚠️</div><h2>لا تعادل في الأدوار الإقصائية</h2><p>كل مباراة إقصائية لها فائز، فلا يمكن حفظ نتيجة تعادل. <b>توقّعك لم يُسجَّل بعد.</b></p><div class="irow"><span class="ic">①</span><div>توقّع نتيجة <b>بفائز</b> (مثل 2-1).</div></div><div class="irow"><span class="ic">⚽</span><div>أو اضغط <b>"ستُحسم بركلات الترجيح"</b> واختر الفائز.</div></div><button class="igo" onclick="closeInfo()">حسناً</button>'
+        : '<div style="font-size:38px;line-height:1;margin-bottom:4px">⚠️</div><h2>NO DRAWS IN THE KNOCKOUTS</h2><p>A knockout match must have a winner, so a level score can\'t be saved. <b>Your prediction has NOT been submitted.</b></p><div class="irow"><span class="ic">①</span><div>Predict a score <b>with a winner</b> (e.g. 2-1).</div></div><div class="irow"><span class="ic">⚽</span><div>Or tap <b>"This match will go to penalties"</b> and pick the winner.</div></div><button class="igo" onclick="closeInfo()">GOT IT</button>'); } catch(_) {}
+      return;
+    }
     payload = { h: Math.max(0, Math.min(20, +h)), a: Math.max(0, Math.min(20, +a)) };
   }
   if (!cs_user) { openAuth("C", { ctx: "predict" }); reset("SIGN IN, THEN SUBMIT", 2400); return; }
