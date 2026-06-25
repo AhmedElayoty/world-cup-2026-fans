@@ -150,7 +150,7 @@ main{flex:1;padding:14px 14px calc(20px + env(safe-area-inset-bottom));overflow-
  margin-bottom:11px;cursor:pointer;transition:transform .08s}
 .mcard:active{transform:scale(.985)}
 .mcard.egy{background:#0a2e1d;border-color:var(--green)}
-.mtop{display:flex;align-items:center;gap:8px;font-family:'Oswald';font-size:10.5px;
+.mtop{position:relative;display:flex;align-items:center;gap:8px;font-family:'Oswald';font-size:10.5px;
  letter-spacing:1.4px;color:var(--mut);margin-bottom:10px}
 .badge{padding:2px 9px;border-radius:20px;font-weight:600}
 .badge.live{background:var(--red);color:#fff;animation:pulse 1.4s infinite}
@@ -174,7 +174,7 @@ main{flex:1;padding:14px 14px calc(20px + env(safe-area-inset-bottom));overflow-
  white-space:nowrap;color:var(--gold);background:rgba(255,192,46,.12);border:1px solid rgba(255,192,46,.5);border-radius:999px;padding:0 7px}
 .team.away .frank{align-self:flex-end}
 .frank.egy{color:#6dffb5;background:rgba(0,210,106,.14);border-color:rgba(0,210,106,.5)}
-.mtopmid{flex:1;text-align:center;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mtopmid{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:54%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;pointer-events:none}
 .mgroup{font-family:'Oswald';font-weight:600;font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:#cdd9ff}
 .lrank{align-self:flex-start;display:inline-block;margin-top:1px;font-family:'Oswald';font-weight:700;font-size:9.5px;letter-spacing:.5px;line-height:1.3;padding:1px 7px;border-radius:8px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .lrank.prov{animation:lrankBlink 1.4s ease-in-out infinite}
@@ -1081,7 +1081,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.78</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.79</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1406,10 +1406,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.78";
+const APP_VERSION = "2.79";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-25-v279";
+const FORCE_RELOAD = "2026-06-25-v280";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
