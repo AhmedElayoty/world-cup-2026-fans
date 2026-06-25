@@ -377,8 +377,9 @@ html[dir="rtl"] .hero .he{letter-spacing:0}
 .penpick .wbtn{flex:1;max-width:180px;background:var(--navy2);border:1.5px solid var(--line);color:var(--mut);font-family:'Oswald';font-weight:600;font-size:13px;border-radius:10px;padding:12px 8px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .penpick .wbtn.on{background:var(--rust);border-color:var(--rust2);color:#fff}
 .penpick .wbtn:disabled{opacity:.85;cursor:default}
-.pentog{display:block;width:100%;margin-top:10px;background:none;border:1px dashed var(--line);color:var(--mut);font-family:'Oswald';font-weight:600;font-size:12px;letter-spacing:.4px;border-radius:9px;padding:9px;cursor:pointer}
-.pentog:hover{color:var(--gold);border-color:var(--gold)}
+.pentog{display:block;width:100%;margin-top:10px;background:rgba(224,90,43,.13);border:1.5px solid var(--rust2);color:var(--gold);font-family:'Oswald';font-weight:700;font-size:13px;letter-spacing:.5px;border-radius:10px;padding:11px 9px;cursor:pointer}
+.pentog:hover{background:rgba(224,90,43,.22);color:#fff;border-color:var(--gold)}
+.pentog:active{background:rgba(224,90,43,.3);color:#fff}
 .finnote{margin-top:9px;font-size:12px;color:var(--gold);background:rgba(255,192,46,.08);border:1px solid rgba(255,192,46,.32);border-radius:9px;padding:8px 11px;font-family:'Oswald';font-weight:500;letter-spacing:.2px}
 .finnote b{color:#fff;font-weight:700}
 .infomodal{position:fixed;inset:0;background:rgba(4,8,22,.86);z-index:120;display:flex;align-items:center;justify-content:center;padding:18px}
@@ -754,7 +755,8 @@ html[dir="rtl"] .fchip b{margin-left:0;margin-right:6px}
 .lbexp{width:100%;background:none;border:none;border-top:1px solid rgba(255,255,255,.08);margin-top:2px;padding:13px 0 5px;color:var(--mut);font-family:'Oswald';font-weight:600;font-size:11px;letter-spacing:1.1px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
 .lbexp .chev{font-size:9px;opacity:.8}
 .lbexp:active{color:#fff}
-.lbmore{text-align:center;color:var(--dim);font-size:11px;padding:9px 0 3px;font-family:'Oswald';letter-spacing:.5px}
+.lbmore{text-align:center;color:var(--dim);font-size:11px;padding:9px 0 3px;font-family:'Oswald';letter-spacing:.5px;cursor:pointer}
+.lbmore:active{color:var(--txt)}
 .lbempty{text-align:center;color:var(--dim);font-size:12px;padding:18px 0}
 .cards2{display:flex;gap:11px;align-items:center;justify-content:flex-end}
 .cc{font-family:'Oswald';font-weight:700;font-size:15px;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:4px;color:#f4f6fb}
@@ -1074,7 +1076,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.71</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.72</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1399,10 +1401,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.71";
+const APP_VERSION = "2.72";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-25-v272";
+const FORCE_RELOAD = "2026-06-25-v273";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -3664,6 +3666,22 @@ function maybeMissedStreakPopup() {
     showMissedPopup(info.n);
   } catch (_) {}
 }
+// leaderboard renderer: show the top 10, collapse the rest behind a "VIEW MORE" toggle (keeps the Predict page short)
+function lbBoard(rows, key) {
+  const row = (r, i) => '<div class="lbrow' + (r.uid === myId ? " me" : "") + '"><div class="rk">' + (i + 1) + '</div><div class="nm">' + esc(r.name) + '</div><div class="ex">' + r.exact + ' exact · ' + r.played + ' played</div><div class="sc2">' + r.pts + '</div></div>';
+  if (rows.length <= 10) return rows.map(row).join("");
+  const ar = (typeof LANG !== "undefined" && LANG === "ar"), n = rows.length - 10;
+  return rows.slice(0, 10).map(row).join("") +
+    '<div id="lbrest-' + key + '" class="hide">' + rows.slice(10).map(row).join("") + '</div>' +
+    '<div class="lbmore" id="lbmore-' + key + '" data-more="' + n + '" role="button" tabindex="0" onclick="lbToggle(\'' + key + '\')">' +
+    (ar ? ("▾ عرض المزيد (" + n + ")") : ("▾ VIEW MORE · " + n + " MORE")) + '</div>';
+}
+function lbToggle(key) {
+  const rest = document.getElementById("lbrest-" + key), btn = document.getElementById("lbmore-" + key);
+  if (!rest || !btn) return;
+  const nowHidden = rest.classList.toggle("hide"), n = btn.getAttribute("data-more") || "", ar = (typeof LANG !== "undefined" && LANG === "ar");
+  btn.textContent = nowHidden ? (ar ? ("▾ عرض المزيد (" + n + ")") : ("▾ VIEW MORE · " + n + " MORE")) : (ar ? "▴ عرض أقل" : "▴ VIEW LESS");
+}
 async function loadLeaderboard(evs, preAll) {
   try {
     const all = preAll || await readKey(PRED_KEY, {});   // reuse renderPredict's single read when provided
@@ -3680,7 +3698,7 @@ async function loadLeaderboard(evs, preAll) {
       const champHtml = champ ? '<div class="champbanner"><span class="ct">' + (remaining ? "🏆 LEADING THE TABLE" : "🏆 OVERALL CHAMPION") + '</span> <b>' + esc(champ.name) + '</b> · ' + champ.pts + ' pts<span class="cs">' + (remaining ? "the final still decides the overall winner" : "World Cup 2026 Prediction Champion!") + '</span></div>' : '';
       const allHead = '<div style="font-family:Oswald;font-size:11px;letter-spacing:1px;color:var(--gold);margin-bottom:8px">ALL WEEKS · TOTAL POINTS</div>';
       if ($("lbAllBody")) $("lbAllBody").innerHTML = champHtml + allHead + (allRows.length
-        ? allRows.map((r, i) => '<div class="lbrow' + (r.uid === myId ? " me" : "") + '"><div class="rk">' + (i + 1) + '</div><div class="nm">' + esc(r.name) + '</div><div class="ex">' + r.exact + ' exact · ' + r.played + ' played</div><div class="sc2">' + r.pts + '</div></div>').join("")
+        ? lbBoard(allRows, "all")
         : '<div class="empty" style="padding:12px">No points yet.</div>');
       const _aw = $("lbAllWrap"); if (_aw) _aw.classList.toggle("hide", fixedYMD(new Date()) < "20260718");   // reveal the overall total + champion for the finals weekend (18 Jul)
     } catch (_) {}
@@ -3711,9 +3729,7 @@ async function loadLeaderboard(evs, preAll) {
     const scored = rows.filter(r => r.played > 0);
     const board = scored.length ? scored : rows;
     $("lbBody").innerHTML = wkHead + (board.length && (scored.length || done.length === 0)
-      ? board.map((r, i) => '<div class="lbrow' + (r.uid === myId ? " me" : "") + '"><div class="rk">' + (i + 1) + '</div>' +
-          '<div class="nm">' + esc(r.name) + '</div><div class="ex">' + r.exact + ' exact · ' + r.played + ' played</div>' +
-          '<div class="sc2">' + r.pts + '</div></div>').join("")
+      ? lbBoard(board, "wk")
       : '<div class="empty" style="padding:12px">No points yet this week · the board fills as this week\u2019s matches finish.</div>');
   } catch (_) {
     $("lbBody").innerHTML = '<div class="empty" style="padding:12px">Leaderboard unreachable.</div>';
