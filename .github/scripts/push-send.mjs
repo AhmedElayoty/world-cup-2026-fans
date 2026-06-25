@@ -109,53 +109,53 @@ const goURL = (go, m) => "./index.html?go=" + go + (m ? "&m=" + encodeURICompone
 const CAT = {
   chat: {
     tag: () => "chat", renotify: false,
-    en: { t: "💬 {name} sent a message", b: "{preview}" },
-    ar: { t: "💬 {name} كتب رسالة", b: "{preview}" },
+    en: { t: "💬 {name}", b: "{preview}" },
+    ar: { t: "💬 {name}", b: "{preview}" },
     url: () => goURL("chat"),
     acts: [{ id: "open_chat", en: "Reply", ar: "رد", url: () => goURL("chat") }]
   },
   predict_reminder: {
     tag: d => "predr-" + d.matchId, renotify: false,
-    en: { t: "🎯 Predict {home} v {away}", b: "Kicks off {koTime}. Lock your score before it closes ⚽" },
-    ar: { t: "🎯 توقّع {home} ضد {away}", b: "الانطلاق {koTime}. سجّل توقّعك قبل الإغلاق ⚽" },
+    en: { t: "🎯 Don't forget to predict", b: "{home} v {away} kicks off {koTime}. Lock your score before it closes ⚽" },
+    ar: { t: "🎯 لا تنسَ توقّعك", b: "{home} ضد {away} ينطلق {koTime}. سجّل توقّعك قبل الإغلاق ⚽" },
     url: d => goURL("predict", d.matchId),
     acts: [{ id: "predict_match", en: "Predict now", ar: "توقّع الآن", url: d => goURL("predict", d.matchId) }]
   },
   match_30min: {
     tag: d => "m-" + d.matchId, renotify: false,
-    en: { t: "⏰ 30 min · {home} v {away}", b: "Kick-off {koTime}. Last call to predict ⚽" },
-    ar: { t: "⏰ 30 دقيقة · {home} ضد {away}", b: "انطلاق المباراة {koTime}. آخر فرصة للتوقّع ⚽" },
+    en: { t: "⏰ 30 minutes to kick-off", b: "{home} v {away} at {koTime}. Last call to predict ⚽" },
+    ar: { t: "⏰ 30 دقيقة على الانطلاق", b: "{home} ضد {away} الساعة {koTime}. آخر فرصة للتوقّع ⚽" },
     url: d => goURL("predict", d.matchId),
     acts: [{ id: "predict_match", en: "Predict", ar: "توقّع", url: d => goURL("predict", d.matchId) },
            { id: "open_match", en: "View match", ar: "عرض المباراة", url: d => goURL("match", d.matchId) }]
   },
   match_5min: {
     tag: d => "m-" + d.matchId, renotify: true,
-    en: { t: "🔥 5 minutes! {home} v {away}", b: "Whistle about to blow. Get in here ⚽" },
-    ar: { t: "🔥 5 دقائق! {home} ضد {away}", b: "صافرة البداية على الأبواب. يلا بينا ⚽" },
+    en: { t: "🔥 Kick-off in 5 minutes", b: "{home} v {away}. Whistle about to blow, get in here ⚽" },
+    ar: { t: "🔥 الانطلاق بعد 5 دقائق", b: "{home} ضد {away}. صافرة البداية على الأبواب، يلا بينا ⚽" },
     url: d => goURL("match", d.matchId),
     acts: [{ id: "open_match", en: "View match", ar: "عرض المباراة", url: d => goURL("match", d.matchId) },
            { id: "open_chat", en: "Chat", ar: "الدردشة", url: () => goURL("chat") }]
   },
   lineups: {
     tag: d => "m-" + d.matchId, renotify: false,
-    en: { t: "📋 Line-ups are in · {home} v {away}", b: "Starting XI and formations just dropped 👀" },
-    ar: { t: "📋 صدرت التشكيلات · {home} ضد {away}", b: "التشكيلة الأساسية والخطط ظهرت الآن 👀" },
+    en: { t: "📋 Line-ups are in", b: "{home} v {away}. Starting XI and formations just dropped 👀" },
+    ar: { t: "📋 صدرت التشكيلات", b: "{home} ضد {away}. التشكيلة الأساسية والخطط ظهرت الآن 👀" },
     url: d => goURL("match", d.matchId),
     acts: [{ id: "open_match", en: "View match", ar: "عرض المباراة", url: d => goURL("match", d.matchId) }]
   },
   final_score: {
     tag: d => "m-" + d.matchId, renotify: true,
-    en: { t: "🏁 Full time · {home} {hs}-{as} {away}", b: "{note}See how your prediction did 🎯" },
-    ar: { t: "🏁 انتهت المباراة · {home} {hs}-{as} {away}", b: "{note}شوف نتيجة توقّعك 🎯" },
+    en: { t: "🏁 Full time", b: "{home} {hs}-{as} {away}{note}. See how your prediction did 🎯" },
+    ar: { t: "🏁 انتهت المباراة", b: "{home} {hs}-{as} {away}{note}. شوف نتيجة توقّعك 🎯" },
     url: d => goURL("match", d.matchId),
     acts: [{ id: "open_match", en: "View match", ar: "عرض المباراة", url: d => goURL("match", d.matchId) },
            { id: "open_leaderboard", en: "Leaderboard", ar: "الترتيب", url: () => goURL("leaderboard") }]
   },
   goal: {
     tag: d => "m-" + d.matchId, renotify: true,
-    en: { t: "⚽ GOAL! {home} {hs}-{as} {away}", b: "{scorer} finds the net · {min}'" },
-    ar: { t: "⚽ هدف! {home} {hs}-{as} {away}", b: "{scorer} يسجّل · الدقيقة {min}" },
+    en: { t: "⚽ GOAL!", b: "{home} {hs}-{as} {away} · {scorer} {min}'" },
+    ar: { t: "⚽ هدف!", b: "{home} {hs}-{as} {away} · {scorer} الدقيقة {min}" },
     url: d => goURL("match", d.matchId),
     acts: [{ id: "open_match", en: "View match", ar: "عرض المباراة", url: d => goURL("match", d.matchId) },
            { id: "open_chat", en: "Chat", ar: "الدردشة", url: () => goURL("chat") }]
@@ -163,31 +163,31 @@ const CAT = {
   nation_qualified: {
     tag: d => "qual-" + d.nation, renotify: true,
     icon: d => FLAG(ISO[d.nation] || ""),
-    en: { t: "🎉 {nation} are through to {stage}!", b: "Qualification confirmed. Let's gooo ⚽🔥" },
-    ar: { t: "🎉 {nation} تأهّل إلى {stage}!", b: "التأهّل مؤكَّد. يلا يا أبطال ⚽🔥" },
-    egypt: { en: { t: "🦅 EGYPT are through to {stage}! 🇪🇬", b: "Yallaaa! On to {stage} 🇪🇬⚽🔥" },
-             ar: { t: "🦅 مصر تأهّلت إلى {stage}! 🇪🇬", b: "مبروك لرجالة مصر · يا حبيبتي يا مصر ⚽🔥" } },
+    en: { t: "🎉 {nation} are through!", b: "{nation} have qualified for {stage}. Let's gooo ⚽🔥" },
+    ar: { t: "🎉 {nation} تأهّل!", b: "{nation} وصل إلى {stage}. يلا يا أبطال ⚽🔥" },
+    egypt: { en: { t: "🦅 EGYPT are through! 🇪🇬", b: "Egypt have qualified for {stage}. Yallaaa! ⚽🔥" },
+             ar: { t: "🦅 مصر تأهّلت! 🇪🇬", b: "مبروك لرجالة مصر · يا حبيبتي يا مصر ⚽🔥" } },
     url: () => goURL("match"),
     acts: [{ id: "open_match", en: "See the bracket", ar: "شوف المخطّط", url: () => goURL("match") }]
   },
   week_open: {
     tag: d => "weekopen-" + d.weekId, renotify: false,
-    en: { t: "🎯 Next week's predictions are open", b: "Get your picks in early and climb the table ⚽" },
-    ar: { t: "🎯 توقّعات الأسبوع القادم مفتوحة", b: "سجّل توقّعاتك مبكّراً وتصدّر الترتيب ⚽" },
+    en: { t: "🎯 Predictions are open", b: "Next week's matches are open. Get your picks in early and climb the table ⚽" },
+    ar: { t: "🎯 التوقّعات مفتوحة", b: "مباريات الأسبوع القادم مفتوحة. سجّل مبكّراً وتصدّر الترتيب ⚽" },
     url: () => goURL("predict"),
     acts: [{ id: "open_predict", en: "Predict now", ar: "توقّع الآن", url: () => goURL("predict") }]
   },
   knockout_open: {
     tag: d => "predm-" + d.matchId, renotify: true,
-    en: { t: "🎯 New match to predict · {home} v {away}", b: "It's official: {home} v {away}. Make your call ⚽" },
-    ar: { t: "🎯 مباراة جديدة للتوقّع · {home} ضد {away}", b: "تأكّدت المواجهة: {home} ضد {away}. توقّع النتيجة ⚽" },
+    en: { t: "🎯 New match to predict", b: "It's official: {home} v {away}. Make your call ⚽" },
+    ar: { t: "🎯 مباراة جديدة للتوقّع", b: "تأكّدت المواجهة: {home} ضد {away}. توقّع النتيجة ⚽" },
     url: d => goURL("predict", d.matchId),
     acts: [{ id: "predict_match", en: "Predict now", ar: "توقّع الآن", url: d => goURL("predict", d.matchId) }]
   },
   weekly_champion: {
     tag: d => "champ-" + d.weekId, renotify: true,
-    en: { t: "👑 {champion} is this week's Prediction Champion", b: "{points} pts · top of the leaderboard. Bonus earned 🏆" },
-    ar: { t: "👑 {champion} بطل التوقّعات لهذا الأسبوع", b: "{points} نقطة · متصدّر الترتيب · بونص التوقّعات 🏆" },
+    en: { t: "👑 Prediction Champion", b: "{champion} tops the week with {points} pts 🏆" },
+    ar: { t: "👑 برنس التوقّعات", b: "{champion} تصدّر الأسبوع بـ {points} نقطة 🏆" },
     url: () => goURL("leaderboard"),
     acts: [{ id: "open_leaderboard", en: "Leaderboard", ar: "الترتيب", url: () => goURL("leaderboard") }]
   },
@@ -226,7 +226,7 @@ async function sendTo(list, payload) {
 const langOf = s => (s && s.lang === "ar") ? "ar" : "en";
 function applyNote(d, lang) {
   if (!d || d.noteVal === undefined) return d || {};
-  const N = { none: { en: "", ar: "" }, aet: { en: "After extra time · ", ar: "بعد الوقت الإضافي · " }, pens: { en: "On penalties · ", ar: "بركلات الترجيح · " } };
+  const N = { none: { en: "", ar: "" }, aet: { en: " · after extra time", ar: " · بعد الوقت الإضافي" }, pens: { en: " · on penalties", ar: " · بركلات الترجيح" } };
   return Object.assign({}, d, { note: (N[d.noteVal] || N.none)[lang === "ar" ? "ar" : "en"] });
 }
 
@@ -401,7 +401,13 @@ async function main() {
   }
 
   if (deadAll.size) { const before = subs.length; subs = subs.filter(s => s && !deadAll.has(s.endpoint)); console.log("pruned dead:", before - subs.length); try { await writeKey(K.subs, subs); } catch (_) {} }
-  const cutoff = now - 3 * 86400000; sent = sent.filter(s => s && s.ts >= cutoff).slice(-400);
+  // Prune the sent-log. One-time MILESTONES (qualified, knockout-confirmed, advance, champion, week-open, broadcast)
+  // are kept for the whole tournament so they never re-fire after the 3-day window; high-volume ids (goals, finals,
+  // kick-offs, line-ups, chat, reminders) prune after 3 days and cap at 400. This also means a brand-new subscriber
+  // never gets the backlog: any id already here is skipped for everyone.
+  const MILE = /^(kc-|q-r32-|adv-|qual-|champ-|weekopen-|bc-)/;
+  const live = sent.filter(s => s && (MILE.test(s.id) ? (now - s.ts) < 40 * 86400000 : (now - s.ts) < 3 * 86400000));
+  sent = live.filter(s => MILE.test(s.id)).concat(live.filter(s => !MILE.test(s.id)).slice(-400));
   try { await writeKey(K.sent, sent); } catch (_) {}
   const keepSent = new Set(sent.map(s => s.id)); const pend2 = {}; for (const k in pending) if (!keepSent.has(k) && (now - pending[k]) < 6 * 3600000) pend2[k] = pending[k];
   try { await writeKey(K.pending, pend2); } catch (_) {}
