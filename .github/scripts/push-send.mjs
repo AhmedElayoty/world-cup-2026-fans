@@ -116,31 +116,31 @@ const CAT = {
   },
   predict_reminder: {
     tag: d => "predr-" + d.matchId, renotify: false,
-    en: { t: "🎯 Don't forget to predict", b: "{home} v {away} kicks off {koTime}. Lock your score before it closes ⚽" },
-    ar: { t: "🎯 لا تنسَ توقّعك", b: "{home} ضد {away} ينطلق {koTime}. سجّل توقّعك قبل الإغلاق ⚽" },
+    en: { t: "🎯 Predict!", b: "{home} v {away} kicks off {koTime}. Lock your score before it closes ⚽" },
+    ar: { t: "🎯 توقّع!", b: "{home} ضد {away} ينطلق {koTime}. سجّل توقّعك قبل الإغلاق ⚽" },
     url: d => goURL("predict", d.matchId),
     acts: [{ id: "predict_match", en: "Predict now", ar: "توقّع الآن", url: d => goURL("predict", d.matchId) }]
   },
   match_30min: {
     tag: d => "m-" + d.matchId, renotify: false,
-    en: { t: "⏰ 30 minutes to kick-off", b: "{home} v {away} at {koTime}. Last call to predict ⚽" },
-    ar: { t: "⏰ 30 دقيقة على الانطلاق", b: "{home} ضد {away} الساعة {koTime}. آخر فرصة للتوقّع ⚽" },
+    en: { t: "⏰ 30 min", b: "{home} v {away} at {koTime}. Last call to predict ⚽" },
+    ar: { t: "⏰ 30 دقيقة", b: "{home} ضد {away} الساعة {koTime}. آخر فرصة للتوقّع ⚽" },
     url: d => goURL("predict", d.matchId),
     acts: [{ id: "predict_match", en: "Predict", ar: "توقّع", url: d => goURL("predict", d.matchId) },
            { id: "open_match", en: "View match", ar: "عرض المباراة", url: d => goURL("match", d.matchId) }]
   },
   match_5min: {
     tag: d => "m-" + d.matchId, renotify: true,
-    en: { t: "🔥 Kick-off in 5 minutes", b: "{home} v {away}. Whistle about to blow, get in here ⚽" },
-    ar: { t: "🔥 الانطلاق بعد 5 دقائق", b: "{home} ضد {away}. صافرة البداية على الأبواب، يلا بينا ⚽" },
+    en: { t: "🔥 5 min!", b: "{home} v {away}. Whistle about to blow, get in here ⚽" },
+    ar: { t: "🔥 5 دقائق!", b: "{home} ضد {away}. صافرة البداية على الأبواب، يلا بينا ⚽" },
     url: d => goURL("match", d.matchId),
     acts: [{ id: "open_match", en: "View match", ar: "عرض المباراة", url: d => goURL("match", d.matchId) },
            { id: "open_chat", en: "Chat", ar: "الدردشة", url: () => goURL("chat") }]
   },
   lineups: {
     tag: d => "m-" + d.matchId, renotify: false,
-    en: { t: "📋 Line-ups are in", b: "{home} v {away}. Starting XI and formations just dropped 👀" },
-    ar: { t: "📋 صدرت التشكيلات", b: "{home} ضد {away}. التشكيلة الأساسية والخطط ظهرت الآن 👀" },
+    en: { t: "📋 Line-ups", b: "{home} v {away}. Starting XI and formations just dropped 👀" },
+    ar: { t: "📋 التشكيلات", b: "{home} ضد {away}. التشكيلة الأساسية والخطط ظهرت الآن 👀" },
     url: d => goURL("match", d.matchId),
     acts: [{ id: "open_match", en: "View match", ar: "عرض المباراة", url: d => goURL("match", d.matchId) }]
   },
@@ -163,31 +163,31 @@ const CAT = {
   nation_qualified: {
     tag: d => "qual-" + d.nation, renotify: true,
     icon: d => FLAG(ISO[d.nation] || ""),
-    en: { t: "🎉 {nation} are through!", b: "{nation} have qualified for {stage}. Let's gooo ⚽🔥" },
-    ar: { t: "🎉 {nation} تأهّل!", b: "{nation} وصل إلى {stage}. يلا يا أبطال ⚽🔥" },
-    egypt: { en: { t: "🦅 EGYPT are through! 🇪🇬", b: "Egypt have qualified for {stage}. Yallaaa! ⚽🔥" },
-             ar: { t: "🦅 مصر تأهّلت! 🇪🇬", b: "مبروك لرجالة مصر · يا حبيبتي يا مصر ⚽🔥" } },
+    en: { t: "🎉 Qualified!", b: "{nation} have qualified for {stage}. Let's gooo ⚽🔥" },
+    ar: { t: "🎉 تأهّل!", b: "{nation} وصل إلى {stage}. يلا يا أبطال ⚽🔥" },
+    egypt: { en: { t: "🦅 Egypt! 🇪🇬", b: "Egypt have qualified for {stage}. Yallaaa! ⚽🔥" },
+             ar: { t: "🦅 مصر تأهّلت!", b: "مبروك لرجالة مصر · يا حبيبتي يا مصر ⚽🔥" } },
     url: () => goURL("match"),
     acts: [{ id: "open_match", en: "See the bracket", ar: "شوف المخطّط", url: () => goURL("match") }]
   },
   week_open: {
     tag: d => "weekopen-" + d.weekId, renotify: false,
-    en: { t: "🎯 Predictions are open", b: "Next week's matches are open. Get your picks in early and climb the table ⚽" },
-    ar: { t: "🎯 التوقّعات مفتوحة", b: "مباريات الأسبوع القادم مفتوحة. سجّل مبكّراً وتصدّر الترتيب ⚽" },
+    en: { t: "🎯 New week!", b: "Next week's matches are open. Get your picks in early and climb the table ⚽" },
+    ar: { t: "🎯 أسبوع جديد!", b: "مباريات الأسبوع القادم مفتوحة. سجّل مبكّراً وتصدّر الترتيب ⚽" },
     url: () => goURL("predict"),
     acts: [{ id: "open_predict", en: "Predict now", ar: "توقّع الآن", url: () => goURL("predict") }]
   },
   knockout_open: {
     tag: d => "predm-" + d.matchId, renotify: true,
-    en: { t: "🎯 New match to predict", b: "It's official: {home} v {away}. Make your call ⚽" },
-    ar: { t: "🎯 مباراة جديدة للتوقّع", b: "تأكّدت المواجهة: {home} ضد {away}. توقّع النتيجة ⚽" },
+    en: { t: "🎯 New match", b: "It's official: {home} v {away}. Make your call ⚽" },
+    ar: { t: "🎯 مباراة جديدة", b: "تأكّدت المواجهة: {home} ضد {away}. توقّع النتيجة ⚽" },
     url: d => goURL("predict", d.matchId),
     acts: [{ id: "predict_match", en: "Predict now", ar: "توقّع الآن", url: d => goURL("predict", d.matchId) }]
   },
   weekly_champion: {
     tag: d => "champ-" + d.weekId, renotify: true,
-    en: { t: "👑 Prediction Champion", b: "{champion} tops the week with {points} pts 🏆" },
-    ar: { t: "👑 برنس التوقّعات", b: "{champion} تصدّر الأسبوع بـ {points} نقطة 🏆" },
+    en: { t: "👑 Champion!", b: "{champion} tops the week with {points} pts 🏆" },
+    ar: { t: "👑 البرنس!", b: "{champion} برنس التوقّعات · {points} نقطة 🏆" },
     url: () => goURL("leaderboard"),
     acts: [{ id: "open_leaderboard", en: "Leaderboard", ar: "الترتيب", url: () => goURL("leaderboard") }]
   },
