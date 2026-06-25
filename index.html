@@ -449,8 +449,12 @@ html[dir="rtl"] .hero .he{letter-spacing:0}
 .brk .myscore{display:block;font-family:'Oswald';font-weight:600;font-size:12.5px;letter-spacing:.5px;color:#e9d8a4;margin-top:5px}
 .brk.none{background:var(--card);border-color:var(--line);color:var(--mut)}
 .brknote{font-size:10.5px;color:#c9a44a;font-family:'Oswald';letter-spacing:1px;margin:-4px 0 8px}
-.otdkey{margin-left:auto;background:transparent;border:1px solid var(--gold);color:var(--gold);font-family:'Oswald';font-weight:600;font-size:10.5px;letter-spacing:1px;padding:5px 11px;border-radius:8px;cursor:pointer;white-space:nowrap;flex:none}
-.otdkey:hover{background:rgba(255,192,46,.14)}
+.otdkey{margin-left:auto;display:inline-flex;align-items:center;gap:7px;background:rgba(255,192,46,.13);border:1.5px solid var(--gold);color:var(--gold);font-family:'Oswald';font-weight:700;font-size:11px;letter-spacing:1px;padding:6px 13px;border-radius:9px;cursor:pointer;white-space:nowrap;flex:none;animation:otdpulse 2.6s ease-in-out infinite}
+.otdkey .cal{font-size:15px}
+.otdkey:hover{background:rgba(255,192,46,.22)}
+.otdkey:active{transform:scale(.96)}
+@keyframes otdpulse{0%,100%{box-shadow:0 0 0 0 rgba(255,192,46,.30)}50%{box-shadow:0 0 9px 1px rgba(255,192,46,.55)}}
+@media(prefers-reduced-motion:reduce){.otdkey{animation:none}}
 .infomodal .otdrow{display:flex;gap:10px;text-align:left;margin:12px 0;align-items:flex-start}
 .infomodal .otdrow .ic{font-size:16px;flex:none;width:22px;text-align:center;margin-top:1px}
 .infomodal .otdrow div{font-size:13px;color:#dfe6ff;line-height:1.5}
@@ -1077,7 +1081,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.77</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.78</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 </div>
@@ -1402,10 +1406,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.77";
+const APP_VERSION = "2.78";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-25-v278";
+const FORCE_RELOAD = "2026-06-25-v279";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
