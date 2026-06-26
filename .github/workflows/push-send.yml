@@ -4,8 +4,8 @@ name: Push send
 # kick-off (30/5 min), line-ups, goals (delayed >=3 min), final score, nation qualified,
 # next-week-open, knockout-confirmed, weekly champion, and manual broadcasts.
 # FREE: this is a PUBLIC repo, so GitHub Actions minutes are unlimited.
-# Runs every ~5 min so goal alerts can land in the 3-5 min window. Each alert is
-# de-duplicated by id (capriole_wc26_push_sent), so it goes out exactly once.
+# Cloudflare Worker wc26-push-scheduler is now the live 1-minute scheduler.
+# Keep this workflow as a manual fallback only; do not run it on a cron.
 # First run with an empty sent-log SEEDS the current state (sends nothing) so a cold
 # start never backfills old results.
 #
@@ -23,8 +23,6 @@ name: Push send
 # any commit resets the clock. Set repo Variable HEALTHCHECK_URL_PUSH for a free
 # dead-man's-switch ping on every success (left empty, the ping is skipped).
 on:
-  schedule:
-    - cron: "*/5 * * * *"
   workflow_dispatch:
     inputs:
       test:
