@@ -1,8 +1,9 @@
 name: Push send
 
-# Sends Web Push notifications to the app's subscribers: chat, prediction reminders,
-# kick-off (30/5 min), line-ups, goals (delayed >=3 min), final score, nation qualified,
-# next-week-open, knockout-confirmed, weekly champion, and manual broadcasts.
+# Sends Web Push notifications to the app's subscribers: chat, prediction reminders
+# (60-240 min), kick-off (30/5 min), line-ups, goals (delayed >=1 min after ESPN confirms),
+# red cards, shootout start, final score, prediction points, nation qualified/opponent/eliminated,
+# Egypt celebration, next-week-open, knockout-confirmed, weekly champion, and manual broadcasts.
 # FREE: this is a PUBLIC repo, so GitHub Actions minutes are unlimited.
 # Cloudflare Worker wc26-push-scheduler is now the live 1-minute scheduler.
 # Keep this workflow as a manual fallback only; do not run it on a cron.
