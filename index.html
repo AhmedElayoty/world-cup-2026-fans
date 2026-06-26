@@ -1088,7 +1088,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.85</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.86</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1414,10 +1414,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.85";
+const APP_VERSION = "2.86";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-25-v286";
+const FORCE_RELOAD = "2026-06-26-v287";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -3628,7 +3628,7 @@ function updateInstallIcon(){ const sh = $("setSheet"); if(sh) sh.classList.togg
 
 /* ===== Web Push: subscribe / unsubscribe + store the subscription in textdb (sent by the GitHub Action) ===== */
 const PUSH_SUBS_KEY = "capriole_wc26_push_subs";   // textdb array of {endpoint, keys:{p256dh,auth}, nat, ts, ua} · shared by both site instances · the push-send.mjs Action reads + prunes it
-const VAPID_PUBLIC  = "BI4pbMHsPCfia1nngQUbb_LpBT6BjrULPMbQ-p5qfSNrGrbuBzr2vrMm3MuluKZ-oiA-OuOQ0TmrVDTpSRg2p2I";   // public half only · the private key lives ONLY as a GitHub Actions secret in world-cup-2026-fans
+const VAPID_PUBLIC  = "BI4pbMHsPCfia1nngQUbb_LpBT6BjrULPMbQ-p5qfSNrGrbuBzr2vrMm3MuluKZ-oiA-OuOQ0TmrVDTpSRg2p2I";   // public half only · the private key lives only in the push sender secret (Cloudflare Worker after cutover; GitHub fallback until then)
 function _urlB64ToU8(b64){ const pad="=".repeat((4-b64.length%4)%4); const s=(b64+pad).replace(/-/g,"+").replace(/_/g,"/"); const raw=atob(s); const u=new Uint8Array(raw.length); for(let i=0;i<raw.length;i++) u[i]=raw.charCodeAt(i); return u; }
 const pushSupported = () => ("serviceWorker" in navigator) && ("PushManager" in window) && ("Notification" in window);
 const _isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent||"") || ((navigator.platform==="MacIntel") && (navigator.maxTouchPoints||0)>1);
@@ -5214,7 +5214,7 @@ setTimeout(function(){ try{
   const tab = ({chat:"C",predict:"P",match:"M",leaderboard:"P"})[go];
   if(tab && typeof showTab==="function") showTab(tab);
   if(go==="predict" && m && typeof gotoPredict==="function") gotoPredict(m);
-  else if(go==="match" && m && typeof goLive==="function") goLive(m);
+  else if(go==="match" && m){ if(typeof gotoMatch==="function") gotoMatch(m); else if(typeof goLive==="function") goLive(m); }
   try{ history.replaceState(null,"",location.pathname); }catch(_){}   // clean the URL so a later refresh does not re-trigger
 }catch(_){} }, 250);
 updateAuthTog();   // header Sign in / Sign out pill
