@@ -1088,7 +1088,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.86</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.87</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1414,10 +1414,10 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.86";
+const APP_VERSION = "2.87";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
-const FORCE_RELOAD = "2026-06-26-v287";
+const FORCE_RELOAD = "2026-06-26-v288";
 let TZ = (function(){ try { return localStorage.getItem("cs_tz") || "Asia/Dubai"; } catch(_) { return "Asia/Dubai"; } })();
 let HOUR12 = (function(){ try { return localStorage.getItem("cs_h12") !== "0"; } catch(_) { return true; } })();
 const T0 = Date.UTC(2026, 5, 11), T1 = Date.UTC(2026, 6, 19);
@@ -3574,8 +3574,8 @@ function maybeShowPushBar(force){
     }
     const ar = (typeof LANG !== "undefined" && LANG === "ar");
     bar.querySelector(".pbtxt").innerHTML = ar
-      ? '🔔 فعّل تنبيهات المباريات<small>الأهداف تصل متأخّرة 3 دقائق حتى لا تُفسد متعة البث البطيء · يمكنك الإيقاف في أي وقت من الإعدادات</small>'
-      : '🔔 Turn on match alerts<small>Goals arrive 3 min late so slow streams aren\'t spoiled · turn off anytime in Settings</small>';
+      ? '🔔 فعّل تنبيهات المباريات<small>الأهداف تصل بعد حوالي دقيقة من تأكيد ESPN · يمكنك الإيقاف في أي وقت من الإعدادات</small>'
+      : '🔔 Turn on match alerts<small>Goals arrive about 1 min after ESPN confirms · turn off anytime in Settings</small>';
     bar.querySelector(".pbgo").textContent = ar ? "تفعيل" : "Allow";
     bar.style.display = "flex";
   }catch(_){ bar.style.display = "none"; }
@@ -3584,8 +3584,8 @@ function maybeShowPushBar(force){
 function showPushPopup(){
   const ar = (typeof LANG !== "undefined" && LANG === "ar");
   showInfo(ar
-    ? '<h3>🔔 فعّل تنبيهات المباريات</h3><p>تذكير قبل انطلاق المباريات، الأهداف، نتيجة منتخبك، وبطل التوقّعات الأسبوعي.</p><p style="font-size:12px;color:var(--mut);margin-top:-4px">الأهداف تصل متأخّرة 3 دقائق حتى لا تُفسد متعة البث البطيء · يمكنك الإيقاف في أي وقت من الإعدادات.</p><button class="igo" onclick="pushPromptAllow()">تفعيل التنبيهات</button><button class="ino" onclick="pushPromptCancel()">ليس الآن</button>'
-    : '<h3>🔔 Turn on match alerts</h3><p>A heads-up before kick-off, goals, your nation\'s results, and the weekly Prediction Champion.</p><p style="font-size:12px;color:var(--mut);margin-top:-4px">Goals arrive 3 min late so slow streams aren\'t spoiled · turn off anytime in Settings.</p><button class="igo" onclick="pushPromptAllow()">Allow alerts</button><button class="ino" onclick="pushPromptCancel()">Not now</button>');
+    ? '<h3>🔔 فعّل تنبيهات المباريات</h3><p>تذكير قبل انطلاق المباريات، الأهداف، نتيجة منتخبك، وبطل التوقّعات الأسبوعي.</p><p style="font-size:12px;color:var(--mut);margin-top:-4px">الأهداف تصل بعد حوالي دقيقة من تأكيد ESPN · يمكنك الإيقاف في أي وقت من الإعدادات.</p><button class="igo" onclick="pushPromptAllow()">تفعيل التنبيهات</button><button class="ino" onclick="pushPromptCancel()">ليس الآن</button>'
+    : '<h3>🔔 Turn on match alerts</h3><p>A heads-up before kick-off, goals, your nation\'s results, and the weekly Prediction Champion.</p><p style="font-size:12px;color:var(--mut);margin-top:-4px">Goals arrive about 1 min after ESPN confirms · turn off anytime in Settings.</p><button class="igo" onclick="pushPromptAllow()">Allow alerts</button><button class="ino" onclick="pushPromptCancel()">Not now</button>');
 }
 function pushPromptAllow(){ try{ localStorage.setItem("cs_push_popupSeen","1"); }catch(_){} try{ closeInfo(); }catch(_){} enablePush(); }   // their tap → fires the real system permission dialog
 function pushPromptCancel(){ try{ localStorage.setItem("cs_push_popupSeen","1"); }catch(_){} try{ closeInfo(); }catch(_){} }   // declined → quiet bottom bar may re-ask later; no more modal
