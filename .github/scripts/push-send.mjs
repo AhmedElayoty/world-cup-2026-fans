@@ -49,6 +49,12 @@ const DRY  = argv.includes("--dry");
 const TEST = argv.includes("--test") || process.env.PUSH_TEST === "true";
 const PREVIEW = argv.includes("--preview") ? (argv[argv.indexOf("--preview") + 1] || "all") : null;
 const PLANG = argv.includes("--lang") ? (argv[argv.indexOf("--lang") + 1] || "en") : "en";
+const ONLY = argv.includes("--only") ? (argv[argv.indexOf("--only") + 1] || "").split(",").map(s => s.trim()).filter(Boolean) : null;   // --preview subset
+const GOAL_DELAY_MS = 3 * 60000;
+const GOAL_STALE_MS = 20 * 60000;
+const LIVE_STALE_MS = 10 * 60000;
+const CHAT_STALE_MS = 60 * 60000;
+const LINEUP_TOO_LATE_MS = 5 * 60000;
 
 // ---------- textdb + ESPN helpers ----------
 const RD = k => "https://textdb.online/" + k + "?t=" + Date.now();
@@ -99,6 +105,16 @@ function scorePred(p, H, A, e) {
 }
 const koTimeUAE = e => { try { return new Date(e.date).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Dubai" }); } catch (_) { return ""; } };
 const nextStageName = () => "the next round";
+function rosterList(r) { if (!r) return []; if (Array.isArray(r.roster)) return r.roster; if (Array.isArray(r.entries)) return r.entries; return []; }
+function validLineupRoster(r) {
+  const roster = rosterList(r);
+  const formation = r && (r.formation || r.formationDisplay || r.displayFormation);
+  const starters = roster.filter(p => p && (p.starter === true || p.formationPlace != null || p.formation_place != null));
+  return !!formation && starters.length >= 11;
+}
+function goalScore(g, H, A) {
+  return { hs: (g.homeScore ?? g.homeTeamScore ?? H.score ?? "-"), as: (g.awayScore ?? g.awayTeamScore ?? A.score ?? "-") };
+}
 
 // ---------- NOTIFICATION CATALOG (bilingual) ----------
 const FLAG = iso => "https://flagcdn.com/w128/" + iso + ".png";
@@ -117,14 +133,14 @@ const CAT = {
   predict_reminder: {
     tag: d => "predr-" + d.matchId, renotify: false,
     en: { t: "🎯 Predict!", b: "{home} v {away} kicks off {koTime}. Lock your score before it closes ⚽" },
-    ar: { t: "🎯 توقّع!", b: "{home} ضد {away} ينطلق {koTime}. سجّل توقّعك قبل الإغلاق ⚽" },
+    ar: { t: "🎯 متنساش تتوقّع", b: "{home} ضد {away} هيلعبوا {koTime}. سجّل توقّعك قبل ما يقفل ⚽" },
     url: d => goURL("predict", d.matchId),
     acts: [{ id: "predict_match", en: "Predict now", ar: "توقّع الآن", url: d => goURL("predict", d.matchId) }]
   },
   match_30min: {
     tag: d => "m-" + d.matchId, renotify: false,
     en: { t: "⏰ 30 min", b: "{home} v {away} at {koTime}. Last call to predict ⚽" },
-    ar: { t: "⏰ 30 دقيقة", b: "{home} ضد {away} الساعة {koTime}. آخر فرصة للتوقّع ⚽" },
+    ar: { t: "⏰ فاضل 30 دقيقة", b: "{home} ضد {away} الساعة {koTime}. آخر فرصة تتوقّع ⚽" },
     url: d => goURL("predict", d.matchId),
     acts: [{ id: "predict_match", en: "Predict", ar: "توقّع", url: d => goURL("predict", d.matchId) },
            { id: "open_match", en: "View match", ar: "عرض المباراة", url: d => goURL("match", d.matchId) }]
@@ -132,22 +148,30 @@ const CAT = {
   match_5min: {
     tag: d => "m-" + d.matchId, renotify: true,
     en: { t: "🔥 5 min!", b: "{home} v {away}. Whistle about to blow, get in here ⚽" },
-    ar: { t: "🔥 5 دقائق!", b: "{home} ضد {away}. صافرة البداية على الأبواب، يلا بينا ⚽" },
+    ar: { t: "🔥 فاضل 5 دقايق!", b: "{home} ضد {away}. الماتش هيبدأ، يلا بينا ⚽" },
     url: d => goURL("match", d.matchId),
     acts: [{ id: "open_match", en: "View match", ar: "عرض المباراة", url: d => goURL("match", d.matchId) },
            { id: "open_chat", en: "Chat", ar: "الدردشة", url: () => goURL("chat") }]
   },
+  match_live: {
+    tag: d => "m-" + d.matchId, renotify: true,
+    en: { t: "LIVE NOW", b: "{home} v {away} has started." },
+    ar: { t: "LIVE NOW", b: "{home} v {away} has started." },
+    url: d => goURL("match", d.matchId),
+    acts: [{ id: "open_match", en: "View match", ar: "View match", url: d => goURL("match", d.matchId) },
+           { id: "open_chat", en: "Chat", ar: "Chat", url: () => goURL("chat") }]
+  },
   lineups: {
     tag: d => "m-" + d.matchId, renotify: false,
     en: { t: "📋 Line-ups", b: "{home} v {away}. Starting XI and formations just dropped 👀" },
-    ar: { t: "📋 التشكيلات", b: "{home} ضد {away}. التشكيلة الأساسية والخطط ظهرت الآن 👀" },
+    ar: { t: "📋 التشكيلة نزلت", b: "{home} ضد {away}. التشكيلة الأساسية والخطة بانت دلوقتي 👀" },
     url: d => goURL("match", d.matchId),
     acts: [{ id: "open_match", en: "View match", ar: "عرض المباراة", url: d => goURL("match", d.matchId) }]
   },
   final_score: {
     tag: d => "m-" + d.matchId, renotify: true,
     en: { t: "🏁 Full time", b: "{home} {hs}-{as} {away}{note}. See how your prediction did 🎯" },
-    ar: { t: "🏁 انتهت المباراة", b: "{home} {hs}-{as} {away}{note}. شوف نتيجة توقّعك 🎯" },
+    ar: { t: "🏁 خلصت الماتش", b: "{home} {hs}-{as} {away}{note}. شوف توقّعك جاب كام 🎯" },
     url: d => goURL("match", d.matchId),
     acts: [{ id: "open_match", en: "View match", ar: "عرض المباراة", url: d => goURL("match", d.matchId) },
            { id: "open_leaderboard", en: "Leaderboard", ar: "الترتيب", url: () => goURL("leaderboard") }]
@@ -155,7 +179,7 @@ const CAT = {
   goal: {
     tag: d => "m-" + d.matchId, renotify: true,
     en: { t: "⚽ GOAL!", b: "{home} {hs}-{as} {away} · {scorer} {min}'" },
-    ar: { t: "⚽ هدف!", b: "{home} {hs}-{as} {away} · {scorer} الدقيقة {min}" },
+    ar: { t: "⚽ جوووون!", b: "{home} {hs}-{as} {away} · {scorer} ف الدقيقة {min}" },
     url: d => goURL("match", d.matchId),
     acts: [{ id: "open_match", en: "View match", ar: "عرض المباراة", url: d => goURL("match", d.matchId) },
            { id: "open_chat", en: "Chat", ar: "الدردشة", url: () => goURL("chat") }]
@@ -173,14 +197,14 @@ const CAT = {
   week_open: {
     tag: d => "weekopen-" + d.weekId, renotify: false,
     en: { t: "🎯 New week!", b: "Next week's matches are open. Get your picks in early and climb the table ⚽" },
-    ar: { t: "🎯 أسبوع جديد!", b: "مباريات الأسبوع القادم مفتوحة. سجّل مبكّراً وتصدّر الترتيب ⚽" },
+    ar: { t: "🎯 أسبوع جديد!", b: "ماتشات الأسبوع الجاي فتحت. سجّل بدري وطلّع نفسك فوق ⚽" },
     url: () => goURL("predict"),
     acts: [{ id: "open_predict", en: "Predict now", ar: "توقّع الآن", url: () => goURL("predict") }]
   },
   knockout_open: {
     tag: d => "predm-" + d.matchId, renotify: true,
     en: { t: "🎯 New match", b: "It's official: {home} v {away}. Make your call ⚽" },
-    ar: { t: "🎯 مباراة جديدة", b: "تأكّدت المواجهة: {home} ضد {away}. توقّع النتيجة ⚽" },
+    ar: { t: "🎯 ماتش جديد للتوقّع", b: "بقت رسمي: {home} ضد {away}. توقّع النتيجة ⚽" },
     url: d => goURL("predict", d.matchId),
     acts: [{ id: "predict_match", en: "Predict now", ar: "توقّع الآن", url: d => goURL("predict", d.matchId) }]
   },
@@ -245,6 +269,7 @@ async function main() {
       predict_reminder:{ home: "Egypt", away: "Spain", koTime: "20:00", matchId: "preview1" },
       match_30min:     { home: "Egypt", away: "Spain", koTime: "20:00", matchId: "preview1" },
       match_5min:      { home: "Egypt", away: "Spain", matchId: "preview1" },
+      match_live:      { home: "Egypt", away: "Spain", matchId: "preview1" },
       lineups:         { home: "Egypt", away: "Spain", matchId: "preview1" },
       goal:            { scorer: "Mohamed Salah", min: 67, home: "Egypt", hs: 2, as: 1, away: "Spain", matchId: "preview1" },
       final_score:     { home: "Egypt", hs: 2, as: 1, away: "Spain", note: "", matchId: "preview1" },
@@ -253,7 +278,7 @@ async function main() {
       week_open:       { weekId: "preview" },
       weekly_champion: { champion: "AhmedElayoty", points: 14, weekId: "preview" }
     };
-    const order = ["chat", "predict_reminder", "match_30min", "match_5min", "lineups", "goal", "final_score", "knockout_open", "nation_qualified", "week_open", "weekly_champion"];
+    const order = (ONLY || ["chat", "predict_reminder", "match_30min", "match_5min", "match_live", "lineups", "goal", "final_score", "knockout_open", "nation_qualified", "week_open", "weekly_champion"]);
     for (const type of order) {
       const p = buildPayload(type, SAMPLE[type], PLANG);
       console.log("  " + type + " -> " + p.title + " | " + p.body);
@@ -286,14 +311,17 @@ async function main() {
     try {
       const st = (e.status && e.status.type && e.status.type.state) || "";
       const { H, A } = HA(e); if (!H || !A || !H.team || !A.team) continue;
-      const home = H.team.displayName, away = A.team.displayName, mins = (new Date(e.date) - now) / 60000;
+      const kickoff = Date.parse(e.date); if (!isFinite(kickoff)) continue;
+      const home = H.team.displayName, away = A.team.displayName, mins = (kickoff - now) / 60000;
       const real = ![home, away].some(n => PH.test(n));
+      let summary = null;
+      const getSummary = async () => summary || (summary = await getJSON(ESPN + "/summary?event=" + e.id));
 
       if (koMatchConfirmed(e) && st === "pre") fire("kc-" + e.id, "knockout_open", { home, away, matchId: e.id }, subs);
 
       if (st === "pre" && real) {
-        if (mins > 25 && mins <= 30) fire("ko30-" + e.id, "match_30min", { home, away, koTime: koTimeUAE(e), matchId: e.id }, subs);
-        if (mins > 0 && mins <= 5)  fire("ko5-" + e.id, "match_5min", { home, away, matchId: e.id }, subs);
+        if (mins > 25 && mins <= 35) fire("ko30-" + e.id, "match_30min", { home, away, koTime: koTimeUAE(e), matchId: e.id }, subs);
+        if (mins > 0 && mins <= 7)  fire("ko5-" + e.id, "match_5min", { home, away, matchId: e.id }, subs);
         if (mins <= 240 && mins > 30) {
           subs.forEach(s => {
             const uid = s && s.uid; if (!uid) return;
@@ -301,29 +329,35 @@ async function main() {
             fire("predr-" + e.id + "-" + uid, "predict_reminder", { home, away, koTime: koTimeUAE(e), matchId: e.id }, [s]);
           });
         }
-        if (mins > 0 && mins <= 90 && !sentIds.has("lu-" + e.id)) {
-          const sum = await getJSON(ESPN + "/summary?event=" + e.id);
+        if (mins * 60000 > LINEUP_TOO_LATE_MS && mins <= 90 && !sentIds.has("lu-" + e.id)) {
+          const sum = await getSummary();
           const rosters = (sum && sum.rosters) || [];
-          if (rosters.length >= 2 && rosters.every(r => (r.roster || []).length >= 11)) fire("lu-" + e.id, "lineups", { home, away, matchId: e.id }, subs);
+          if (rosters.length >= 2 && rosters.every(validLineupRoster)) fire("lu-" + e.id, "lineups", { home, away, matchId: e.id }, subs);
         }
       }
 
-      if (st === "in") {
-        const sum = await getJSON(ESPN + "/summary?event=" + e.id);
+      if (st === "in" && real) {
+        if (now - kickoff >= 0 && now - kickoff <= LIVE_STALE_MS) fire("live-" + e.id, "match_live", { home, away, matchId: e.id }, subs);
+        else if (now - kickoff > LIVE_STALE_MS && !sentIds.has("live-" + e.id)) { sentIds.add("live-" + e.id); sent.push({ id: "live-" + e.id, ts: now, skip: "stale_live" }); }
+      }
+
+      if ((st === "in" || (st === "post" && (now - kickoff) < 4 * 3600000)) && real) {
+        const sum = await getSummary();
         for (const g of ((sum && sum.keyEvents) || [])) {
           if (!g || g.scoringPlay !== true || g.shootout === true) continue;
           const gid = "goal-" + e.id + "-" + g.id; if (sentIds.has(gid)) continue;
           const wall = g.wallclock ? Date.parse(g.wallclock) : NaN;
           const effective = isFinite(wall) ? wall : (pending[gid] || (pending[gid] = now));
-          if (now - effective >= 180000) {
+          const age = now - effective;
+          if (age >= GOAL_DELAY_MS && age <= GOAL_STALE_MS) {
             const scorer = (g.participants && g.participants[0] && g.participants[0].athlete && g.participants[0].athlete.displayName) || "Goal";
             const min = (g.clock && g.clock.displayValue ? g.clock.displayValue : "").replace("'", "");
-            fire(gid, "goal", { scorer, min, home, away, hs: (+H.score || 0), as: (+A.score || 0), matchId: e.id }, subs);
-          }
+            fire(gid, "goal", { scorer, min, home, away, ...goalScore(g, H, A), matchId: e.id }, subs);
+          } else if (age > GOAL_STALE_MS) { sentIds.add(gid); sent.push({ id: gid, ts: now, skip: "stale_goal" }); }
         }
       }
 
-      if (st === "post" && (now - new Date(e.date)) < 6 * 3600000) {   // only matches that kicked off within the last 6h (stops backfilling old results)
+      if (st === "post" && (now - kickoff) < 6 * 3600000) {   // only matches that kicked off within the last 6h (stops backfilling old results)
         const desc = (e.status.type.description || "") + " " + (e.status.type.detail || "");
         const so = (H.shootoutScore != null && A.shootoutScore != null && (+H.shootoutScore !== 0 || +A.shootoutScore !== 0));
         const noteVal = so ? "pens" : /extra/i.test(desc) ? "aet" : "none";
@@ -350,10 +384,10 @@ async function main() {
     }
   }
 
-  // CHAT (new non-bot messages in last 15 min, to everyone except sender)
+  // CHAT (recent unsent non-bot messages, to everyone except sender)
   const BOT = /^(goalbot|brkbot|champbot|funbot|adminbot)/i;
   let chat = await readKey(K.chat, []); if (!Array.isArray(chat)) chat = [];
-  for (const m of chat.filter(m => m && m.id && m.text && m.ts && (now - m.ts) <= 15 * 60000 && m.uid && !BOT.test(m.uid) && !sentIds.has("chat-" + m.id)).slice(-3))
+  for (const m of chat.filter(m => m && m.id && m.text && m.ts && (now - m.ts) <= CHAT_STALE_MS && m.uid && !BOT.test(m.uid) && !sentIds.has("chat-" + m.id)).sort((a, b) => a.ts - b.ts).slice(-5))
     fire("chat-" + m.id, "chat", { name: m.name || "Someone", preview: (m.text || "").slice(0, 80) }, subs.filter(s => (s && s.uid) !== m.uid));
 
   // NEXT WEEK predictions just opened
@@ -363,10 +397,10 @@ async function main() {
 
   // WEEKLY CHAMPION at ~10:00 UAE (06:00 UTC)
   const nowD = new Date(now);
-  if (nowD.getUTCHours() === 6 && nowD.getUTCMinutes() < 10) {
+  if (fixedYMD(nowD) === curWk && nowD.getUTCHours() === 6 && nowD.getUTCMinutes() < 10) {
     const byWeek = {}; events.forEach(e => { const w = weekStartKey(new Date(e.date)); (byWeek[w] = byWeek[w] || []).push(e); });
-    const wk = Object.keys(byWeek).filter(w => w < curWk && byWeek[w].every(e => e.status.type.state === "post")).sort().pop();
-    if (wk && !sentIds.has("champ-" + wk)) {
+    const wk = weekKeyAddDays(curWk, -7);
+    if (byWeek[wk] && byWeek[wk].length && byWeek[wk].every(e => e.status.type.state === "post") && !sentIds.has("champ-" + wk)) {
       const scores = Object.entries(preds).map(([uid, u]) => { let pts = 0; byWeek[wk].forEach(e => { const { H, A } = HA(e); const p = (u.preds || {})[e.id]; if (hasPred(p)) pts += scorePred(p, H, A, e); }); return { name: u.name || "?", pts }; }).filter(x => x.pts > 0).sort((a, b) => b.pts - a.pts);
       if (scores.length) { const top = scores[0].pts; fire("champ-" + wk, "weekly_champion", { champion: scores.filter(s => s.pts === top).map(s => s.name).join(" & "), points: top, weekId: wk }, subs); }
     }
