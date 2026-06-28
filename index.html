@@ -1088,7 +1088,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.87</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.88</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1414,7 +1414,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.87";
+const APP_VERSION = "2.88";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
@@ -2735,6 +2735,7 @@ function syncKnockout(evs) {
   (evs || []).forEach(e => {
     try {
       const stt = e.status && e.status.type && e.status.type.state; if (stt === "pre") return;
+      const _kost = (e.season || {}).type; if (_kost == null || _kost === _GROUP_STAGE_TYPE) return;   // KNOCKOUT fixtures ONLY (same season.type gate as confirmedTeams): a GROUP game played on a knockout node's date/venue (e.g. Jordan vs Argentina — their 3rd GROUP game, not an R32/R16) was being matched by date+venue and swept into the bracket as a knockout result, then propagated forward as a phantom winner. Gate on season.type so group games never land here.
       const comp = e.competitions && e.competitions[0]; if (!comp) return;
       const ymd = fixedYMD(new Date(e.date)), vn = norm((comp.venue || {}).fullName), vc = norm(((comp.venue || {}).address || {}).city);
       let node = BRACKET.find(n => { const nd = uaeStrToDate(n.uae); if (!nd || fixedYMD(nd) !== ymd) return false; const sn = norm(n.st); return (vn && sn && (vn === sn || vn.includes(sn) || sn.includes(vn))) || (vc && vc === norm(n.city)); });   // venue: exact OR contains either direction (ESPN "GEHA Field at Arrowhead Stadium" vs our "Arrowhead Stadium")
