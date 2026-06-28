@@ -1,0 +1,25 @@
+name: Week status
+
+# READ-ONLY diagnostic: prints each tournament week's date range, match
+# finished/live/upcoming counts, the computed Prediction Champion, what the
+# banner (lastCompletedWeek) shows, and where South Africa vs Canada lands.
+# Writes nothing, no secrets. Run from the Actions tab.
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Print week status
+        run: node .github/scripts/week-status.mjs
