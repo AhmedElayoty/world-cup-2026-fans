@@ -1,0 +1,38 @@
+name: Pin push milestones
+
+# One-shot maintenance job: mark notification ids as already-sent in the shared dedup
+# ledger (textdb key capriole_wc26_push_sent) so the live push sender stops re-firing a
+# one-time milestone (e.g. "Egypt qualified for the Round of 32"). Merge-only + read-back
+# verified; no secrets needed (textdb is keyless). Run from the Actions tab, or via API.
+#
+# The ledger is SHARED across both mirror apps, so a single run covers everyone.
+on:
+  workflow_dispatch:
+    inputs:
+      ids:
+        description: "Comma-separated notification ids to pin (blank = q-r32-Egypt,egy-r32)"
+        type: string
+        default: "q-r32-Egypt,egy-r32"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: push-pin
+  cancel-in-progress: false
+
+jobs:
+  pin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Pin milestone ids
+        env:
+          PIN_IDS: ${{ inputs.ids }}
+        run: node .github/scripts/push-pin.mjs
