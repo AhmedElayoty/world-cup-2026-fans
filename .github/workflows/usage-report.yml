@@ -1,0 +1,25 @@
+name: Usage report
+
+# READ-ONLY: prints how many people use the app (unique visitors, active users,
+# accounts, push subscribers, predictors, chat authors, top countries) from the
+# shared textdb stores. Writes nothing, needs no secrets. Run from the Actions tab.
+# The stores are shared across both mirror apps, so one run covers everyone.
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Print usage report
+        run: node .github/scripts/usage-report.mjs
