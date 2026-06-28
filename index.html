@@ -1088,7 +1088,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.89</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.90</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1414,7 +1414,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.89";
+const APP_VERSION = "2.90";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
@@ -3870,7 +3870,16 @@ async function loadLeaderboard(evs, preAll) {
         : '<div class="empty" style="padding:12px">No points yet.</div>');
       const _aw = $("lbAllWrap"); if (_aw) _aw.classList.toggle("hide", fixedYMD(new Date()) < "20260718");   // reveal the overall total + champion for the finals weekend (18 Jul)
     } catch (_) {}
-    const curWk = weekStartKey(new Date());
+    // Weekly board stays on the week that's IN PLAY: don't roll to the new calendar week (which would
+    // reset everyone to 0) until the PREVIOUS week's matches have all finished. A match that kicks off
+    // late and runs past UAE midnight (e.g. South Africa v Canada) keeps last week's table showing until
+    // it ends — so the weekly board now waits for completion, matching the champion banner.
+    let curWk = weekStartKey(new Date());
+    { const prevWk = weekKeyAddDays(curWk, -7);
+      const curHasResult = evs.some(e => e.status.type.state === "post" && weekStartKey(new Date(e.date)) === curWk);
+      const prevEvs = evs.filter(e => weekStartKey(new Date(e.date)) === prevWk);
+      const prevDone = prevEvs.length > 0 && prevEvs.every(e => e.status.type.state === "post");
+      if (!curHasResult && prevEvs.length && !prevDone) curWk = prevWk; }   // last week still has a live/unplayed match → keep showing it
     const done = evs.filter(e => e.status.type.state === "post" && weekStartKey(new Date(e.date)) === curWk);
     const wkAll = evs.filter(e => weekStartKey(new Date(e.date)) === curWk);
     const wkRange = wkAll.length
