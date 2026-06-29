@@ -1065,8 +1065,8 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
   <div id="brkBox"></div>
   <div class="lb hide" id="lbAllWrap"><h3>&#127942; OVERALL &#183; ALL WEEKS</h3>
   <div class="brknote">Total points across the whole tournament &#183; <b>highest wins on finals day</b></div><div id="lbAllBody"><div class="empty">Loading…</div></div></div>
-  <div class="lb"><h3 style="display:flex;align-items:center;gap:8px">&#127942; THIS WEEK<button class="otdkey" onclick="openOnThisDay()">&#128197; TODAY'S FUN FACTS &#8594;</button></h3>
-  <div class="brknote">&#127942; Weekly top predictor is crowned the <b>Prediction Champion</b></div><div id="lbBody"><div class="empty">Loading…</div></div></div>
+  <div class="lb"><h3 style="display:flex;align-items:center;gap:8px"><span id="lbTitle">&#127942; THIS WEEK</span><button class="otdkey" onclick="openOnThisDay()">&#128197; TODAY'S FUN FACTS &#8594;</button></h3>
+  <div class="brknote" id="brkNote">&#127942; Weekly top predictor is crowned the <b>Prediction Champion</b></div><div id="lbBody"><div class="empty">Loading…</div></div></div>
   <div class="secrow"><span class="sect">YOUR PREDICTIONS</span></div>
   <div class="scorekey"><span class="sklbl">HOW POINTS WORK</span><span class="skpill gold"><b>3 PTS</b> EXACT SCORE</span><span class="skpill cyan"><b>1 PT</b> RIGHT RESULT</span></div>
   <div id="predList"><div class="empty">Loading…</div></div>
@@ -1092,7 +1092,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.96</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.97</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1418,7 +1418,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.96";
+const APP_VERSION = "2.97";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
@@ -2628,6 +2628,13 @@ function currentKoRound() {                                   // earliest round 
   return "FINAL";
 }
 function updateKoPhaseUI() { try { const nav = document.querySelector("nav"); if (nav) nav.classList.toggle("kophase", koPhaseStarted()); } catch (_) {} }
+// ---- Per-ROUND predictions + leaderboard (knockouts only; the group stage stays per-week). ----
+const KO_ROUND_LABEL = { R32: ["ROUND OF 32", "دور الـ32"], R16: ["ROUND OF 16", "دور الـ16"], QF: ["QUARTER-FINALS", "ربع النهائي"], SF: ["SEMI-FINALS", "نصف النهائي"], FINAL: ["FINAL", "النهائي"] };
+function koRoundLabel(code) { const m = KO_ROUND_LABEL[code]; return m ? ((typeof LANG !== "undefined" && LANG === "ar") ? m[1] : m[0]) : code; }
+function koRoundMatches(code) { return _koEvents().filter(e => { const r = koRound(e); return r === code || (code === "FINAL" && r === "BRONZE"); }); }
+function koRoundStartMs(code) { const ds = koRoundMatches(code).map(e => +new Date(e.date)).filter(n => isFinite(n)); return ds.length ? Math.min.apply(null, ds) : null; }
+function koMatchOpen(e) { const s = koRoundStartMs(koRound(e)); return s != null && Date.now() >= s - 2 * 86400000; }   // a knockout match opens once we're within 2 days of its ROUND's first match (teams already confirmed by the caller)
+function lastDoneKoRound() { let last = null; for (const rc of KO_ROUND_ORDER) { const inR = koRoundMatches(rc); if (inR.length && inR.every(e => e.status && e.status.type && e.status.type.state === "post")) last = rc; } return last; }   // highest fully-finished knockout round, else null
 let bracketRound = "R32", _slots = null, _egyTrack = null;
 function setBracketRound(r) { bracketRound = r; renderBracket(); }
 function resolveSlots(groups) {
@@ -3271,7 +3278,7 @@ async function renderPredict() {
     const up = evs.filter(e => e.status.type.state === "pre" && new Date(e.date) > now && ((e.competitions[0] || {}).competitors || []).every(c => c.team && c.team.logo));   // real-team fixtures only (skip knockout placeholders)
     const isKO = e => !!(e.season && e.season.type && e.season.type !== 13802);   // group stage = season.type 13802; anything else = knockout
     const grpUp = up.filter(e => !isKO(e));
-    const koUp = up.filter(isKO);   // knockouts open the instant their teams are confirmed · no week gate
+    const koUp = up.filter(e => isKO(e) && koMatchOpen(e));   // a knockout match opens once its teams are confirmed AND we're within 2 days of its ROUND's first match (per-fixture; doesn't wait for the whole round to be set)
     const curWk = weekStartKey(new Date());
     const nextWk = weekKeyAddDays(curWk, 7);
     const nextOpen = grpUp.some(e => weekStartKey(new Date(e.date)) === nextWk && (new Date(e.date) - now) <= 2 * 86400000);  // next week opens 2 days before its first match
@@ -3301,7 +3308,8 @@ async function renderPredict() {
       html += '<div class="secrow" style="margin-top:' + (html ? "14px" : "2px") + '"><span class="sect">' + lab + '</span></div>' +
         done.map(e => predCard(e, isClosed(e))).join("");
     }
-    if (!html) html = '<div class="empty">No matches open yet · next week\u2019s fixtures open 2 days before it starts.</div>';
+    const _koOpenMsg = (typeof LANG !== "undefined" && LANG === "ar") ? 'لا مباريات مفتوحة بعد · تُفتح مباريات كل دور قبل يومين من بدايته.' : 'No matches open yet · each round\u2019s fixtures open 2 days before the round starts.';
+    if (!html) html = '<div class="empty">' + (koPhaseStarted() ? _koOpenMsg : 'No matches open yet · next week\u2019s fixtures open 2 days before it starts.') + '</div>';
     const recent = evs.filter(e => e.status.type.state !== "pre").slice(-6).reverse();
     if (recent.length) html += '<div class="secrow" style="margin-top:14px"><span class="sect">LOCKED / FINISHED</span></div>' +
       recent.map(e => predCard(e, true)).join("");
@@ -3763,8 +3771,13 @@ async function refreshPushUI(){
 }
 addEventListener("beforeinstallprompt", e => { e.preventDefault(); _installPrompt = e; maybeShowInstall(); updateInstallIcon(); });
 addEventListener("appinstalled", () => { _installPrompt = null; hideInstallBar(); updateInstallIcon(); });
+const PREDROUND_HTML = '<h3>🏆 New: predictions are per round</h3><p>The leaderboard and the Prediction Champion are now decided <b>per knockout round</b> (Round of 32, Round of 16, and so on) instead of per week.</p><p style="font-size:12px;color:var(--mut)">Each round opens for prediction about 2 days before it starts. Good luck! ⚽</p><button class="igo" onclick="closeInfo()">Got it</button>';
+const PREDROUND_AR = '<h3>🏆 جديد: التوقّعات الآن لكل دور</h3><p>أصبحت لوحة الصدارة وبرنس التوقّعات تُحسَب الآن <b>لكل دور إقصائي</b> (دور الـ32، دور الـ16، وهكذا) بدلاً من الأسبوع.</p><p style="font-size:12px;color:var(--mut)">تُفتح مباريات كل دور للتوقّع قبل يومين تقريباً من بدايته. بالتوفيق! ⚽</p><button class="igo" onclick="closeInfo()">تمام</button>';
 function predictPopups(koUp) {   // one-time per user, on opening the Predict tab
   try {
+    if (fixedYMD(new Date()) <= "20260701" && !localStorage.getItem("cs_predround_notice")) {   // per-round switch notice · once per user, only within ~2 days of the change (through 1 Jul)
+      localStorage.setItem("cs_predround_notice", "1"); showInfo((typeof LANG !== "undefined" && LANG === "ar") ? PREDROUND_AR : PREDROUND_HTML); return;
+    }
     if (fixedYMD(new Date()) >= "20260718" && !localStorage.getItem("cs_finale_seen")) {
       localStorage.setItem("cs_finale_seen", "1"); showInfo(LANG === "ar" ? FINALE_AR : FINALE_HTML); return;
     }
@@ -3905,40 +3918,37 @@ async function loadLeaderboard(evs, preAll) {
     // reset everyone to 0) until the PREVIOUS week's matches have all finished. A match that kicks off
     // late and runs past UAE midnight (e.g. South Africa v Canada) keeps last week's table showing until
     // it ends — so the weekly board now waits for completion, matching the champion banner.
-    let curWk = weekStartKey(new Date());
-    { const prevWk = weekKeyAddDays(curWk, -7);
-      const curHasResult = evs.some(e => e.status.type.state === "post" && weekStartKey(new Date(e.date)) === curWk);
-      const prevEvs = evs.filter(e => weekStartKey(new Date(e.date)) === prevWk);
-      const prevDone = prevEvs.length > 0 && prevEvs.every(e => e.status.type.state === "post");
-      if (!curHasResult && prevEvs.length && !prevDone) curWk = prevWk; }   // last week still has a live/unplayed match → keep showing it
-    const done = evs.filter(e => e.status.type.state === "post" && weekStartKey(new Date(e.date)) === curWk);
-    const wkAll = evs.filter(e => weekStartKey(new Date(e.date)) === curWk);
-    const wkRange = wkAll.length
-      ? (fmt(new Date(wkAll[0].date), { day: "2-digit", month: "short" }) + " - " +
-         fmt(new Date(wkAll[wkAll.length - 1].date), { day: "2-digit", month: "short" })).toUpperCase()
-      : "";
+    // CURRENT-PERIOD board: per-WEEK during the group stage, per-ROUND during the knockouts (group-stage weekly champions stay history).
+    let done, wkHead;
+    if (koPhaseStarted()) {
+      const _rc = currentKoRound();
+      done = koRoundMatches(_rc).filter(e => e.status.type.state === "post");
+      wkHead = '<div style="font-family:Oswald;font-size:11px;letter-spacing:1px;color:var(--cyan);margin-bottom:8px">' + (LANG === "ar" ? "هذا الدور" : "THIS ROUND") + ' · ' + koRoundLabel(_rc) + '</div>';
+    } else {
+      let curWk = weekStartKey(new Date());
+      { const prevWk = weekKeyAddDays(curWk, -7);
+        const curHasResult = evs.some(e => e.status.type.state === "post" && weekStartKey(new Date(e.date)) === curWk);
+        const prevEvs = evs.filter(e => weekStartKey(new Date(e.date)) === prevWk);
+        const prevDone = prevEvs.length > 0 && prevEvs.every(e => e.status.type.state === "post");
+        if (!curHasResult && prevEvs.length && !prevDone) curWk = prevWk; }
+      done = evs.filter(e => e.status.type.state === "post" && weekStartKey(new Date(e.date)) === curWk);
+      const wkAll = evs.filter(e => weekStartKey(new Date(e.date)) === curWk);
+      const wkRange = wkAll.length ? (fmt(new Date(wkAll[0].date), { day: "2-digit", month: "short" }) + " - " + fmt(new Date(wkAll[wkAll.length - 1].date), { day: "2-digit", month: "short" })).toUpperCase() : "";
+      wkHead = '<div style="font-family:Oswald;font-size:11px;letter-spacing:1px;color:var(--cyan);margin-bottom:8px">THIS WEEK' + (wkRange ? " · " + wkRange : "") + ' · POINTS RESET EVERY MONDAY</div>';
+    }
     const rows = Object.entries(all).map(([uid, u]) => {
       let pts = 0, exact = 0, played = 0;
-      done.forEach(e => {
-        const c = e.competitions[0];
-        const H = c.competitors.find(x => x.homeAway === "home"), A = c.competitors.find(x => x.homeAway === "away");
-        const p = (u.preds || {})[e.id];
-        if (!hasPred(p)) return;
-        played++;
-        const s = scoreFinal(p, H, A, e);
-        pts += s;
-        if (s === 3 || s === 10) exact++;
-      });
+      done.forEach(e => { const c = e.competitions[0]; const H = c.competitors.find(x => x.homeAway === "home"), A = c.competitors.find(x => x.homeAway === "away"); const p = (u.preds || {})[e.id]; if (!hasPred(p)) return; played++; const s = scoreFinal(p, H, A, e); pts += s; if (s === 3 || s === 10) exact++; });
       return { uid, name: u.name || "?", pts, exact, played };
     }).sort((a, b) => b.pts - a.pts || b.exact - a.exact);
-    // weekly champion is surfaced by announceChampion() in #brkBox (single source of truth)
-    const wkHead = '<div style="font-family:Oswald;font-size:11px;letter-spacing:1px;color:var(--cyan);margin-bottom:8px">THIS WEEK' +
-      (wkRange ? " · " + wkRange : "") + ' · POINTS RESET EVERY MONDAY</div>';
+    { const _lt = document.getElementById("lbTitle"); if (_lt) _lt.innerHTML = "🏆 " + (koPhaseStarted() ? (LANG === "ar" ? "هذا الدور" : "THIS ROUND") : (LANG === "ar" ? "هذا الأسبوع" : "THIS WEEK")); }
+    { const _bn = document.getElementById("brkNote"); if (_bn) _bn.innerHTML = "🏆 " + (koPhaseStarted() ? (LANG === "ar" ? "يُتوَّج صاحب أعلى التوقّعات في كل دور ليكون <b>برنس التوقّعات</b>" : "Each round’s top predictor is crowned the <b>Prediction Champion</b>") : (LANG === "ar" ? "يُتوَّج صاحب أعلى التوقّعات أسبوعياً ليكون <b>برنس التوقّعات</b>" : "Weekly top predictor is crowned the <b>Prediction Champion</b>")); }
     const scored = rows.filter(r => r.played > 0);
     const board = scored.length ? scored : rows;
+    const _emptyP = koPhaseStarted() ? (LANG === "ar" ? "لا نقاط في هذا الدور بعد · تمتلئ اللوحة مع انتهاء مباريات الدور." : "No points yet this round · the board fills as this round’s matches finish.") : "No points yet this week · the board fills as this week’s matches finish.";
     $("lbBody").innerHTML = wkHead + (board.length && (scored.length || done.length === 0)
       ? lbBoard(board, "wk")
-      : '<div class="empty" style="padding:12px">No points yet this week · the board fills as this week\u2019s matches finish.</div>');
+      : '<div class="empty" style="padding:12px">' + _emptyP + '</div>');
   } catch (_) {
     $("lbBody").innerHTML = '<div class="empty" style="padding:12px">Leaderboard unreachable.</div>';
   }
@@ -4511,12 +4521,42 @@ function lastCompletedWeek(evs) {
   const lab = (_dxb(new Date(ds[0].date)) + ((typeof LANG !== "undefined" && LANG === "ar") ? " إلى " : " to ") + _dxb(new Date(ds[ds.length - 1].date))).toUpperCase();
   return { wk, events: ds, lab, d0: ds[0].date, d1: ds[ds.length - 1].date };   // raw boundary dates so the chat champion message can build the week label in BOTH languages (w.lab itself is in the viewer's current language only)
 }
+function announceRoundChampion(all) {   // knockout ROUND champion: crowned when a round's matches are all finished
+  try {
+    const rc = lastDoneKoRound();
+    if (!rc) { $("brkBox").innerHTML = ""; return; }   // no knockout round fully finished yet → nothing to crown
+    const lbl = koRoundLabel(rc), ar = (typeof LANG !== "undefined" && LANG === "ar");
+    const scores = weekScores(koRoundMatches(rc), all);   // reuse the scorer over this round's matches
+    if (!scores.length) { $("brkBox").innerHTML = '<div class="brk none">&#127942; ' + (ar ? ("لا برنس توقّعات بعد · لم يسجّل أحد نقاطاً في " + lbl) : ("No Prediction Champion yet · nobody scored in " + lbl)) + '.</div>'; return; }
+    const top = scores[0].pts, winners = scores.filter(s => s.pts === top), names = winners.map(x => x.name).join(" & "), plural = winners.length > 1;
+    let mineLine = "";
+    const mine = cs_user ? scores.find(s => s.uid === myId) : null;
+    if (mine && mine.pts > 0) { const _l = ar ? ("نتيجتك في " + lbl + " : ") : ("Your " + lbl + " score : "); mineLine = '<span class="myscore">' + _l + mine.pts + (ar ? " نقطة" : " pts") + '</span>'; }
+    const head = ar ? (plural ? "برانسة التوقّعات" : "برنس التوقّعات") : ("PREDICTION CHAMPION" + (plural ? "S" : ""));
+    const body = ar ? (esc(names) + " تصدّر " + lbl + " بـ " + top + " نقطة") : (esc(names) + " topped " + lbl + " with " + top + " pts");
+    const tag = ar ? ("بطل " + lbl + "!") : (lbl + " CHAMPION!");
+    $("brkBox").innerHTML = '<div class="brk">&#127942; <b>' + head + '</b> &#183; ' + body + '.<span>' + tag + '</span>' + mineLine + '</div>';
+    try {
+      if (!localStorage.getItem("cs_champ_" + rc)) {   // post to chat ONCE per completed round (bilingual, name-on-top Arabic)
+        localStorage.setItem("cs_champ_" + rc, "1");
+        const enMsg = plural ? names + " share the " + lbl + " crown · joint Prediction Champions with " + top + " pts each! 👏" : names + " is the " + lbl + " Prediction Champion · top of the round with " + top + " pts! Congrats 👏";
+        const arDesc = plural ? "برانسة التوقّعات في " + lbl + " · يتقاسمون اللقب بـ " + top + " نقطة لكلٍّ منهم! 👏" : "برنس التوقّعات في " + lbl + " · متصدّر لوحة الصدارة بـ " + top + " نقطة! مبروك 👏";
+        const cts = Date.now();
+        postRoom([
+          { id: "champ-" + rc + "-en", uid: "champbot_en", name: "🏆 LEADERBOARD", text: "🏆 " + enMsg, ts: cts },
+          { id: "champ-" + rc + "-ar", uid: "champbot_ar", name: "🏆 لوحة الصدارة", text: "🏆 " + names + "\n" + arDesc, ts: cts + 1 }
+        ]).catch(() => {});
+      }
+    } catch (_) {}
+  } catch (_) {}
+}
 async function announceChampion() {
   try {
     const evs = await seasonEvents();
+    const all = await readKey(PRED_KEY, {});
+    if (koPhaseStarted()) { announceRoundChampion(all); return; }   // knockouts → per-round champion; group-stage weekly champions are already history
     const w = lastCompletedWeek(evs);
     if (!w) { $("brkBox").innerHTML = ""; return; }
-    const all = await readKey(PRED_KEY, {});
     const scores = weekScores(w.events, all);
     if (!scores.length) {
       $("brkBox").innerHTML = '<div class="brk none">&#127942; No Prediction Champion yet · nobody scored points last week (' +
