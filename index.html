@@ -1092,7 +1092,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.99</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.00</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1418,7 +1418,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.99";
+const APP_VERSION = "3.00";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
@@ -4544,16 +4544,16 @@ function announceRoundChampion(all, evs) {   // knockout-phase TOP BOX: headline
     const cTop = scores.length ? scores[0].pts : 0;
     const cPlural = !!(scores.length && scores.filter(s => s.pts === cTop).length > 1);
     const cNames = scores.length ? scores.filter(s => s.pts === cTop).map(x => esc(x.name)).join(" & ") : "";
-    const line1 = '&#127942; <b>' + label + (cPlural && !ar ? "S" : "") + '</b> &#183; ' + (scores.length ? (cNames + ' &#183; ' + cTop + (ar ? " نقطة" : " pts")) : (ar ? "لا أحد بعد" : "nobody yet"));
+    const line1 = '&#127942; <b>' + label + (cPlural && !ar ? "S" : "") + '</b> &#183; ' + (scores.length ? ('<bdi>' + cNames + '</bdi> &#183; <bdi>' + cTop + '</bdi> ' + (ar ? "نقطة" : "pts")) : (ar ? "لا أحد بعد" : "nobody yet"));
     let rows = "";
     if (gs.length) {
       const gTop = gs[0].pts, gNames = gs.filter(s => s.pts === gTop).map(x => esc(x.name)).join(" & ");
-      rows += '<span class="myscore">&#127941; ' + (ar ? "بطل دور المجموعات" : "GROUP STAGE CHAMPION") + ' &#183; ' + gNames + ' &#183; ' + gTop + (ar ? " نقطة" : " pts") + '</span>';
+      rows += '<span class="myscore">&#127941; ' + (ar ? "بطل دور المجموعات" : "GROUP STAGE CHAMPION") + ' &#183; <bdi>' + gNames + '</bdi> &#183; <bdi>' + gTop + '</bdi> ' + (ar ? "نقطة" : "pts") + '</span>';
     }
     if (cs_user) {
       const myPts = mine ? mine.pts : 0;
       const myLbl = rc ? (ar ? "نتيجتك في الدور الأخير" : "Your Last Round's Score") : (ar ? "نتيجتك في الأسبوع الماضي" : "Your Last Week's Score");   // period matches the headline champion
-      rows += '<span class="myscore">' + myLbl + ' &#183; ' + myPts + (ar ? " نقطة" : " pts") + '</span>';
+      rows += '<span class="myscore">' + myLbl + ' &#183; <bdi>' + myPts + '</bdi> ' + (ar ? "نقطة" : "pts") + '</span>';
     }
     $("brkBox").innerHTML = '<div class="brk">' + line1 + rows + '</div>';
     // chat post: ONLY when a knockout round completes (never for the last-week bridge), once per round
