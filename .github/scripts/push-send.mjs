@@ -121,7 +121,6 @@ function standingsEntries(standings) {
   }
   return rows;
 }
-function dropSentIds(sent, sentIds, ids) { if (!ids || !ids.size) return sent; for (const id of ids) sentIds.delete(id); return sent.filter(s => !(s && ids.has(s.id))); }
 function confirmedKnockoutTeams(events) {
   const set = new Set();
   for (const e of events || []) {
@@ -570,13 +569,6 @@ async function main() {
   const standings = await getJSON(STANDINGS_URL);
   const standRows = standingsEntries(standings);
   const koTeams = confirmedKnockoutTeams(events);
-  const unconfirmedStandingsIds = new Set();
-  for (const row of standRows) {
-    const note = (row.ent.note && row.ent.note.description) || "";
-    if (/advance to round of 32/i.test(note) && !koTeams.has(row.name)) unconfirmedStandingsIds.add("q-r32-" + row.name);
-    if (/eliminated|did not advance|failed to advance/i.test(note) && !row.settled) unconfirmedStandingsIds.add("elim-group-note-" + slugId(row.id || row.name));
-  }
-  sent = dropSentIds(sent, sentIds, unconfirmedStandingsIds);
   const egyptSubs = subs.filter(s => sameNation(s && s.nat, CELEB_EGY));
   for (const nation of koTeams) {
     fire("q-r32-" + nation, "nation_qualified", { nation, stage: "the Round of 32", matchId: "" }, subs.filter(s => sameNation(s && s.nat, nation)));
