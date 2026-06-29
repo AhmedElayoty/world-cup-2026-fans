@@ -954,7 +954,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
 .glint{position:absolute;width:7px;height:7px;border-radius:50%;background:#fff;box-shadow:0 0 8px 3px rgba(201,166,107,.9);opacity:0;pointer-events:none}
 .gEagle{left:calc(50% - 3.5px);top:calc(50% - 3.5px);animation:glint .6s 3500ms both}
 .gSalah{right:12%;top:13%;animation:glint .6s 4600ms both}
-#egyWin .msg{margin-top:22px;text-align:center;max-width:92vw}
+#egyWin .egyMsg{margin-top:22px;text-align:center;max-width:92vw}
 .msgAr{font-family:var(--ar);font-weight:800;font-size:clamp(26px,8.5vw,38px);line-height:1.25;color:#fff;text-shadow:0 2px 0 rgba(192,158,95,.45),0 0 22px rgba(206,17,38,.35);opacity:0;animation:msgIn .46s 3100ms both}
 .rule{width:84px;height:2px;background:var(--egy-gold);margin:10px auto;transform-origin:center;box-shadow:0 0 8px rgba(192,158,95,.6);transform:scaleX(0);animation:ruleIn .5s 3350ms ease-in-out both}
 .msgEn{font-family:var(--la);font-weight:600;font-size:clamp(15px,4.6vw,21px);letter-spacing:2.5px;text-transform:uppercase;color:var(--egy-gold);line-height:1.2;opacity:0;animation:msgIn .46s 3600ms both}
@@ -994,7 +994,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
 @keyframes sndAttn{0%,100%{transform:scale(1);box-shadow:0 6px 22px rgba(0,0,0,.45)}50%{transform:scale(1.06);box-shadow:0 8px 30px rgba(231,181,77,.9),0 0 0 6px rgba(231,181,77,.28)}}
 
 @media (max-height:740px){ .flag{width:min(66vw,300px)} .salah{width:min(44vw,172px)} }
-@media (max-height:660px){ .flag{width:min(58vw,260px)} .salah{width:min(40vw,156px);margin-top:12px} #egyWin .msg{margin-top:11px} }
+@media (max-height:660px){ .flag{width:min(58vw,260px)} .salah{width:min(40vw,156px);margin-top:12px} #egyWin .egyMsg{margin-top:11px} }
 @media (prefers-reduced-motion:reduce){
   .rays,.slamFlash,.glint,.sweep{display:none!important}
   .vignette,.glow,.flagFly,.flag,.salah,.salah.bob,.msgAr,.rule,.msgEn,.chant,.chant.pulse,.sndbtn{
@@ -1088,7 +1088,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.90</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.91</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1165,7 +1165,7 @@ function buildOverlay(){
         '<img alt="Mohamed Salah celebrating Egypt\'s win">' +
         '<div class="sweep"></div><div class="glint gSalah"></div>' +
       '</div>' +
-      '<div class="msg">' +
+      '<div class="egyMsg">' +
         '<div class="msgAr" dir="rtl">مبروك لرجالة مصر</div>' +
         '<div class="rule"></div>' +
       '</div>' +
@@ -1414,7 +1414,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.90";
+const APP_VERSION = "2.91";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
