@@ -1091,7 +1091,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.92</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.93</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1417,7 +1417,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.92";
+const APP_VERSION = "2.93";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
@@ -2746,11 +2746,14 @@ function renderBracket() {
   const statusHTML = koPhaseStarted() ? "" /* hide the groups-complete / provisional banner once the knockouts are underway (within 1h of the first KO match) — useless then; NOT deleted, so a future tournament's group stage shows it again */ : _allDone
     ? '<div class="brstatus ok">' + (LANG === "ar" ? "✓ المجموعات اكتملت · الأدوار الإقصائية مؤكَّدة" : "✓ GROUPS COMPLETE · KNOCKOUTS CONFIRMED") + '</div>'
     : '<div class="brstatus prov">' + (LANG === "ar" ? "⚠ غير مؤكَّد بعد · دور الـ32 مبدئي حسب الترتيب الحالي، ويُعتمد بعد أن تُكمل كل المجموعات مبارياتها الثلاث" : "⚠ NOT CONFIRMED YET · provisional R32 from the current standings · locks once every group finishes its 3 matches") + '</div>';
+  // bracket legend: keep the "★ Your nation" tracker all tournament, but auto-hide the group-stage "Teams drop in as groups finish" hint once knockouts start (same koPhaseStarted gate as the banner; reverts for a future group stage). The timezone is always shown in the top LIVE-FEED strip, so nothing is lost. Drop the whole row if both halves are empty.
+  const _trackSpan = _egyTrack ? '<span class="egl">★ Your nation · ' + esc(myNation().toUpperCase()) + '</span>' : '';
+  const _hintSpan = koPhaseStarted() ? '' : '<span>Teams drop in as groups finish · times ' + tzAbbr() + '</span>';
+  const legendHTML = (_trackSpan || _hintSpan) ? '<div class="brlegend">' + (_trackSpan || '<span></span>') + (_hintSpan || '<span></span>') + '</div>' : '';
   host.innerHTML = '<div class="rchips">' + chips + '</div>' + statusHTML +
     '<div class="brdlrow"><button class="brdl" onclick="openBracketPoster()">⤢ OPEN FULL TREE</button>' +
     '<button class="brdl alt" onclick="downloadBracketPNG(this)">⬇ DOWNLOAD (PNG)</button></div>' +
-    '<div class="brlegend">' + (_egyTrack ? '<span class="egl">★ Your nation · ' + esc(myNation().toUpperCase()) + '</span>' : '<span></span>') +
-    '<span>Teams drop in as groups finish · times ' + tzAbbr() + '</span></div>' +
+    legendHTML +
     '<div class="brbody">' + body + '</div>';
 }
 
