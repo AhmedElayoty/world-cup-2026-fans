@@ -39,30 +39,26 @@ Run from the repo's **Actions** tab. Read-only unless noted.
 - `push-pin.yml` / `.github/scripts/push-pin.mjs` — **writes**: pins notification ids into the
   dedup ledger `capriole_wc26_push_sent` (maintenance; merge-only + read-back verified).
 
-## ⚠️ OPEN WORK — the Cloudflare Worker (NOT in this repo)
-- The **live push sender** is a Cloudflare Worker named **`wc26-push-scheduler`**, on a
-  **1-minute cron**. Its source is **not in either GitHub repo** — it lives only in the
-  Cloudflare dashboard. The GitHub Action `push-send.yml` is a **manual fallback only**
-  (last ran 2026-06-26), so repo changes do not affect live notifications.
-- **Bug:** it re-sends the one-time "Egypt qualified for the Round of 32" notification
-  repeatedly. Proven that it **ignores the shared dedup ledger** `capriole_wc26_push_sent`:
-  the ids `q-r32-Egypt` and `egy-r32` are already in that ledger (359 entries) yet it still
-  fires. Its dedup is likely its own Cloudflare KV that isn't persisting / isn't being checked.
-- Worker env vars (from the dashboard): `DRY_RUN=false`, `MIRROR_TEXTDB=true`,
-  secret `PUSH_ADMIN_TOKEN`, plus a VAPID private-key secret.
+## Cloudflare Worker push sender
+- The **live push sender** is Cloudflare Worker **`wc26-push-scheduler`**, on a **1-minute cron**.
+  GitHub Action `push-send.yml` is manual fallback only; the last scheduled fallback runs were
+  2026-06-26 before the Cloudflare cutover.
+- **2026-06-29 fix:** the repeated R32 qualification push was not because the Worker ignored
+  `capriole_wc26_push_sent`. Root cause was an auto-cleanup block in the Worker/fallback that
+  removed `q-r32-*` IDs from the shared sent ledger when ESPN bracket data temporarily did not
+  show a team, then sent again when the bracket appeared. That cleanup has been removed.
+- Current live Worker version: `333b93e7-2e11-4b82-b12a-1615d81196ed`.
+- Current verification: `q-r32-Egypt`, `egy-r32`, `opp-760499-2620`, and `kc-760499` are present
+  in `capriole_wc26_push_sent`; post-fix dry run queues `[]`.
+- Worker env vars: `DRY_RUN=false`, `MIRROR_TEXTDB=true`, secret `PUSH_ADMIN_TOKEN`, plus VAPID
+  private-key secret.
 
-### What to change (the balance)
-1. Pull the Worker source (`wrangler login`, then fetch `wc26-push-scheduler`) and **commit it
-   to the repo** under e.g. `cloudflare/wc26-push-scheduler.js` (+ `wrangler.toml`) so it's
-   version-controlled.
-2. **Fix its dedup** so each one-time milestone (`q-r32-Egypt`, `egy-r32`, etc.) fires once:
-   persist/check its sent-store reliably, and ideally also consult the shared
-   `capriole_wc26_push_sent` ledger as a backstop.
-3. Deploy with `wrangler deploy`.
-
-### Immediate stop options (no code)
-- Set Worker var `DRY_RUN=true` (computes but sends nothing), **or** disable its cron trigger
-  in the Cloudflare dashboard. End-users can also turn it off in-app: Settings → 🔔 Match alerts.
+### Remaining work
+1. Commit the Worker source/config to this repo under a `cloudflare/` or `workers/` path so the
+   live notification sender is version-controlled with the fallback script.
+2. Keep the invariant: normal cron runs may add dedupe IDs, but must never remove milestone IDs
+   such as `q-r32-*`, `egy-*`, `opp-*`, `kc-*`, `adv-*`, `elim-*`, `champ-*`, or `weekopen-*`.
+3. Immediate stop option remains: set Worker var `DRY_RUN=true` or disable the cron in Cloudflare.
 
 ## Reference (public-by-design — these ship in the client JS)
 - ESPN public API, league `fifa.world`.
