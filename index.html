@@ -1092,7 +1092,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.01</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.02</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1418,7 +1418,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "3.01";
+const APP_VERSION = "3.02";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
@@ -4526,14 +4526,12 @@ function announceRoundChampion(all, evs) {   // knockout-phase TOP BOX: headline
     const ar = (typeof LANG !== "undefined" && LANG === "ar");
     // 1) headline: this round's champion once a round is fully finished; until then, last week's (the bridge so the box is never empty)
     const rc = lastDoneKoRound();
-    let scores, label;
+    let scores;
     if (rc) {
       scores = weekScores(koRoundMatches(rc), all);
-      label = ar ? ("بطل " + koRoundLabel(rc)) : (koRoundLabel(rc) + " CHAMPION");
     } else {
       const w = lastCompletedWeek(evs);
       scores = w ? weekScores(w.events.filter(e => !isKOEvent(e)), all) : [];   // GROUP matches only — a knockout fixture in this week (e.g. SA v CAN R32) counts in its round, not last week
-      label = ar ? "بطل الأسبوع الماضي" : "LAST WEEK'S CHAMPION";
     }
     // 2) overall GROUP-STAGE champion (cumulative across every finished group match)
     const gsEvs = evs.filter(e => !isKOEvent(e) && e.status && e.status.type && e.status.type.state === "post");
@@ -4544,11 +4542,18 @@ function announceRoundChampion(all, evs) {   // knockout-phase TOP BOX: headline
     const cTop = scores.length ? scores[0].pts : 0;
     const cPlural = !!(scores.length && scores.filter(s => s.pts === cTop).length > 1);
     const cNames = scores.length ? scores.filter(s => s.pts === cTop).map(x => esc(x.name)).join(" & ") : "";
-    const line1 = '&#127942; <b>' + label + (cPlural && !ar ? "S" : "") + '</b> &#183; ' + (scores.length ? ('<bdi>' + cNames + '</bdi> &#183; <bdi>' + cTop + '</bdi> ' + (ar ? "نقطة" : "pts")) : (ar ? "لا أحد بعد" : "nobody yet"));
+    // headline label — Arabic uses برنس/برانسة التوقّعات + the period (owner's wording); liAr attaches Arabic "for" (لدور… , للنهائي)
+    const liAr = s => s.indexOf("ال") === 0 ? ("لل" + s.slice(2)) : ("ل" + s);
+    const brns = cPlural ? "برانسة التوقّعات" : "برنس التوقّعات";
+    const label = rc
+      ? (ar ? (brns + " " + liAr(koRoundLabel(rc))) : (koRoundLabel(rc) + " CHAMPION" + (cPlural ? "S" : "")))
+      : (ar ? (brns + " الأسبوع الماضي") : ("LAST WEEK'S CHAMPION" + (cPlural ? "S" : "")));
+    const line1 = '&#127942; <b>' + label + '</b> &#183; ' + (scores.length ? ('<bdi>' + cNames + '</bdi> &#183; <bdi>' + cTop + '</bdi> ' + (ar ? "نقطة" : "pts")) : (ar ? "لا أحد بعد" : "nobody yet"));
     let rows = "";
     if (gs.length) {
-      const gTop = gs[0].pts, gNames = gs.filter(s => s.pts === gTop).map(x => esc(x.name)).join(" & ");
-      rows += '<span class="myscore">&#127941; ' + (ar ? "بطل دور المجموعات" : "GROUP STAGE CHAMPION") + ' &#183; <bdi>' + gNames + '</bdi> &#183; <bdi>' + gTop + '</bdi> ' + (ar ? "نقطة" : "pts") + '</span>';
+      const gTop = gs[0].pts, gWin = gs.filter(s => s.pts === gTop), gPlural = gWin.length > 1, gNames = gWin.map(x => esc(x.name)).join(" & ");
+      const gLabel = ar ? ((gPlural ? "برانسة التوقّعات" : "برنس التوقّعات") + " لدور المجموعات") : ("GROUP STAGE CHAMPION" + (gPlural ? "S" : ""));
+      rows += '<span class="myscore">&#127941; ' + gLabel + ' &#183; <bdi>' + gNames + '</bdi> &#183; <bdi>' + gTop + '</bdi> ' + (ar ? "نقطة" : "pts") + '</span>';
     }
     if (cs_user) {
       const myPts = mine ? mine.pts : 0;
