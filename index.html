@@ -128,6 +128,9 @@ nav button.on{color:#fff;border-bottom-color:var(--rust2)}
 nav button{min-height:54px}
 @media (max-width:360px){nav button{font-size:10.5px}}
 @media (max-width:332px){nav button{font-size:9.5px;letter-spacing:0;padding:9px 1px}}
+/* Knockout phase: reorder tabs to Matches·Knockouts·Stats·Predict·Chat·Groups, with the now-historical Groups dimmed. CSS order only (DOM unchanged → auto-reverts for a future tournament's group stage). */
+nav.kophase #tabK{order:1} nav.kophase #tabS{order:2} nav.kophase #tabP{order:3} nav.kophase #tabC{order:4} nav.kophase #tabG{order:5;opacity:.5}
+nav.kophase #tabG.on{opacity:1}
 .navbadge{position:absolute;top:5px;left:calc(50% + 13px);min-width:16px;height:16px;padding:0 4px;border-radius:9px;background:var(--rust2);color:#fff;font-family:'Inter';font-weight:700;font-size:9.5px;line-height:16px;text-align:center;display:none;box-shadow:0 0 0 2px var(--navy)}
 #toastWrap{position:fixed;top:calc(8px + env(safe-area-inset-top));left:0;right:0;z-index:200;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 10px}
 .ctoast{pointer-events:auto;width:100%;max-width:430px;background:rgba(16,26,60,.97);border:1px solid var(--line);border-left:3px solid var(--rust2);border-radius:14px;box-shadow:0 10px 34px rgba(0,0,0,.55);padding:10px 11px;display:flex;align-items:center;gap:10px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);animation:toastIn .26s cubic-bezier(.2,.9,.3,1)}
@@ -1088,7 +1091,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.91</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.92</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1414,7 +1417,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.91";
+const APP_VERSION = "2.92";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
@@ -1812,7 +1815,7 @@ function showTab(t) {
   }
   if (t === "G" || t === "K") { loadStandings(true); groupsTimer = groupsTimer || setInterval(loadStandings, 20000); }
   else if (groupsTimer) { clearInterval(groupsTimer); groupsTimer = null; }
-  if (t === "K") renderBracket();   // paint the bracket immediately; loadStandings re-renders it as fresh data lands
+  if (t === "K") { try { bracketRound = currentKoRound(); } catch (_) {} renderBracket(); }   // open on the CURRENT round (R32 now → auto R16 once R32 is done, etc.); the round chips still browse other rounds. loadStandings re-renders as fresh data lands
   if (t === "P") { renderPredict(); if (!cs_user && !window._predSkipped) openAuth("C", { ctx: "predict" }); }
   if (t === "S") { renderStats(); statsTimer = statsTimer || setInterval(() => { if (!$("paneS").classList.contains("hide")) renderStats(); }, 30000); }
   else if (statsTimer) { clearInterval(statsTimer); statsTimer = null; }
@@ -1822,7 +1825,7 @@ function showTab(t) {
 // Ignores gestures that begin inside a horizontally-scrollable element (date strip, wide tables/bracket).
 (function () {
   const main = document.querySelector("main"); if (!main) return;
-  const ORDER = ["M", "G", "K", "S", "P", "C"];
+  // swipe order is computed per gesture (the knockout phase reorders the tabs — keep swipe in sync with what's on screen)
   let sx = 0, sy = 0, st = 0, on = false;
   function scrollableX(el) {
     while (el && el !== main) {
@@ -1841,6 +1844,7 @@ function showTab(t) {
     if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.7 || Date.now() - st > 700) return;   // deliberate horizontal flick only
     let dir = dx < 0 ? 1 : -1;                                              // swipe left → next tab
     if (document.documentElement.getAttribute("dir") === "rtl") dir = -dir; // mirror for Arabic
+    const ORDER = (typeof koPhaseStarted === "function" && koPhaseStarted()) ? ["M", "K", "S", "P", "C", "G"] : ["M", "G", "K", "S", "P", "C"];
     const cur = ORDER.findIndex(x => $("tab" + x).classList.contains("on"));
     const ni = (cur < 0 ? 0 : cur) + dir;
     if (ni < 0 || ni >= ORDER.length) return;                              // no wrap-around at the ends
@@ -2165,7 +2169,8 @@ function teamGroupPos(t, g){
   }catch(_){ return 0; }
 }
 function groupLabelHTML(e){
-  const g = matchGroup(e); if(!g) return "";
+  const g = matchGroup(e);
+  if(!g){ const rn = koRoundName(e); return rn ? '<span class="mgroup">' + esc(rn) + '</span>' : ""; }   // knockout match → show the round name (e.g. "Round of 16") in the same centred slot the group label used
   const L = groupLetter(g); if(!L) return "";
   const ar = (typeof LANG !== "undefined" && LANG === "ar");
   if (ar) return '<span class="mgroup">المجموعة <span class="glet" dir="ltr">' + esc(L) + '</span></span>';   // "المجموعة" + group LETTER (word right, letter left — natural RTL order)
@@ -2600,6 +2605,28 @@ function uaeStrToDate(s){ const p=String(s||"").trim().split(/\s+/); if(p.length
 function koWhen(s){ const d=uaeStrToDate(s); if(!d){ const p=String(s||"").split(" "); return {dt:null,day:p.slice(1,3).join(" "),dayW:p.slice(0,3).join(" "),time:p[p.length-1]}; } return { dt:d, day:fmt(d,{day:"2-digit",month:"short"}), dayW:fmt(d,{weekday:"short",day:"2-digit",month:"short"}), time:fmt(d,{hour:"2-digit",minute:"2-digit"}) }; }
 function koRange(code){ const ds=BRACKET.filter(n=>n.r===code).map(n=>uaeStrToDate(n.uae)).filter(Boolean).sort((a,b)=>a-b); if(!ds.length) return ""; const f=d=>fmt(d,{day:"2-digit",month:"short"}).toUpperCase(); const lo=f(ds[0]), hi=f(ds[ds.length-1]); return lo===hi?lo:lo+" - "+hi; }
 function koRangeByName(nm){ const m={"ROUND OF 32":"R32","ROUND OF 16":"R16","QUARTER-FINAL":"QF","SEMI-FINAL":"SF","FINAL":"FINAL"}; return koRange(m[nm]||""); }
+// ---- Knockout-phase lifecycle (all data-driven from ESPN season.slug; auto-reverts for a future tournament, nothing hardcoded to 2026) ----
+const KO_SLUG_ROUND = { "round-of-32": "R32", "round-of-16": "R16", "quarterfinals": "QF", "semifinals": "SF", "3rd-place-match": "BRONZE", "final": "FINAL" };
+const KO_ROUND_ORDER = ["R32", "R16", "QF", "SF", "FINAL"];   // bronze (3rd place) folds into the FINAL view
+function koSlug(e) { return ((e && e.season && e.season.slug) || "").toLowerCase(); }
+function koRound(e) { return KO_SLUG_ROUND[koSlug(e)] || null; }   // null for group-stage matches
+function koRoundName(e) {
+  const ar = (typeof LANG !== "undefined" && LANG === "ar");
+  const M = { "round-of-32": ["Round of 32", "دور الـ32"], "round-of-16": ["Round of 16", "دور الـ16"], "quarterfinals": ["Quarter-final", "ربع النهائي"], "semifinals": ["Semi-final", "نصف النهائي"], "3rd-place-match": ["3rd-place play-off", "تحديد المركز الثالث"], "final": ["Final", "النهائي"] };
+  const m = M[koSlug(e)]; return m ? (ar ? m[1] : m[0]) : "";
+}
+function _koEvents() { try { return ((typeof seasonCache !== "undefined" && seasonCache.events) || []).filter(koRound); } catch (_) { return []; } }
+function firstKoKickoff() { const ks = _koEvents().map(e => +new Date(e.date)).filter(n => isFinite(n)); return ks.length ? Math.min.apply(null, ks) : null; }
+function koPhaseStarted() { const f = firstKoKickoff(); return f != null && Date.now() >= f - 3600000; }   // true once we're within 1h of the FIRST knockout kickoff
+function currentKoRound() {                                   // earliest round that isn't fully finished (R32 now → auto R16 once every R32 match is post → QF → …)
+  const evs = _koEvents(); if (!evs.length) return "R32";
+  for (const rc of KO_ROUND_ORDER) {
+    const inR = evs.filter(e => { const r = koRound(e); return r === rc || (rc === "FINAL" && r === "BRONZE"); });
+    if (inR.length && inR.some(e => !(e.status && e.status.type && e.status.type.state === "post"))) return rc;
+  }
+  return "FINAL";
+}
+function updateKoPhaseUI() { try { const nav = document.querySelector("nav"); if (nav) nav.classList.toggle("kophase", koPhaseStarted()); } catch (_) {} }
 let bracketRound = "R32", _slots = null, _egyTrack = null;
 function setBracketRound(r) { bracketRound = r; renderBracket(); }
 function resolveSlots(groups) {
@@ -2716,7 +2743,7 @@ function renderBracket() {
     }
   }
   const _allDone = !!(_slots && _slots.allDone);
-  const statusHTML = _allDone
+  const statusHTML = koPhaseStarted() ? "" /* hide the groups-complete / provisional banner once the knockouts are underway (within 1h of the first KO match) — useless then; NOT deleted, so a future tournament's group stage shows it again */ : _allDone
     ? '<div class="brstatus ok">' + (LANG === "ar" ? "✓ المجموعات اكتملت · الأدوار الإقصائية مؤكَّدة" : "✓ GROUPS COMPLETE · KNOCKOUTS CONFIRMED") + '</div>'
     : '<div class="brstatus prov">' + (LANG === "ar" ? "⚠ غير مؤكَّد بعد · دور الـ32 مبدئي حسب الترتيب الحالي، ويُعتمد بعد أن تُكمل كل المجموعات مبارياتها الثلاث" : "⚠ NOT CONFIRMED YET · provisional R32 from the current standings · locks once every group finishes its 3 matches") + '</div>';
   host.innerHTML = '<div class="rchips">' + chips + '</div>' + statusHTML +
@@ -4772,6 +4799,7 @@ async function seasonEvents(force) {
   if (!force && Date.now() - seasonCache.t < 600000 && seasonCache.events.length) return seasonCache.events;
   const d = await getJSON(API + "/scoreboard?dates=" + SEASON_RANGE);
   seasonCache = { t: Date.now(), events: (d.events || []).sort((a, b) => new Date(a.date) - new Date(b.date)) };
+  try { updateKoPhaseUI(); } catch (_) {}   // knockouts may now be within 1h → reorder the tabs + hide the groups-confirmed banner
   return seasonCache.events;
 }
 function isBot(m) { return !m.uid || m.uid === "goalbot" || m.uid === "brkbot"; }   // hide goal + champion/breakfast bots from chat
