@@ -1092,7 +1092,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.94</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.95</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1418,7 +1418,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.94";
+const APP_VERSION = "2.95";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
@@ -4509,7 +4509,7 @@ function lastCompletedWeek(evs) {
   const ds = byWeek[wk];
   const _dxb = d => new Intl.DateTimeFormat(LANG === "ar" ? "ar-u-nu-latn" : "en-GB", { timeZone: "Asia/Dubai", day: "2-digit", month: "short" }).format(d);
   const lab = (_dxb(new Date(ds[0].date)) + ((typeof LANG !== "undefined" && LANG === "ar") ? " إلى " : " to ") + _dxb(new Date(ds[ds.length - 1].date))).toUpperCase();
-  return { wk, events: ds, lab };
+  return { wk, events: ds, lab, d0: ds[0].date, d1: ds[ds.length - 1].date };   // raw boundary dates so the chat champion message can build the week label in BOTH languages (w.lab itself is in the viewer's current language only)
 }
 async function announceChampion() {
   try {
@@ -4545,10 +4545,20 @@ async function announceChampion() {
       else if (w.wk > fence && localStorage.getItem("cs_champ_" + w.wk) !== "1") {
         localStorage.setItem("cs_champ_" + w.wk, "1");
         localStorage.setItem("cs_champ_fence", w.wk);
-        const msg = plural
-          ? names + " share the crown · joint Prediction Champions for " + w.lab + " with " + top + " pts each! 👏"
-          : names + " is the Prediction Champion for " + w.lab + " · top of the leaderboard with " + top + " pts! Congrats 👏";
-        postRoom([{ id: "champ-w" + w.wk, uid: "champbot", name: "🏆 LEADERBOARD", text: "🏆 " + msg, ts: Date.now() }]).catch(() => {});
+        // bilingual: post an English AND an Arabic announcement (same pattern as the fun-fact bot funbot_ar/funbot_en),
+        // each with the week label formatted in its own language. The chat doesn't translate stored text, so both are posted.
+        const labFor = isAr => { const f = d => new Intl.DateTimeFormat(isAr ? "ar-u-nu-latn" : "en-GB", { timeZone: "Asia/Dubai", day: "2-digit", month: "short" }).format(new Date(d)); return (f(w.d0) + (isAr ? " إلى " : " to ") + f(w.d1)).toUpperCase(); };
+        const enMsg = plural
+          ? names + " share the crown · joint Prediction Champions for " + labFor(false) + " with " + top + " pts each! 👏"
+          : names + " is the Prediction Champion for " + labFor(false) + " · top of the leaderboard with " + top + " pts! Congrats 👏";
+        const arMsg = plural
+          ? names + " يتقاسمون اللقب · برانسة التوقّعات لأسبوع " + labFor(true) + " بـ " + top + " نقطة لكلٍّ منهم! 👏"
+          : names + " برنس التوقّعات لأسبوع " + labFor(true) + " · متصدّر لوحة الصدارة بـ " + top + " نقطة! مبروك 👏";
+        const cts = Date.now();
+        postRoom([
+          { id: "champ-w" + w.wk + "-en", uid: "champbot_en", name: "🏆 LEADERBOARD", text: "🏆 " + enMsg, ts: cts },
+          { id: "champ-w" + w.wk + "-ar", uid: "champbot_ar", name: "🏆 لوحة الصدارة", text: "🏆 " + arMsg, ts: cts + 1 }
+        ]).catch(() => {});
       }
     } catch (_) {}
   } catch (_) {}
