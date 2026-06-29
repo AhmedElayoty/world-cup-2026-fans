@@ -1092,7 +1092,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.95</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.96</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1418,7 +1418,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.95";
+const APP_VERSION = "2.96";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
@@ -4551,13 +4551,16 @@ async function announceChampion() {
         const enMsg = plural
           ? names + " share the crown · joint Prediction Champions for " + labFor(false) + " with " + top + " pts each! 👏"
           : names + " is the Prediction Champion for " + labFor(false) + " · top of the leaderboard with " + top + " pts! Congrats 👏";
-        const arMsg = plural
-          ? names + " يتقاسمون اللقب · برانسة التوقّعات لأسبوع " + labFor(true) + " بـ " + top + " نقطة لكلٍّ منهم! 👏"
-          : names + " برنس التوقّعات لأسبوع " + labFor(true) + " · متصدّر لوحة الصدارة بـ " + top + " نقطة! مبروك 👏";
+        // Arabic: put the (English) NAME on its OWN first line, then the Arabic description below. An English name inline
+        // at the start of an RTL Arabic sentence reads jumbled (LTR name reorders the line); name-on-top isolates it.
+        // .msg .txt is white-space:pre-wrap, so the \n renders as a real line break. English stays inline (all LTR, reads fine).
+        const arDesc = plural
+          ? "برانسة التوقّعات لأسبوع " + labFor(true) + " · يتقاسمون اللقب بـ " + top + " نقطة لكلٍّ منهم! 👏"
+          : "برنس التوقّعات لأسبوع " + labFor(true) + " · متصدّر لوحة الصدارة بـ " + top + " نقطة! مبروك 👏";
         const cts = Date.now();
         postRoom([
           { id: "champ-w" + w.wk + "-en", uid: "champbot_en", name: "🏆 LEADERBOARD", text: "🏆 " + enMsg, ts: cts },
-          { id: "champ-w" + w.wk + "-ar", uid: "champbot_ar", name: "🏆 لوحة الصدارة", text: "🏆 " + arMsg, ts: cts + 1 }
+          { id: "champ-w" + w.wk + "-ar", uid: "champbot_ar", name: "🏆 لوحة الصدارة", text: "🏆 " + names + "\n" + arDesc, ts: cts + 1 }
         ]).catch(() => {});
       }
     } catch (_) {}
