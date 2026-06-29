@@ -1092,7 +1092,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.98</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.99</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1418,7 +1418,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.98";
+const APP_VERSION = "2.99";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
@@ -4552,7 +4552,8 @@ function announceRoundChampion(all, evs) {   // knockout-phase TOP BOX: headline
     }
     if (cs_user) {
       const myPts = mine ? mine.pts : 0;
-      rows += '<span class="myscore">' + (ar ? ("نتيجتك &#183; " + myPts + " نقطة") : ("Your score &#183; " + myPts + " pts")) + '</span>';
+      const myLbl = rc ? (ar ? "نتيجتك في الدور الأخير" : "Your Last Round's Score") : (ar ? "نتيجتك في الأسبوع الماضي" : "Your Last Week's Score");   // period matches the headline champion
+      rows += '<span class="myscore">' + myLbl + ' &#183; ' + myPts + (ar ? " نقطة" : " pts") + '</span>';
     }
     $("brkBox").innerHTML = '<div class="brk">' + line1 + rows + '</div>';
     // chat post: ONLY when a knockout round completes (never for the last-week bridge), once per round
