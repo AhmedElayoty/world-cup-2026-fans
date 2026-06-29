@@ -1092,7 +1092,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.97</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.98</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1418,7 +1418,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.97";
+const APP_VERSION = "2.98";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
@@ -4521,40 +4521,63 @@ function lastCompletedWeek(evs) {
   const lab = (_dxb(new Date(ds[0].date)) + ((typeof LANG !== "undefined" && LANG === "ar") ? " إلى " : " to ") + _dxb(new Date(ds[ds.length - 1].date))).toUpperCase();
   return { wk, events: ds, lab, d0: ds[0].date, d1: ds[ds.length - 1].date };   // raw boundary dates so the chat champion message can build the week label in BOTH languages (w.lab itself is in the viewer's current language only)
 }
-function announceRoundChampion(all) {   // knockout ROUND champion: crowned when a round's matches are all finished
+function announceRoundChampion(all, evs) {   // knockout-phase TOP BOX: headline champion (last week until a round is decided, then that round) + overall group-stage champion + your score
   try {
+    const ar = (typeof LANG !== "undefined" && LANG === "ar");
+    // 1) headline: this round's champion once a round is fully finished; until then, last week's (the bridge so the box is never empty)
     const rc = lastDoneKoRound();
-    if (!rc) { $("brkBox").innerHTML = ""; return; }   // no knockout round fully finished yet → nothing to crown
-    const lbl = koRoundLabel(rc), ar = (typeof LANG !== "undefined" && LANG === "ar");
-    const scores = weekScores(koRoundMatches(rc), all);   // reuse the scorer over this round's matches
-    if (!scores.length) { $("brkBox").innerHTML = '<div class="brk none">&#127942; ' + (ar ? ("لا برنس توقّعات بعد · لم يسجّل أحد نقاطاً في " + lbl) : ("No Prediction Champion yet · nobody scored in " + lbl)) + '.</div>'; return; }
-    const top = scores[0].pts, winners = scores.filter(s => s.pts === top), names = winners.map(x => x.name).join(" & "), plural = winners.length > 1;
-    let mineLine = "";
+    let scores, label;
+    if (rc) {
+      scores = weekScores(koRoundMatches(rc), all);
+      label = ar ? ("بطل " + koRoundLabel(rc)) : (koRoundLabel(rc) + " CHAMPION");
+    } else {
+      const w = lastCompletedWeek(evs);
+      scores = w ? weekScores(w.events, all) : [];
+      label = ar ? "بطل الأسبوع الماضي" : "LAST WEEK'S CHAMPION";
+    }
+    // 2) overall GROUP-STAGE champion (cumulative across every finished group match)
+    const gsEvs = evs.filter(e => !isKOEvent(e) && e.status && e.status.type && e.status.type.state === "post");
+    const gs = weekScores(gsEvs, all);
+    // 3) your score in the headline period (shown even if you weren't the champion)
     const mine = cs_user ? scores.find(s => s.uid === myId) : null;
-    if (mine && mine.pts > 0) { const _l = ar ? ("نتيجتك في " + lbl + " : ") : ("Your " + lbl + " score : "); mineLine = '<span class="myscore">' + _l + mine.pts + (ar ? " نقطة" : " pts") + '</span>'; }
-    const head = ar ? (plural ? "برانسة التوقّعات" : "برنس التوقّعات") : ("PREDICTION CHAMPION" + (plural ? "S" : ""));
-    const body = ar ? (esc(names) + " تصدّر " + lbl + " بـ " + top + " نقطة") : (esc(names) + " topped " + lbl + " with " + top + " pts");
-    const tag = ar ? ("بطل " + lbl + "!") : (lbl + " CHAMPION!");
-    $("brkBox").innerHTML = '<div class="brk">&#127942; <b>' + head + '</b> &#183; ' + body + '.<span>' + tag + '</span>' + mineLine + '</div>';
-    try {
-      if (!localStorage.getItem("cs_champ_" + rc)) {   // post to chat ONCE per completed round (bilingual, name-on-top Arabic)
-        localStorage.setItem("cs_champ_" + rc, "1");
-        const enMsg = plural ? names + " share the " + lbl + " crown · joint Prediction Champions with " + top + " pts each! 👏" : names + " is the " + lbl + " Prediction Champion · top of the round with " + top + " pts! Congrats 👏";
-        const arDesc = plural ? "برانسة التوقّعات في " + lbl + " · يتقاسمون اللقب بـ " + top + " نقطة لكلٍّ منهم! 👏" : "برنس التوقّعات في " + lbl + " · متصدّر لوحة الصدارة بـ " + top + " نقطة! مبروك 👏";
-        const cts = Date.now();
-        postRoom([
-          { id: "champ-" + rc + "-en", uid: "champbot_en", name: "🏆 LEADERBOARD", text: "🏆 " + enMsg, ts: cts },
-          { id: "champ-" + rc + "-ar", uid: "champbot_ar", name: "🏆 لوحة الصدارة", text: "🏆 " + names + "\n" + arDesc, ts: cts + 1 }
-        ]).catch(() => {});
-      }
-    } catch (_) {}
+    if (!scores.length && !gs.length) { $("brkBox").innerHTML = ""; return; }
+    const cTop = scores.length ? scores[0].pts : 0;
+    const cPlural = !!(scores.length && scores.filter(s => s.pts === cTop).length > 1);
+    const cNames = scores.length ? scores.filter(s => s.pts === cTop).map(x => esc(x.name)).join(" & ") : "";
+    const line1 = '&#127942; <b>' + label + (cPlural && !ar ? "S" : "") + '</b> &#183; ' + (scores.length ? (cNames + ' &#183; ' + cTop + (ar ? " نقطة" : " pts")) : (ar ? "لا أحد بعد" : "nobody yet"));
+    let rows = "";
+    if (gs.length) {
+      const gTop = gs[0].pts, gNames = gs.filter(s => s.pts === gTop).map(x => esc(x.name)).join(" & ");
+      rows += '<span class="myscore">&#127941; ' + (ar ? "بطل دور المجموعات" : "GROUP STAGE CHAMPION") + ' &#183; ' + gNames + ' &#183; ' + gTop + (ar ? " نقطة" : " pts") + '</span>';
+    }
+    if (cs_user) {
+      const myPts = mine ? mine.pts : 0;
+      rows += '<span class="myscore">' + (ar ? ("نتيجتك &#183; " + myPts + " نقطة") : ("Your score &#183; " + myPts + " pts")) + '</span>';
+    }
+    $("brkBox").innerHTML = '<div class="brk">' + line1 + rows + '</div>';
+    // chat post: ONLY when a knockout round completes (never for the last-week bridge), once per round
+    if (rc && scores.length) {
+      try {
+        if (!localStorage.getItem("cs_champ_" + rc)) {
+          localStorage.setItem("cs_champ_" + rc, "1");
+          const lbl = koRoundLabel(rc), names = scores.filter(s => s.pts === cTop).map(x => x.name).join(" & "), plural = cPlural, top = cTop;
+          const enMsg = plural ? names + " share the " + lbl + " crown · joint Prediction Champions with " + top + " pts each! 👏" : names + " is the " + lbl + " Prediction Champion · top of the round with " + top + " pts! Congrats 👏";
+          const arDesc = plural ? "برانسة التوقّعات في " + lbl + " · يتقاسمون اللقب بـ " + top + " نقطة لكلٍّ منهم! 👏" : "برنس التوقّعات في " + lbl + " · متصدّر لوحة الصدارة بـ " + top + " نقطة! مبروك 👏";
+          const cts = Date.now();
+          postRoom([
+            { id: "champ-" + rc + "-en", uid: "champbot_en", name: "🏆 LEADERBOARD", text: "🏆 " + enMsg, ts: cts },
+            { id: "champ-" + rc + "-ar", uid: "champbot_ar", name: "🏆 لوحة الصدارة", text: "🏆 " + names + "\n" + arDesc, ts: cts + 1 }
+          ]).catch(() => {});
+        }
+      } catch (_) {}
+    }
   } catch (_) {}
 }
 async function announceChampion() {
   try {
     const evs = await seasonEvents();
     const all = await readKey(PRED_KEY, {});
-    if (koPhaseStarted()) { announceRoundChampion(all); return; }   // knockouts → per-round champion; group-stage weekly champions are already history
+    if (koPhaseStarted()) { announceRoundChampion(all, evs); return; }   // knockouts → per-round champion; group-stage weekly champions are already history
     const w = lastCompletedWeek(evs);
     if (!w) { $("brkBox").innerHTML = ""; return; }
     const scores = weekScores(w.events, all);
