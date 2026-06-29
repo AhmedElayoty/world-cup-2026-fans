@@ -183,6 +183,7 @@ main{flex:1;padding:14px 14px calc(20px + env(safe-area-inset-bottom));overflow-
 .team.away .frank{align-self:flex-end}
 .frank.egy{color:#6dffb5;background:rgba(0,210,106,.14);border-color:rgba(0,210,106,.5)}
 .mtopmid{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:54%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;pointer-events:none}
+.mtopday{margin-inline-start:auto;white-space:nowrap}  /* date pinned to the row's logical-end: RIGHT in English, LEFT in Arabic. Was margin-left:auto, a PHYSICAL margin that floated the date to the centre in RTL (colliding with .mtopmid); the logical margin pins it to the correct edge in both directions. */
 .mgroup{font-family:'Oswald';font-weight:600;font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:#cdd9ff}
 .lrank{align-self:flex-start;display:inline-block;margin-top:1px;font-family:'Oswald';font-weight:700;font-size:9.5px;letter-spacing:.5px;line-height:1.3;padding:1px 7px;border-radius:8px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .lrank.prov{animation:lrankBlink 1.4s ease-in-out infinite}
@@ -1091,7 +1092,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.93</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v2.94</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1417,7 +1418,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "2.93";
+const APP_VERSION = "2.94";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
@@ -2273,7 +2274,7 @@ function renderMatches() {
       : '<div class="mhint">&#9662; Press for line-ups, formation &amp; stats</div>';
     const vt = venueTime(e);
     return `<div class="mcard${egy ? " egy" : ""}${flashIds.has(e.id) ? " goal" : ""}${openId === e.id ? " open" : ""}${liveCls}" id="mc${e.id}" onclick="toggleM('${e.id}')">
-      <div class="mtop">${badge}<span class="mtopmid">${groupLabelHTML(e) || esc(note)}</span><span style="margin-left:auto">${dayw}</span></div>
+      <div class="mtop">${badge}<span class="mtopmid">${groupLabelHTML(e) || esc(note)}</span><span class="mtopday">${dayw}</span></div>
       <div class="mrow">
         <div class="${hCls}">${logo(H)}<span class="tcol"><span class="tname${H.team.displayName === myNation() ? " egy" : ""}">${esc(H.team.displayName)}</span>${rankChip(H)}${liveRankHTML(H, e)}</span></div>
         ${mid}
