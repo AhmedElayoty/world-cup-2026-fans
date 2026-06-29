@@ -1092,7 +1092,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.02</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.03</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1418,7 +1418,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "3.02";
+const APP_VERSION = "3.03";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
@@ -4536,6 +4536,7 @@ function announceRoundChampion(all, evs) {   // knockout-phase TOP BOX: headline
     // 2) overall GROUP-STAGE champion (cumulative across every finished group match)
     const gsEvs = evs.filter(e => !isKOEvent(e) && e.status && e.status.type && e.status.type.state === "post");
     const gs = weekScores(gsEvs, all);
+    const overall = weekScores(evs.filter(e => e.status && e.status.type && e.status.type.state === "post"), all);   // cumulative across EVERYTHING played (group + knockouts so far)
     // 3) your score in the headline period (shown even if you weren't the champion)
     const mine = cs_user ? scores.find(s => s.uid === myId) : null;
     if (!scores.length && !gs.length) { $("brkBox").innerHTML = ""; return; }
@@ -4550,15 +4551,21 @@ function announceRoundChampion(all, evs) {   // knockout-phase TOP BOX: headline
       : (ar ? (brns + " الأسبوع الماضي") : ("LAST WEEK'S CHAMPION" + (cPlural ? "S" : "")));
     const line1 = '&#127942; <b>' + label + '</b> &#183; ' + (scores.length ? ('<bdi>' + cNames + '</bdi> &#183; <bdi>' + cTop + '</bdi> ' + (ar ? "نقطة" : "pts")) : (ar ? "لا أحد بعد" : "nobody yet"));
     let rows = "";
-    if (gs.length) {
-      const gTop = gs[0].pts, gWin = gs.filter(s => s.pts === gTop), gPlural = gWin.length > 1, gNames = gWin.map(x => esc(x.name)).join(" & ");
-      const gLabel = ar ? ((gPlural ? "برانسة التوقّعات" : "برنس التوقّعات") + " لدور المجموعات") : ("GROUP STAGE CHAMPION" + (gPlural ? "S" : ""));
-      rows += '<span class="myscore">&#127941; ' + gLabel + ' &#183; <bdi>' + gNames + '</bdi> &#183; <bdi>' + gTop + '</bdi> ' + (ar ? "نقطة" : "pts") + '</span>';
+    // champion row: GROUP STAGE champion until a knockout round (R32) is decided; once it is, the OVERALL (cumulative) champion + total
+    const champRow = rc ? overall : gs;
+    if (champRow.length) {
+      const rTop = champRow[0].pts, rWin = champRow.filter(s => s.pts === rTop), rPlural = rWin.length > 1, rNames = rWin.map(x => esc(x.name)).join(" & ");
+      const rLabel = rc
+        ? (ar ? ((rPlural ? "برانسة التوقّعات" : "برنس التوقّعات") + " العام") : ("OVERALL CHAMPION" + (rPlural ? "S" : "")))
+        : (ar ? ((rPlural ? "برانسة التوقّعات" : "برنس التوقّعات") + " لدور المجموعات") : ("GROUP STAGE CHAMPION" + (rPlural ? "S" : "")));
+      rows += '<span class="myscore">&#127941; ' + rLabel + ' &#183; <bdi>' + rNames + '</bdi> &#183; <bdi>' + rTop + '</bdi> ' + (ar ? "نقطة" : "pts") + '</span>';
     }
     if (cs_user) {
       const myPts = mine ? mine.pts : 0;
       const myLbl = rc ? (ar ? "نتيجتك في الدور الأخير" : "Your Last Round's Score") : (ar ? "نتيجتك في الأسبوع الماضي" : "Your Last Week's Score");   // period matches the headline champion
       rows += '<span class="myscore">' + myLbl + ' &#183; <bdi>' + myPts + '</bdi> ' + (ar ? "نقطة" : "pts") + '</span>';
+      const myOverall = (overall.find(s => s.uid === myId) || {}).pts || 0;   // your cumulative total across everything played
+      rows += '<span class="myscore">' + (ar ? "نتيجتك الإجمالية" : "Your overall score") + ' &#183; <bdi>' + myOverall + '</bdi> ' + (ar ? "نقطة" : "pts") + '</span>';
     }
     $("brkBox").innerHTML = '<div class="brk">' + line1 + rows + '</div>';
     // chat post: ONLY when a knockout round completes (never for the last-week bridge), once per round
