@@ -1092,7 +1092,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.00</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.01</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1418,7 +1418,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "3.00";
+const APP_VERSION = "3.01";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
@@ -4532,7 +4532,7 @@ function announceRoundChampion(all, evs) {   // knockout-phase TOP BOX: headline
       label = ar ? ("بطل " + koRoundLabel(rc)) : (koRoundLabel(rc) + " CHAMPION");
     } else {
       const w = lastCompletedWeek(evs);
-      scores = w ? weekScores(w.events, all) : [];
+      scores = w ? weekScores(w.events.filter(e => !isKOEvent(e)), all) : [];   // GROUP matches only — a knockout fixture in this week (e.g. SA v CAN R32) counts in its round, not last week
       label = ar ? "بطل الأسبوع الماضي" : "LAST WEEK'S CHAMPION";
     }
     // 2) overall GROUP-STAGE champion (cumulative across every finished group match)
