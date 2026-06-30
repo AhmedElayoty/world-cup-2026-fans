@@ -1092,7 +1092,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.03</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.04</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1418,7 +1418,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "3.03";
+const APP_VERSION = "3.04";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
@@ -5129,13 +5129,20 @@ async function aggInstant() {
   };
 }
 async function aggTeams() {
-  const d = await getJSON(STAND);
-  const my = myNation(), rows = [];
-  (d.children || []).forEach(g => ((g.standings && g.standings.entries) || []).forEach(r => {
-    const s = statmap(r);
-    rows.push({ name: r.team.displayName, logo: (r.team.logos && r.team.logos[0]) ? r.team.logos[0].href : "", gf: s.pointsFor || 0, ga: s.pointsAgainst || 0, pl: s.gamesPlayed || 0, isMy: r.team.displayName === my });
-  }));
-  return rows;
+  // aggregate team goals/played across EVERY finished match (group + knockouts) — the group STANDINGS endpoint stops at the group stage ("Played 3"), so the team board was frozen there
+  const evs = await seasonEvents();
+  const fin = evs.filter(e => e.status && e.status.type && e.status.type.state === "post");
+  const my = myNation(), T = {};
+  const logoOf = t => t.logo || (t.logos && t.logos[0] && t.logos[0].href) || (typeof window !== "undefined" && window._logoByName && window._logoByName[t.displayName]) || "";
+  const add = (t, gf, ga) => { if (!t) return; const id = t.id || t.displayName; T[id] = T[id] || { name: t.displayName, logo: logoOf(t), gf: 0, ga: 0, pl: 0 }; if (!T[id].logo) T[id].logo = logoOf(t); T[id].gf += gf; T[id].ga += ga; T[id].pl++; };
+  fin.forEach(e => {
+    const comp = e.competitions[0]; if (!comp || !comp.competitors) return;
+    const H = comp.competitors.find(x => x.homeAway === "home") || comp.competitors[0], A = comp.competitors.find(x => x.homeAway === "away") || comp.competitors[1];
+    if (!H || !A || !H.team || !A.team) return;
+    const hs = +H.score || 0, as = +A.score || 0;   // regular/ET score — penalty shootouts are not counted as goals
+    add(H.team, hs, as); add(A.team, as, hs);
+  });
+  return Object.values(T).map(x => ({ ...x, isMy: x.name === my }));
 }
 async function ensureDeep(onProgress) {
   const evs = await seasonEvents();
