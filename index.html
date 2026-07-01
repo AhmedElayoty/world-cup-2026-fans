@@ -1067,8 +1067,10 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
 }
 
 /* ===== theme toggle button ===== */
-.themebtn{flex:none;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;border-radius:9px;cursor:pointer;background:var(--card2);border:1px solid var(--line);color:var(--txt);transition:background .15s,border-color .15s}
-.themebtn:hover,.themebtn:active{border-color:var(--rust)}
+.themebtn{flex:none;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;border-radius:9px;cursor:pointer;background:rgba(255,192,46,.16);border:1px solid var(--gold);color:var(--gold);transition:background .15s,border-color .15s}
+.themebtn:hover,.themebtn:active{background:rgba(255,192,46,.30)}
+.themebtn.hint{animation:themePulse 1.7s ease-in-out infinite}
+@keyframes themePulse{0%,100%{box-shadow:0 0 0 0 rgba(255,192,46,.55)}70%{box-shadow:0 0 0 7px rgba(255,192,46,0)}}
 .themebtn svg{width:18px;height:18px;display:block}
 .themebtn .ico-moon{display:none}
 html[data-theme="light"] .themebtn .ico-sun{display:none}
@@ -1233,6 +1235,7 @@ html[data-theme="light"] .msg.me .rxchip.mine span{color:var(--rust)}
    <div class="sheet__row"><label class="sheet__lab" for="tzSel">Time zone</label><div class="sheet__ctrl"><select class="tzsel" id="tzSel" onchange="setTZ(this.value)" aria-label="Time zone"></select></div></div>
    <div class="sheet__row"><span class="sheet__lab" id="fmtLab">Time format</span><div class="seg" id="fmtTog" role="radiogroup" aria-labelledby="fmtLab"><button class="seg__btn is-on" type="button" data-h12="1" onclick="setHour12(true)">AM·PM</button><button class="seg__btn" type="button" data-h12="0" onclick="setHour12(false)">24H</button></div></div>
    <div class="sheet__row"><span class="sheet__lab" id="langLab">Language</span><div class="seg" id="langTog" role="radiogroup" aria-labelledby="langLab"><button class="seg__btn is-on" type="button" data-lang="en" onclick="setLang('en')">EN</button><button class="seg__btn seg__btn--ar" type="button" data-lang="ar" onclick="setLang('ar')">عربي</button></div></div>
+   <div class="sheet__row"><span class="sheet__lab" id="themeLab">🌓 Theme</span><div class="seg" id="themeTog" role="radiogroup" aria-labelledby="themeLab"><button class="seg__btn" type="button" data-theme="dark" onclick="setTheme('dark')">DARK</button><button class="seg__btn" type="button" data-theme="light" onclick="setTheme('light')">LIGHT</button></div></div>
   </div>
  </div>
 </header>
@@ -1292,7 +1295,7 @@ html[data-theme="light"] .msg.me .rxchip.mine span{color:var(--rust)}
   <input type="file" id="attFile" accept="image/*,video/*" style="display:none" onchange="attPicked(this)">
   <div class="chatbar" id="chatbar"></div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.16</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.17</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1626,7 +1629,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "3.16";
+const APP_VERSION = "3.17";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
@@ -1835,7 +1838,7 @@ Object.assign(AR, {
   "📲 Install to phone":"📲 ثبّت على هاتفك","Install to phone":"ثبّت على هاتفك"
 });
 // multi-word phrases for substring replacement inside composite nodes (longest first; safe, no single short words)
-Object.assign(AR, {"Time zone":"المنطقة الزمنية","Time format":"صيغة الوقت","Language":"اللغة","Settings":"الإعدادات","Install app":"تثبيت التطبيق","Add to your home screen":"أضِفه إلى شاشتك الرئيسية"});
+Object.assign(AR, {"Time zone":"المنطقة الزمنية","Time format":"صيغة الوقت","Language":"اللغة","Settings":"الإعدادات","Theme":"المظهر","Install app":"تثبيت التطبيق","Add to your home screen":"أضِفه إلى شاشتك الرئيسية"});
 Object.assign(AR, {"NEXT MATCH":"المباراة القادمة","NO UPCOMING MATCH":"لا مباراة قادمة","LIVE NOW":"مباشر الآن","TO KICK-OFF":"حتى الانطلاق","LIVE":"مباشر","CHOOSE A NATION":"اختر منتخباً","Choose a nation":"اختر منتخباً","Tap to follow your team · your next match, live highlights & their road to the final":"اضغط لمتابعة منتخبك · مباراته القادمة وأبرز اللقطات وطريقه إلى النهائي","Choose a nation to view its scheduled matches":"اختر منتخباً لعرض مبارياته المجدولة"});
 const AR_PHRASES = Object.keys(AR).filter(k => /\s/.test(k) && /[A-Za-z]/.test(k)).sort((a,b)=>b.length-a.length);
 // dynamic / numeric templates
@@ -2584,7 +2587,9 @@ function updateAuthTog() {   // header auth button: Sign in (logged out → logi
 }
 // settings sheet (timezone / format / language) opened from the TZ chip
 function applyTheme(t){ var light = t === "light"; try{ if(light) document.documentElement.setAttribute("data-theme","light"); else document.documentElement.removeAttribute("data-theme"); }catch(_){} var m = document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute("content", light ? "#eef1f8" : "#0a1230"); }
-function toggleTheme(){ var light = document.documentElement.getAttribute("data-theme") === "light"; var next = light ? "dark" : "light"; applyTheme(next); try{ localStorage.setItem("cs_theme", next); }catch(_){} }
+function updateThemeTog(){ var seg = document.getElementById("themeTog"); if(!seg) return; var cur = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark"; seg.querySelectorAll(".seg__btn").forEach(function(b){ var on = b.dataset.theme === cur; b.classList.toggle("is-on", on); b.setAttribute("aria-checked", on ? "true" : "false"); }); }
+function setTheme(t){ applyTheme(t); try{ localStorage.setItem("cs_theme", t); localStorage.setItem("cs_theme_seen", "1"); }catch(_){} var b = document.querySelector(".themebtn"); if(b) b.classList.remove("hint"); updateThemeTog(); }
+function toggleTheme(){ setTheme(document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light"); }
 function toggleSettings(e){ if(e) e.stopPropagation(); const sh=$("setSheet"); if(!sh) return; if(sh.hasAttribute("hidden")){ sh.removeAttribute("hidden"); const b=$("setBtn"); if(b) b.setAttribute("aria-expanded","true"); try{ refreshPushUI(); }catch(_){} } else closeSettings(); }
 function closeSettings(){ const sh=$("setSheet"); if(sh && !sh.hasAttribute("hidden")){ sh.setAttribute("hidden",""); const b=$("setBtn"); if(b) b.setAttribute("aria-expanded","false"); } }
 addEventListener("click", e => { const sh=$("setSheet"); if(sh && !sh.hasAttribute("hidden") && e.target && e.target.closest && !e.target.closest("#setSheet") && !e.target.closest("#setBtn")) closeSettings(); });
@@ -5860,6 +5865,7 @@ jumpToLiveDay();   // if a match is live (incl. one that crossed midnight), open
 renderChatComposer();
 pollChat(); chatTimer = setInterval(pollChat, 7000);   // always-on chat poll → unread badge + new-message toasts everywhere
 setTimeout(function () { try { maybeShowFeatPop(); } catch (_) {} }, 1100);   // one-time localized feature announcement
+try{ updateThemeTog(); if(!localStorage.getItem("cs_theme_seen")){ var _tb=document.querySelector(".themebtn"); if(_tb) _tb.classList.add("hint"); } }catch(_){}
 // reopening the app during a live match → refresh the feed immediately instead of waiting for the next poll
 document.addEventListener("visibilitychange", () => { if (!document.hidden && events.some(e => e.status && e.status.type && e.status.type.state === "in")) { clearTimeout(matchTimer); loadMatches(); } });
 if (cs_user) {
