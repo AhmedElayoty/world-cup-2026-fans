@@ -293,7 +293,7 @@ html[dir="rtl"] .team.away img{box-shadow:-3px 0 0 0 var(--cyan)}
 .chatbar .sendbtn:active{filter:brightness(1.1)}
 html[dir="rtl"] .chatbar .sendbtn svg{transform:scaleX(-1);margin-inline-start:0;margin-inline-end:2px}
 .chatnote{font-size:10.5px;color:var(--dim);text-align:center;padding:4px 0 8px}
-.msg{cursor:pointer}
+.msg{cursor:default;position:relative}
 .msg.fact{align-self:center;text-align:center;max-width:92%}
 .msg.fact .when{text-align:center}
 .natflag{width:17px;height:12px;border-radius:2px;object-fit:cover;vertical-align:-1px;margin-right:5px;box-shadow:0 1px 2px rgba(0,0,0,.5)}
@@ -322,8 +322,14 @@ html[dir="rtl"] .chatbar .sendbtn svg{transform:scaleX(-1);margin-inline-start:0
 #lightbox .lbx{position:absolute;top:calc(12px + env(safe-area-inset-top));inset-inline-end:14px;width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.28);color:#fff;font-size:26px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .msg.me{position:relative}
 .msg.me .who{padding-inline-end:22px}
-.msg .msgmenu{position:absolute;top:6px;inset-inline-end:6px;width:26px;height:22px;padding:0;background:none;border:none;color:var(--mut);font-size:18px;line-height:1;cursor:pointer;opacity:.55;border-radius:6px}
-.msg .msgmenu:hover,.msg .msgmenu:active{opacity:1;color:var(--txt)}
+.msg .msgmenu{position:absolute;top:6px;inset-inline-end:6px;width:26px;height:24px;padding:0;background:none;border:none;color:#ffd2bd;cursor:pointer;opacity:.62;border-radius:6px;display:flex;align-items:center;justify-content:center}
+.msg .msgmenu svg{width:15px;height:15px;display:block}
+.msg .msgmenu:hover,.msg .msgmenu:active{opacity:1;color:#fff}
+.msg .rxbtn{position:absolute;top:50%;transform:translateY(-50%);inset-inline-end:-34px;width:28px;height:28px;padding:0;background:var(--card);border:1px solid var(--line);border-radius:50%;color:var(--mut);cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:.72}
+.msg .rxbtn svg{width:17px;height:17px;display:block}
+.msg .rxbtn:hover,.msg .rxbtn:active{opacity:1;color:var(--rust);border-color:var(--rust)}
+.msg.me .rxbtn{inset-inline-end:auto;inset-inline-start:-34px}
+.msg.fact .rxbtn{display:none}
 .msgpop{position:fixed;z-index:340;background:rgba(16,26,60,.99);border:1px solid var(--line);border-radius:12px;padding:5px;box-shadow:0 12px 32px rgba(0,0,0,.6);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);animation:toastIn .14s ease}
 .msgpop button{display:flex;align-items:center;gap:8px;width:100%;background:none;border:none;color:#ff6b6b;font-family:'Inter';font-size:14px;padding:10px 18px 10px 12px;border-radius:8px;cursor:pointer;white-space:nowrap}
 .msgpop button:hover,.msgpop button:active{background:rgba(255,107,107,.14)}
@@ -1140,7 +1146,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
   <input type="file" id="attFile" accept="image/*,video/*" style="display:none" onchange="attPicked(this)">
   <div class="chatbar" id="chatbar"></div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.10</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.11</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1466,7 +1472,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "3.10";
+const APP_VERSION = "3.11";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
@@ -5021,8 +5027,8 @@ function renderChat(msgs) {
   _chatMsgs = msgs;
   const atBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 160;
   $("chatlog").innerHTML = msgs.slice(-100).filter(m => _safeMid(m.id)).map(m => `
-    <div class="msg${m.uid === myId ? " me" : ""}${/^funbot/.test(m.uid || "") ? " fact" : ""}" onclick="openReact(event,'${m.id}')">
-      ${msgMenuBtn(m)}<div class="who">${m.natf ? '<img class="natflag" src="' + esc(m.natf) + '" alt="" title="' + esc(m.nat || "") + '" onerror="this.style.display=&#39;none&#39;">' : ""}${esc(m.name || "?")}</div>
+    <div class="msg${m.uid === myId ? " me" : ""}${/^funbot/.test(m.uid || "") ? " fact" : ""}">
+      ${msgMenuBtn(m)}${reactBtn(m)}<div class="who">${m.natf ? '<img class="natflag" src="' + esc(m.natf) + '" alt="" title="' + esc(m.nat || "") + '" onerror="this.style.display=&#39;none&#39;">' : ""}${esc(m.name || "?")}</div>
       ${m.text ? '<div class="txt" dir="auto">' + emojiFlags(esc(m.text || "")) + '</div>' : ""}${m.att ? attHTML(m.att) : ""}
       <div class="when">${fmt(new Date(m.ts || Date.now()), { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "short" })}</div>
       ${rxRow(m)}
@@ -5370,7 +5376,8 @@ function openLightbox(url) {
 function closeLightbox() { const o = $("lightbox"); if (o) o.remove(); document.removeEventListener("keydown", _lbEsc); try { document.body.style.overflow = ""; } catch (_) {} }
 
 /* ---- delete your OWN message: ⋮ on your bubble → Delete (removes it for everyone from the shared room) ---- */
-function msgMenuBtn(m) { return (m && m.uid === myId && _safeMid(m.id)) ? '<button class="msgmenu" onclick="event.stopPropagation();openMsgMenu(event,\'' + m.id + '\')" aria-label="Message options">&#8942;</button>' : ""; }
+function msgMenuBtn(m) { return (m && m.uid === myId && _safeMid(m.id)) ? '<button class="msgmenu" onclick="event.stopPropagation();delMsg(\'' + m.id + '\')" aria-label="Delete message"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>' : ""; }
+function reactBtn(m) { return (m && _safeMid(m.id)) ? '<button class="rxbtn" onclick="event.stopPropagation();openReact(event,\'' + m.id + '\')" aria-label="React">' + ICO.emoji + '</button>' : ""; }
 function closeMsgMenu() { const p = $("msgpop"); if (p) p.remove(); }
 function openMsgMenu(ev, id) {
   ev.stopPropagation();
