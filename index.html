@@ -303,6 +303,18 @@ html[dir="rtl"] .team.away img{box-shadow:-3px 0 0 0 var(--cyan)}
 .chatbar .emojibtn:hover{border-color:var(--rust)}
 .chatbar .attbtn{flex:none;width:46px;padding:0;background:var(--card);border:1px solid var(--line);color:var(--txt);font-size:20px;border-radius:24px;cursor:pointer}
 .chatbar .attbtn:hover{border-color:var(--rust)}
+.chatbar .micbtn{flex:none;width:46px;padding:0;background:var(--card);border:1px solid var(--line);color:var(--txt);font-size:19px;border-radius:24px;cursor:pointer}
+.chatbar .micbtn:hover{border-color:var(--rust)}
+.vnrec{flex:1;min-width:0;display:flex;align-items:center;gap:9px}
+.vnrec .vndot{flex:none;width:11px;height:11px;border-radius:50%;background:#e5484d;animation:vnpulse 1s infinite}
+@keyframes vnpulse{0%,100%{opacity:1}50%{opacity:.2}}
+.vnrec .vnlab{font-family:'Oswald';font-weight:600;font-size:12px;letter-spacing:1px;color:var(--gold)}
+.vnrec .vntime{font-family:'Oswald';font-size:13px;color:var(--mut);font-variant-numeric:tabular-nums}
+.vnrec .attprev-act{margin-inline-start:auto}
+.attprev .athumb{height:52px;width:52px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:rgba(255,122,69,.16);border:1px solid var(--line);font-size:24px}
+.msg .att.att-aud{display:flex;align-items:center;gap:8px;max-width:280px}
+.msg .att-audio{width:100%;min-width:0;height:40px}
+.msg .att-save.att-save-aud{position:static;flex:none;top:auto;right:auto;width:34px;height:34px;box-shadow:none}
 .attprev{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px;margin-bottom:8px;flex-wrap:wrap}
 .attprev-thumb img{height:52px;width:52px;object-fit:cover;border-radius:8px;display:block}
 .attprev .vthumb{position:relative;height:52px;width:52px;border-radius:8px;overflow:hidden;background:#000}
@@ -1109,13 +1121,14 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
   <input type="file" id="attFile" accept="image/*,video/*" style="display:none" onchange="attPicked(this)">
   <div class="chatbar" id="chatbar">
    <button class="attbtn" onclick="attPick()" aria-label="Attach photo or video">📎</button>
+   <button class="micbtn" onclick="vnStart()" aria-label="Record voice note">🎤</button>
    <input id="chatIn" maxlength="280" placeholder="Message the team…"
           onkeydown="if(event.key==='Enter')sendMsg()">
    <button class="emojibtn" onclick="toggleEmojiPanel(event)" aria-label="Emoji">😊</button>
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.07</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.08</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1441,7 +1454,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "3.07";
+const APP_VERSION = "3.08";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
@@ -1826,6 +1839,7 @@ function setHour12(v) { if (HOUR12 === v) return; HOUR12 = v; try { localStorage
 /* ================= TABS ================= */
 function showTab(t) {
   try { sessionStorage.setItem("cs_tab", t); } catch (_) {}   // remember tab → a reload / pull-to-refresh stays here (only the logo→goHome resets to M)
+  if (t !== "C") { stopAllChatMedia(); if (typeof _vnCtx !== "undefined" && _vnCtx) vnCancel(); }   // leaving chat → stop+reset any playing video/voice note and cancel an in-progress recording
   if (t !== "M" && openId) { openId = null; renderMatches(); }   // leaving Matches → collapse the open match
   ["M", "G", "K", "S", "P", "C"].forEach(x => {
     $("tab" + x).classList.toggle("on", x === t);
@@ -4691,7 +4705,7 @@ function authSkip() {
 function renderChatComposer() {
   const bar = $("chatbar"); if (!bar) return;
   if (cs_user) {
-    bar.innerHTML = '<button class="attbtn" onclick="attPick()" aria-label="Attach photo or video">📎</button><input id="chatIn" maxlength="280" placeholder="Message the team…" onkeydown="if(event.key===\'Enter\')sendMsg()"><button class="emojibtn" onclick="toggleEmojiPanel(event)" aria-label="Emoji">😊</button><button onclick="sendMsg()">SEND</button>';
+    bar.innerHTML = '<button class="attbtn" onclick="attPick()" aria-label="Attach photo or video">📎</button><button class="micbtn" onclick="vnStart()" aria-label="Record voice note">🎤</button><input id="chatIn" maxlength="280" placeholder="Message the team…" onkeydown="if(event.key===\'Enter\')sendMsg()"><button class="emojibtn" onclick="toggleEmojiPanel(event)" aria-label="Emoji">😊</button><button onclick="sendMsg()">SEND</button>';
   } else {
     bar.innerHTML = '<div class="chatlock"><span>🔒 Sign in to chat · reading is free</span><button onclick="openAuth(\'C\',{ctx:\'chat\'})">SIGN IN</button></div>';
   }
@@ -5051,9 +5065,11 @@ function attShowPreview() {
   const ar = (typeof LANG !== "undefined" && LANG === "ar");
   const thumb = _attKind === "img"
     ? '<img src="' + URL.createObjectURL(_attBlob) + '">'
+    : _attKind === "aud"
+    ? '<div class="athumb">🎤</div>'
     : '<div class="vthumb">' + (_attPoster ? '<img src="' + URL.createObjectURL(_attPoster) + '">' : '') + '<span class="vplay">&#9654;</span></div>';
   box.innerHTML = '<div class="attprev-thumb">' + thumb + '</div>' +
-    '<div class="attprev-info"><b>' + (_attKind === "vid" ? (ar ? "فيديو" : "VIDEO") : (ar ? "صورة" : "PHOTO")) + '</b><span>' + _fileSize(_attBlob.size) + '</span></div>' +
+    '<div class="attprev-info"><b>' + (_attKind === "vid" ? (ar ? "فيديو" : "VIDEO") : _attKind === "aud" ? (ar ? "رسالة صوتية" : "VOICE NOTE") : (ar ? "صورة" : "PHOTO")) + '</b><span>' + _fileSize(_attBlob.size) + '</span></div>' +
     '<div class="attprev-act"><button class="attprev-x" onclick="attCancel()" aria-label="Cancel">&#10005;</button>' +
     '<button class="attprev-send" onclick="attSend()">' + (ar ? "إرسال" : "Send") + '</button></div>' +
     '<div class="att-up hide" id="attUp"><div class="att-up-bar" id="attUpBar"></div></div>';
@@ -5091,22 +5107,26 @@ async function attSend() {
 function attHTML(att) {
   if (!att || !att.u) return "";
   const u = esc(att.u), p = att.p ? esc(att.p) : "";
+  const save = '<button class="att-save' + (att.t === "aud" ? " att-save-aud" : "") + '" onclick="event.stopPropagation();attSave(&quot;' + u + '&quot;)" aria-label="Save">&#11015;</button>';
+  if (att.t === "aud")
+    return '<div class="att att-aud" onclick="event.stopPropagation()"><audio class="att-audio" preload="none" controls src="' + u + '"></audio>' + save + '</div>';
   const media = att.t === "vid"
     ? '<video class="att-media" preload="none" playsinline controls' + (p ? ' poster="' + p + '"' : '') + ' src="' + u + '"></video>'
     : '<img class="att-media" loading="lazy" src="' + u + '" alt="attachment">';
-  const save = '<button class="att-save" onclick="event.stopPropagation();attSave(&quot;' + u + '&quot;)" aria-label="Save">&#11015;</button>';
   return '<div class="att" onclick="event.stopPropagation()">' + media + save + '</div>';
 }
 async function attSave(url) {
   const ext = (url.split(".").pop() || "").toLowerCase().replace(/[^a-z0-9]/g, "");
   const MIME = { mp4:"video/mp4", mov:"video/quicktime", webm:"video/webm", m4v:"video/x-m4v",
-                 jpg:"image/jpeg", jpeg:"image/jpeg", png:"image/png", webp:"image/webp", gif:"image/gif" };
+                 jpg:"image/jpeg", jpeg:"image/jpeg", png:"image/png", webp:"image/webp", gif:"image/gif",
+                 wav:"audio/wav", m4a:"audio/mp4", mp3:"audio/mpeg", aac:"audio/aac", ogg:"audio/ogg", weba:"audio/webm" };
   const isVid = /^(mp4|mov|webm|m4v)$/.test(ext);
-  const name = "wc26-" + (isVid ? "video" : "photo") + "." + (ext || (isVid ? "mp4" : "jpg"));
+  const isAud = /^(wav|m4a|mp3|aac|ogg|weba)$/.test(ext);
+  const name = "wc26-" + (isVid ? "video" : isAud ? "voice" : "photo") + "." + (ext || (isVid ? "mp4" : isAud ? "wav" : "jpg"));
   let b;
   try { const r = await fetch(url); if (!r.ok) throw 0; b = await r.blob(); }
   catch (_) { try { window.open(url, "_blank"); } catch (e) {} return; }
-  const type = b.type || MIME[ext] || (isVid ? "video/mp4" : "image/jpeg");
+  const type = b.type || MIME[ext] || (isVid ? "video/mp4" : isAud ? "audio/wav" : "image/jpeg");
   // Phones (iOS/Android): native share sheet -> "Save Video" / "Save Image" in one tap.
   try {
     const file = new File([b], name, { type });
@@ -5124,6 +5144,89 @@ async function attSave(url) {
     setTimeout(() => { try { URL.revokeObjectURL(a.href); } catch (_) {} }, 5000);
   } catch (_) { try { window.open(url, "_blank"); } catch (e) {} }
 }
+/* ---- voice notes: record the mic to a universal WAV (plays on every phone, no transcoding server) ---- */
+let _vnCtx = null, _vnStream = null, _vnProc = null, _vnSrc = null, _vnData = [], _vnLen = 0, _vnRate = 48000, _vnT0 = 0, _vnTimer = null;
+const VN_MAX_MS = 120000;   // 2-minute cap (~3.8 MB WAV at 16 kHz mono)
+function vnSupported() { return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && (window.AudioContext || window.webkitAudioContext)); }
+async function vnStart() {
+  if (!cs_user) { openAuth("C", { ctx: "chat" }); return; }
+  const ar = (typeof LANG !== "undefined" && LANG === "ar");
+  if (!vnSupported()) { alert(ar ? "التسجيل الصوتي غير مدعوم على هذا المتصفح." : "Voice recording isn't supported on this browser."); return; }
+  if (_vnCtx) return;   // already recording
+  attCancel();          // drop any pending photo/video
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
+  catch (_) { alert(ar ? "لم يُسمح بالوصول إلى الميكروفون." : "Microphone access was denied."); return; }
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    _vnStream = stream; _vnCtx = new AC(); try { await _vnCtx.resume(); } catch (_) {}
+    _vnRate = _vnCtx.sampleRate || 48000;
+    _vnSrc = _vnCtx.createMediaStreamSource(_vnStream);
+    _vnProc = _vnCtx.createScriptProcessor(4096, 1, 1);
+    _vnData = []; _vnLen = 0;
+    _vnProc.onaudioprocess = e => { const ch = e.inputBuffer.getChannelData(0); _vnData.push(new Float32Array(ch)); _vnLen += ch.length; };
+    const mute = _vnCtx.createGain(); mute.gain.value = 0;   // silent sink so onaudioprocess fires without echoing the mic to the speaker
+    _vnSrc.connect(_vnProc); _vnProc.connect(mute); mute.connect(_vnCtx.destination);
+    _vnT0 = Date.now(); vnRenderRec();
+    _vnTimer = setInterval(() => { const ms = Date.now() - _vnT0; const el = document.querySelector(".vntime"); if (el) el.textContent = _fmtDur(ms); if (ms >= VN_MAX_MS) vnStop(); }, 250);
+  } catch (_) { _vnTeardown(); alert(ar ? "تعذّر بدء التسجيل." : "Couldn't start recording."); }
+}
+function _vnTeardown() {
+  if (_vnTimer) { clearInterval(_vnTimer); _vnTimer = null; }
+  try { if (_vnProc) { _vnProc.disconnect(); _vnProc.onaudioprocess = null; } } catch (_) {}
+  try { if (_vnSrc) _vnSrc.disconnect(); } catch (_) {}
+  try { if (_vnStream) _vnStream.getTracks().forEach(t => t.stop()); } catch (_) {}
+  try { if (_vnCtx && _vnCtx.state !== "closed") _vnCtx.close(); } catch (_) {}
+  _vnCtx = _vnStream = _vnProc = _vnSrc = null;
+}
+function vnCancel() { const rec = !!_vnCtx; _vnTeardown(); _vnData = []; _vnLen = 0; if (rec) { const box = $("attPrev"); if (box) { box.innerHTML = ""; box.classList.add("hide"); } } }
+function vnStop() {
+  if (!_vnCtx) return;
+  const rate = _vnRate, data = _vnData, len = _vnLen;
+  _vnTeardown();
+  const box = $("attPrev");
+  if (len < rate * 0.4) { if (box) { box.innerHTML = ""; box.classList.add("hide"); } _vnData = []; _vnLen = 0; return; }   // under ~0.4s = accidental tap, discard
+  const pcm = new Float32Array(len); let off = 0; for (let i = 0; i < data.length; i++) { pcm.set(data[i], off); off += data[i].length; }
+  _vnData = []; _vnLen = 0;
+  const target = 16000, ds = _vnDownsample(pcm, rate, target);
+  _attBlob = _vnEncodeWav(ds, target); _attType = "audio/wav"; _attKind = "aud"; _attPoster = null;
+  attShowPreview();
+}
+function _vnDownsample(buf, from, to) {
+  if (!from || to >= from) return buf;
+  const ratio = from / to, outLen = Math.max(1, Math.round(buf.length / ratio)), out = new Float32Array(outLen);
+  for (let i = 0; i < outLen; i++) {
+    const start = Math.floor(i * ratio), end = Math.min(buf.length, Math.floor((i + 1) * ratio));
+    let sum = 0, n = 0; for (let j = start; j < end; j++) { sum += buf[j]; n++; }
+    out[i] = n ? sum / n : 0;
+  }
+  return out;
+}
+function _vnEncodeWav(samples, rate) {
+  const n = samples.length, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+  const wr = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  wr(0, "RIFF"); v.setUint32(4, 36 + n * 2, true); wr(8, "WAVE"); wr(12, "fmt ");
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  wr(36, "data"); v.setUint32(40, n * 2, true);
+  let o = 44; for (let i = 0; i < n; i++) { const s = Math.max(-1, Math.min(1, samples[i])); v.setInt16(o, s < 0 ? s * 0x8000 : s * 0x7FFF, true); o += 2; }
+  return new Blob([buf], { type: "audio/wav" });
+}
+function _fmtDur(ms) { const s = Math.max(0, Math.floor(ms / 1000)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
+function vnRenderRec() {
+  const box = $("attPrev"); if (!box) return;
+  const ar = (typeof LANG !== "undefined" && LANG === "ar");
+  box.innerHTML = '<div class="vnrec"><span class="vndot"></span><span class="vnlab">' + (ar ? "جارٍ التسجيل" : "RECORDING") + '</span><span class="vntime">0:00</span>' +
+    '<div class="attprev-act"><button class="attprev-x" onclick="vnCancel()" aria-label="Cancel">&#10005;</button>' +
+    '<button class="attprev-send" onclick="vnStop()">' + (ar ? "تم" : "Stop") + '</button></div></div>';
+  box.classList.remove("hide");
+}
+/* stop + reset any playing chat video / voice note when leaving chat, backgrounding, locking, or closing the app */
+function stopAllChatMedia() {
+  try { document.querySelectorAll("video.att-media, audio.att-audio").forEach(m => { try { m.pause(); } catch (_) {} try { m.currentTime = 0; } catch (_) {} }); } catch (_) {}
+}
+document.addEventListener("visibilitychange", () => { if (document.hidden) { stopAllChatMedia(); if (_vnCtx) vnCancel(); } });
+window.addEventListener("pagehide", () => { stopAllChatMedia(); if (_vnCtx) vnCancel(); });
 /* ---- chat emoji picker, sender nation flag & message reactions ---- */
 const CHAT_EMOJIS = ["😀","😃","😄","😁","😅","😂","🤣","😊","😍","😘","😎","🤩","🤔","😴","🙄","😜","😢","😭","😡","🥳","🥶","😱","🤝","🙏","👍","👎","👏","🙌","💪","🤞","👀","🔥","⚽","🥅","🏆","🎉","🎊","❤️","💔","💯","⭐","🚩","🟨","🟥"];
 const REACTS = ["❤️","😂","👏","😮","😢","🔥"];
