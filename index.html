@@ -318,7 +318,8 @@ html[dir="rtl"] .team.away img{box-shadow:-3px 0 0 0 var(--cyan)}
 .att-up-bar{height:100%;width:0;background:var(--gold);transition:width .15s}
 .msg .att{position:relative;margin-top:5px;max-width:240px}
 .msg .att-media{max-width:100%;max-height:320px;border-radius:12px;display:block;background:#0a0e1a}
-.msg .att-save{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.62);border:none;color:#fff;width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:14px;line-height:1}
+.msg .att-save{position:absolute;top:7px;right:7px;background:rgba(0,0,0,.68);border:none;color:#fff;width:36px;height:36px;border-radius:9px;cursor:pointer;font-size:17px;line-height:1;box-shadow:0 1px 5px rgba(0,0,0,.5)}
+.msg .att-save:active{background:var(--rust)}
 html[dir="rtl"] .msg .att-save{right:auto;left:6px}
 .emojipanel{position:fixed;z-index:320;max-height:208px;overflow-y:auto;background:rgba(16,26,60,.99);border:1px solid var(--line);border-radius:14px;padding:8px;box-shadow:0 -10px 32px rgba(0,0,0,.55);display:grid;grid-template-columns:repeat(8,1fr);gap:2px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 .emojipanel button{background:none;border:none;font-size:21px;cursor:pointer;padding:5px 0;border-radius:8px;line-height:1}
@@ -1114,7 +1115,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.06</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.07</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1440,7 +1441,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "3.06";
+const APP_VERSION = "3.07";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
@@ -5097,10 +5098,28 @@ function attHTML(att) {
   return '<div class="att" onclick="event.stopPropagation()">' + media + save + '</div>';
 }
 async function attSave(url) {
+  const ext = (url.split(".").pop() || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const MIME = { mp4:"video/mp4", mov:"video/quicktime", webm:"video/webm", m4v:"video/x-m4v",
+                 jpg:"image/jpeg", jpeg:"image/jpeg", png:"image/png", webp:"image/webp", gif:"image/gif" };
+  const isVid = /^(mp4|mov|webm|m4v)$/.test(ext);
+  const name = "wc26-" + (isVid ? "video" : "photo") + "." + (ext || (isVid ? "mp4" : "jpg"));
+  let b;
+  try { const r = await fetch(url); if (!r.ok) throw 0; b = await r.blob(); }
+  catch (_) { try { window.open(url, "_blank"); } catch (e) {} return; }
+  const type = b.type || MIME[ext] || (isVid ? "video/mp4" : "image/jpeg");
+  // Phones (iOS/Android): native share sheet -> "Save Video" / "Save Image" in one tap.
   try {
-    const r = await fetch(url); if (!r.ok) throw 0;
-    const b = await r.blob(); const a = document.createElement("a");
-    a.href = URL.createObjectURL(b); a.download = (url.split("/").pop() || "attachment");
+    const file = new File([b], name, { type });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file] }); return; }
+  } catch (e) {
+    if (e && e.name === "AbortError") return;          // user closed the share sheet
+    try { window.open(url, "_blank"); } catch (_) {}    // share blocked -> open in the native viewer so they can save from there
+    return;
+  }
+  // Desktop browsers: real file download.
+  try {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(b); a.download = name;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => { try { URL.revokeObjectURL(a.href); } catch (_) {} }, 5000);
   } catch (_) { try { window.open(url, "_blank"); } catch (e) {} }
