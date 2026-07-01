@@ -33,7 +33,7 @@
 <meta name="twitter:image" content="https://ahmedelayoty.github.io/world-cup-2026-fans/share-card.png?v=4">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;600;700&family=Cairo:wght@600;700;800&display=swap" rel="stylesheet">
-<script>try{var _dk=localStorage.getItem("cs_theme")==="dark";if(!_dk)document.documentElement.setAttribute("data-theme","light");var _m=document.querySelector('meta[name="theme-color"]');if(!_m){_m=document.createElement("meta");_m.setAttribute("name","theme-color");document.head.appendChild(_m);}_m.setAttribute("content",_dk?"#0a1230":"#eef1f8");}catch(_){}</script>
+<script>try{if(!localStorage.getItem("cs_theme_reset1")){localStorage.setItem("cs_theme","light");localStorage.setItem("cs_theme_reset1","1");}var _dk=localStorage.getItem("cs_theme")==="dark";if(!_dk)document.documentElement.setAttribute("data-theme","light");var _m=document.querySelector('meta[name="theme-color"]');if(!_m){_m=document.createElement("meta");_m.setAttribute("name","theme-color");document.head.appendChild(_m);}_m.setAttribute("content",_dk?"#0a1230":"#eef1f8");}catch(_){}</script>
 <style>
 :root{
   --navy:#0a1230; --navy2:#0d1838; --card:#121d44; --card2:#0e1736;
@@ -1297,7 +1297,7 @@ html[data-theme="light"] .msg.me .rxchip.mine span{color:var(--rust)}
   <input type="file" id="attFile" accept="image/*,video/*" style="display:none" onchange="attPicked(this)">
   <div class="chatbar" id="chatbar"></div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.18</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.19</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1631,7 +1631,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "3.18";
+const APP_VERSION = "3.19";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
