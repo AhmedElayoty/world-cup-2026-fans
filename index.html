@@ -301,6 +301,25 @@ html[dir="rtl"] .team.away img{box-shadow:-3px 0 0 0 var(--cyan)}
 .reactbar button:hover,.reactbar button:active{transform:scale(1.3)}
 .chatbar .emojibtn{flex:none;width:46px;padding:0;background:var(--card);border:1px solid var(--line);color:var(--txt);font-size:20px;border-radius:24px}
 .chatbar .emojibtn:hover{border-color:var(--rust)}
+.chatbar .attbtn{flex:none;width:46px;padding:0;background:var(--card);border:1px solid var(--line);color:var(--txt);font-size:20px;border-radius:24px;cursor:pointer}
+.chatbar .attbtn:hover{border-color:var(--rust)}
+.attprev{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px;margin-bottom:8px;flex-wrap:wrap}
+.attprev-thumb img{height:52px;width:52px;object-fit:cover;border-radius:8px;display:block}
+.attprev .vthumb{position:relative;height:52px;width:52px;border-radius:8px;overflow:hidden;background:#000}
+.attprev .vthumb img{height:100%;width:100%;object-fit:cover}
+.attprev .vplay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;text-shadow:0 1px 3px #000}
+.attprev-info{flex:1;min-width:60px;display:flex;flex-direction:column;font-family:'Oswald'}
+.attprev-info b{font-size:12px;letter-spacing:1px;color:var(--gold)}
+.attprev-info span{font-size:11px;color:var(--mut)}
+.attprev-act{display:flex;gap:6px;flex:none}
+.attprev-x{background:none;border:1px solid var(--line);color:var(--mut);width:34px;height:34px;border-radius:10px;cursor:pointer;font-size:14px}
+.attprev-send{background:var(--rust);border:none;color:#fff;font-family:'Oswald';font-weight:600;letter-spacing:.6px;padding:0 16px;height:34px;border-radius:10px;cursor:pointer}
+.att-up{width:100%;height:5px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden;margin-top:2px}
+.att-up-bar{height:100%;width:0;background:var(--gold);transition:width .15s}
+.msg .att{position:relative;margin-top:5px;max-width:240px}
+.msg .att-media{max-width:100%;max-height:320px;border-radius:12px;display:block;background:#0a0e1a}
+.msg .att-save{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.62);border:none;color:#fff;width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:14px;line-height:1}
+html[dir="rtl"] .msg .att-save{right:auto;left:6px}
 .emojipanel{position:fixed;z-index:320;max-height:208px;overflow-y:auto;background:rgba(16,26,60,.99);border:1px solid var(--line);border-radius:14px;padding:8px;box-shadow:0 -10px 32px rgba(0,0,0,.55);display:grid;grid-template-columns:repeat(8,1fr);gap:2px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 .emojipanel button{background:none;border:none;font-size:21px;cursor:pointer;padding:5px 0;border-radius:8px;line-height:1}
 .emojipanel button:hover{background:rgba(255,255,255,.08)}
@@ -1085,14 +1104,17 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
  <section id="paneC" class="hide">
   <div class="chatnote">Shared team room · be nice, it's football 🏆</div>
   <div id="chatlog"><div class="empty">Loading chat…</div></div>
+  <div id="attPrev" class="attprev hide"></div>
+  <input type="file" id="attFile" accept="image/*,video/*" style="display:none" onchange="attPicked(this)">
   <div class="chatbar" id="chatbar">
+   <button class="attbtn" onclick="attPick()" aria-label="Attach photo or video">📎</button>
    <input id="chatIn" maxlength="280" placeholder="Message the team…"
           onkeydown="if(event.key==='Enter')sendMsg()">
    <button class="emojibtn" onclick="toggleEmojiPanel(event)" aria-label="Emoji">😊</button>
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.04</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.05</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1418,7 +1440,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "3.04";
+const APP_VERSION = "3.05";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
@@ -4668,7 +4690,7 @@ function authSkip() {
 function renderChatComposer() {
   const bar = $("chatbar"); if (!bar) return;
   if (cs_user) {
-    bar.innerHTML = '<input id="chatIn" maxlength="280" placeholder="Message the team…" onkeydown="if(event.key===\'Enter\')sendMsg()"><button class="emojibtn" onclick="toggleEmojiPanel(event)" aria-label="Emoji">😊</button><button onclick="sendMsg()">SEND</button>';
+    bar.innerHTML = '<button class="attbtn" onclick="attPick()" aria-label="Attach photo or video">📎</button><input id="chatIn" maxlength="280" placeholder="Message the team…" onkeydown="if(event.key===\'Enter\')sendMsg()"><button class="emojibtn" onclick="toggleEmojiPanel(event)" aria-label="Emoji">😊</button><button onclick="sendMsg()">SEND</button>';
   } else {
     bar.innerHTML = '<div class="chatlock"><span>🔒 Sign in to chat · reading is free</span><button onclick="openAuth(\'C\',{ctx:\'chat\'})">SIGN IN</button></div>';
   }
@@ -4958,7 +4980,7 @@ function renderChat(msgs) {
   $("chatlog").innerHTML = msgs.slice(-100).filter(m => _safeMid(m.id)).map(m => `
     <div class="msg${m.uid === myId ? " me" : ""}${/^funbot/.test(m.uid || "") ? " fact" : ""}" onclick="openReact(event,'${m.id}')">
       <div class="who">${m.natf ? '<img class="natflag" src="' + esc(m.natf) + '" alt="" title="' + esc(m.nat || "") + '" onerror="this.style.display=&#39;none&#39;">' : ""}${esc(m.name || "?")}</div>
-      <div class="txt" dir="auto">${emojiFlags(esc(m.text || ""))}</div>
+      ${m.text ? '<div class="txt" dir="auto">' + emojiFlags(esc(m.text || "")) + '</div>' : ""}${m.att ? attHTML(m.att) : ""}
       <div class="when">${fmt(new Date(m.ts || Date.now()), { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "short" })}</div>
       ${rxRow(m)}
     </div>`).join("") || `<div class="empty">No messages yet · say hello! 👋</div>`;
@@ -4979,6 +5001,109 @@ async function sendMsg() {
     await postRoom([mine]);
     lastChatJson = ""; pollChat();
   } catch (e) { alert(LANG === "ar" ? "تعذّر الإرسال · تحقّق من الاتصال." : "Couldn't send · check connection."); }
+}
+/* ---- chat attachments (images + short video) · stored in R2 via the wc26-media Worker; the chat only holds the URL ---- */
+const MEDIA_API = "https://wc26-media.ahmed-ayoty.workers.dev";
+let _attBlob = null, _attType = null, _attKind = null, _attPoster = null;
+function attPick() { if (!cs_user) { openAuth("C", { ctx: "chat" }); return; } const f = $("attFile"); if (f) f.click(); }
+function attCancel() { _attBlob = null; _attType = null; _attKind = null; _attPoster = null; const box = $("attPrev"); if (box) { box.innerHTML = ""; box.classList.add("hide"); } }
+function _fileSize(n) { const kb = n / 1024; return kb > 1024 ? (kb / 1024).toFixed(1) + " MB" : Math.max(1, Math.round(kb)) + " KB"; }
+function compressImage(file) {
+  return new Promise((res, rej) => {
+    if (file.type === "image/gif") { res({ blob: file, type: "image/gif" }); return; }
+    const img = new Image();
+    img.onload = () => { const max = 1600; let w = img.width, h = img.height; if (w > max || h > max) { const s = Math.min(max / w, max / h); w = Math.round(w * s); h = Math.round(h * s); } const c = document.createElement("canvas"); c.width = w; c.height = h; c.getContext("2d").drawImage(img, 0, 0, w, h); c.toBlob(bl => { try { URL.revokeObjectURL(img.src); } catch (_) {} res(bl ? { blob: bl, type: "image/jpeg" } : { blob: file, type: file.type }); }, "image/jpeg", 0.82); };
+    img.onerror = () => { try { URL.revokeObjectURL(img.src); } catch (_) {} rej(new Error("image")); };
+    img.src = URL.createObjectURL(file);
+  });
+}
+function videoPoster(file) {
+  return new Promise(res => {
+    try {
+      const v = document.createElement("video"); v.preload = "metadata"; v.muted = true; v.playsInline = true;
+      let done = false; const finish = b => { if (done) return; done = true; try { URL.revokeObjectURL(v.src); } catch (_) {} res(b); };
+      v.onloadeddata = () => { try { v.currentTime = Math.min(0.1, (v.duration || 1) / 2); } catch (_) { finish(null); } };
+      v.onseeked = () => { try { const max = 640; let w = v.videoWidth || 320, h = v.videoHeight || 240; const s = Math.min(1, max / Math.max(w, h)); const c = document.createElement("canvas"); c.width = Math.round(w * s); c.height = Math.round(h * s); c.getContext("2d").drawImage(v, 0, 0, c.width, c.height); c.toBlob(finish, "image/jpeg", 0.7); } catch (_) { finish(null); } };
+      v.onerror = () => finish(null);
+      setTimeout(() => finish(null), 6000);
+      v.src = URL.createObjectURL(file);
+    } catch (_) { res(null); }
+  });
+}
+async function attPicked(inp) {
+  const f = inp.files && inp.files[0]; inp.value = "";
+  if (!f) return;
+  const ar = (typeof LANG !== "undefined" && LANG === "ar");
+  const isImg = f.type.indexOf("image/") === 0, isVid = f.type.indexOf("video/") === 0;
+  if (!isImg && !isVid) { alert(ar ? "الصور أو الفيديو فقط." : "Only images or videos."); return; }
+  if (isVid && f.size > 25 * 1024 * 1024) { alert(ar ? "الفيديو أكبر من 25 ميجابايت · اختر مقطعاً أقصر." : "Video is over 25 MB · pick a shorter clip."); return; }
+  if (isImg && f.size > 15 * 1024 * 1024) { alert(ar ? "الصورة كبيرة جداً." : "Image is too large."); return; }
+  attCancel();
+  try {
+    if (isImg) { const r = await compressImage(f); _attBlob = r.blob; _attType = r.type; _attKind = "img"; _attPoster = null; }
+    else { _attBlob = f; _attType = f.type; _attKind = "vid"; _attPoster = await videoPoster(f); }
+    attShowPreview();
+  } catch (_) { alert(ar ? "تعذّر تجهيز الملف." : "Couldn't process that file."); attCancel(); }
+}
+function attShowPreview() {
+  const box = $("attPrev"); if (!box || !_attBlob) return;
+  const ar = (typeof LANG !== "undefined" && LANG === "ar");
+  const thumb = _attKind === "img"
+    ? '<img src="' + URL.createObjectURL(_attBlob) + '">'
+    : '<div class="vthumb">' + (_attPoster ? '<img src="' + URL.createObjectURL(_attPoster) + '">' : '') + '<span class="vplay">&#9654;</span></div>';
+  box.innerHTML = '<div class="attprev-thumb">' + thumb + '</div>' +
+    '<div class="attprev-info"><b>' + (_attKind === "vid" ? (ar ? "فيديو" : "VIDEO") : (ar ? "صورة" : "PHOTO")) + '</b><span>' + _fileSize(_attBlob.size) + '</span></div>' +
+    '<div class="attprev-act"><button class="attprev-x" onclick="attCancel()" aria-label="Cancel">&#10005;</button>' +
+    '<button class="attprev-send" onclick="attSend()">' + (ar ? "إرسال" : "Send") + '</button></div>' +
+    '<div class="att-up hide" id="attUp"><div class="att-up-bar" id="attUpBar"></div></div>';
+  box.classList.remove("hide");
+}
+function attUpload(blob, type, onprog) {
+  return new Promise((res, rej) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", MEDIA_API + "/upload");
+    xhr.setRequestHeader("Content-Type", type);
+    if (onprog && xhr.upload) xhr.upload.onprogress = e => { if (e.lengthComputable) onprog(Math.round(e.loaded / e.total * 100)); };
+    xhr.onload = () => { try { const j = JSON.parse(xhr.responseText); if (xhr.status >= 200 && xhr.status < 300 && j.url) res(j.url); else rej(new Error(j.error || ("HTTP " + xhr.status))); } catch (e) { rej(e); } };
+    xhr.onerror = () => rej(new Error("network"));
+    xhr.send(blob);
+  });
+}
+async function attSend() {
+  if (!_attBlob) return;
+  if (!cs_user) { openAuth("C", { ctx: "chat" }); return; }
+  const ar = (typeof LANG !== "undefined" && LANG === "ar");
+  const up = $("attUp"), bar = $("attUpBar"), sendBtn = document.querySelector(".attprev-send");
+  if (up) up.classList.remove("hide"); if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = "…"; }
+  try {
+    const url = await attUpload(_attBlob, _attType, p => { if (bar) bar.style.width = p + "%"; });
+    let posterUrl = "";
+    if (_attKind === "vid" && _attPoster) { try { posterUrl = await attUpload(_attPoster, "image/jpeg"); } catch (_) {} }
+    const kind = _attKind;
+    const caption = ($("chatIn").value || "").trim(); $("chatIn").value = "";
+    const nat = myNation(); let natf = ""; try { if (nat) natf = (await natLogos())[nat] || ""; } catch (_) {}
+    const mine = { id: "m" + Date.now() + Math.random().toString(36).slice(2, 6), uid: myId, name: cs_user.username, text: caption, ts: Date.now(), nat, natf, att: { t: kind, u: url, p: posterUrl } };
+    await postRoom([mine]);
+    attCancel(); lastChatJson = ""; pollChat();
+  } catch (e) { alert(ar ? "تعذّر رفع المرفق · تحقّق من الاتصال." : "Upload failed · check your connection."); if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = ar ? "إرسال" : "Send"; } if (up) up.classList.add("hide"); }
+}
+function attHTML(att) {
+  if (!att || !att.u) return "";
+  const u = esc(att.u), p = att.p ? esc(att.p) : "";
+  const media = att.t === "vid"
+    ? '<video class="att-media" preload="none" playsinline controls' + (p ? ' poster="' + p + '"' : '') + ' src="' + u + '"></video>'
+    : '<img class="att-media" loading="lazy" src="' + u + '" alt="attachment">';
+  const save = '<button class="att-save" onclick="event.stopPropagation();attSave(&quot;' + u + '&quot;)" aria-label="Save">&#11015;</button>';
+  return '<div class="att" onclick="event.stopPropagation()">' + media + save + '</div>';
+}
+async function attSave(url) {
+  try {
+    const r = await fetch(url); if (!r.ok) throw 0;
+    const b = await r.blob(); const a = document.createElement("a");
+    a.href = URL.createObjectURL(b); a.download = (url.split("/").pop() || "attachment");
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => { try { URL.revokeObjectURL(a.href); } catch (_) {} }, 5000);
+  } catch (_) { try { window.open(url, "_blank"); } catch (e) {} }
 }
 /* ---- chat emoji picker, sender nation flag & message reactions ---- */
 const CHAT_EMOJIS = ["😀","😃","😄","😁","😅","😂","🤣","😊","😍","😘","😎","🤩","🤔","😴","🙄","😜","😢","😭","😡","🥳","🥶","😱","🤝","🙏","👍","👎","👏","🙌","💪","🤞","👀","🔥","⚽","🥅","🏆","🎉","🎊","❤️","💔","💯","⭐","🚩","🟨","🟥"];
