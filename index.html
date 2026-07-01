@@ -1147,7 +1147,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
   <input type="file" id="attFile" accept="image/*,video/*" style="display:none" onchange="attPicked(this)">
   <div class="chatbar" id="chatbar"></div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.12</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.13</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1379,6 +1379,8 @@ var _celebId = null, _csGroups = null;            // var (hoisted): loadStanding
 const CELEB_EGY = "Egypt", CELEB_OPP = "iran";
 const CELEB_SINCE = Date.parse("2026-06-23T00:00:00Z");   // deploy cutoff: only fire for matches kicking off at/after this — excludes the already-played 22 Jun NZ win, includes the 27 Jun Iran match + every future game    // Iran = Egypt's special matchday-3 group game
 const CELEB_FLAG_KEY = "capriole_wc26_celebrate"; // manual "celebration now" flag (admin-set in textdb)
+const CELEB_MAX_MS = 48 * 3600 * 1000;            // the AUTO popup only appears within ~2 days of full-time; older wins never auto-pop for new devices/logins (still replayable via the Celebrate Egypt bar)
+function _celebRecent(dateStr){ try{ return (Date.now() - (new Date(dateStr).getTime() + 2.5 * 3600 * 1000)) <= CELEB_MAX_MS; }catch(_){ return false; } }   // kickoff + ~2.5h ≈ full-time
 
 function celebSeen(id){ try{ return !!localStorage.getItem("egyCeleb:" + id); }catch(e){ return false; } }    // set ONLY when dismissed via the chant
 function markCelebSeen(id){ try{ if(id) localStorage.setItem("egyCeleb:" + id, "1"); }catch(e){} }
@@ -1435,15 +1437,21 @@ function _celebFire(id){
 function checkCelebration(){
   try{
     if(overlay.dataset.open === "1") return;
-    // Egypt officially placed into an ESPN knockout fixture = qualified to the R32 → celebrate once (even if it came via other results, not a win)
-    try{ if(typeof confirmedTeams === "function" && confirmedTeams().has(CELEB_EGY)){ const qid = "egyR32"; if(!celebSeen(qid)){ _celebFire(qid); return; } } }catch(_){}
     const seen = new Set(), pool = [];
     (typeof events !== "undefined" ? events : []).concat((typeof seasonCache !== "undefined" && seasonCache.events) || [])
       .forEach(function(e){ if(e && !seen.has(e.id)){ seen.add(e.id); pool.push(e); } });
+    // RECENCY GATE: the auto-popup only appears within ~2 days of Egypt's most recent finished match.
+    // After that, new devices / new logins do NOT get it (it stays replayable on demand via the Celebrate Egypt bar).
+    const egyFin = pool.filter(function(e){ return e.status && e.status.type && e.status.type.state === "post" && new Date(e.date).getTime() >= CELEB_SINCE && egyCelebResult(e); })
+                       .sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
+    const egyRecent = egyFin.length ? _celebRecent(egyFin[egyFin.length - 1].date) : false;
+    // Egypt placed into an ESPN knockout fixture = qualified to the R32 → celebrate once, but ONLY inside the 2-day window
+    try{ if(egyRecent && typeof confirmedTeams === "function" && confirmedTeams().has(CELEB_EGY)){ const qid = "egyR32"; if(!celebSeen(qid)){ _celebFire(qid); return; } } }catch(_){}
     const trig = pool.filter(function(e){ return e.status && e.status.type && e.status.type.state === "post" && new Date(e.date).getTime() >= CELEB_SINCE && egyCelebTrigger(e); });
     if(!trig.length) return;
     trig.sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
     const m = trig[trig.length - 1], id = "egyWin:" + m.id;
+    if(!_celebRecent(m.date)) return;   // older win → no auto-popup (only the on-demand Celebrate Egypt bar remains)
     if(celebSeen(id)) return;
     _celebFire(id);
   }catch(e){}
@@ -1473,7 +1481,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "3.12";
+const APP_VERSION = "3.13";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
