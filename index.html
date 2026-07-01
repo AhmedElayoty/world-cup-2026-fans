@@ -280,12 +280,12 @@ html[dir="rtl"] .team.away img{box-shadow:-3px 0 0 0 var(--cyan)}
 .msg.me .who{color:#ffd2bd}
 .msg .txt{font-size:13.5px;line-height:1.45;word-wrap:break-word;white-space:pre-wrap}
 .msg .when{font-size:9.5px;color:var(--dim);text-align:right;margin-top:3px}
-.chatbar{position:sticky;bottom:0;display:flex;align-items:flex-end;gap:5px;padding:8px 0 2px;background:linear-gradient(transparent,var(--navy) 30%)}
+.chatbar{position:sticky;bottom:0;display:flex;align-items:flex-end;gap:3px;padding:8px 0 2px;background:linear-gradient(transparent,var(--navy) 30%)}
 .chatbar textarea{flex:1;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:20px;color:var(--txt);
  font-family:'Inter';font-size:16px;line-height:1.35;padding:9px 15px;outline:none;resize:none;overflow-y:auto;max-height:132px;height:42px}
 .chatbar textarea:focus{border-color:var(--rust)}
 .chatbar textarea::-webkit-scrollbar{width:0;height:0}
-.chatbar .iconbtn{flex:none;width:42px;height:42px;padding:0;background:none;border:none;color:var(--mut);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%}
+.chatbar .iconbtn{flex:none;width:34px;height:42px;padding:0;background:none;border:none;color:var(--mut);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%}
 .chatbar .iconbtn svg{width:24px;height:24px;display:block}
 .chatbar .iconbtn:hover,.chatbar .iconbtn:active{color:var(--rust)}
 .chatbar .sendbtn{flex:none;width:42px;height:42px;padding:0;background:var(--rust);border:none;border-radius:50%;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
@@ -327,6 +327,13 @@ html[dir="rtl"] .chatbar .sendbtn svg{transform:scaleX(-1);margin-inline-start:0
 .msgpop{position:fixed;z-index:340;background:rgba(16,26,60,.99);border:1px solid var(--line);border-radius:12px;padding:5px;box-shadow:0 12px 32px rgba(0,0,0,.6);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);animation:toastIn .14s ease}
 .msgpop button{display:flex;align-items:center;gap:8px;width:100%;background:none;border:none;color:#ff6b6b;font-family:'Inter';font-size:14px;padding:10px 18px 10px 12px;border-radius:8px;cursor:pointer;white-space:nowrap}
 .msgpop button:hover,.msgpop button:active{background:rgba(255,107,107,.14)}
+.featpop-wrap{position:fixed;inset:0;z-index:420;background:rgba(4,8,20,.72);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:24px;animation:toastIn .18s ease}
+.featpop{background:var(--card);border:1px solid var(--line);border-radius:18px;max-width:340px;width:100%;padding:24px 22px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.featpop-ics{display:flex;align-items:center;justify-content:center;gap:16px;color:var(--rust);margin-bottom:4px}
+.featpop-ics svg{width:30px;height:30px}
+.featpop h3{font-family:'Oswald';font-weight:700;font-size:20px;letter-spacing:.5px;color:var(--txt);margin:10px 0 8px}
+.featpop p{font-family:'Inter';font-size:14px;line-height:1.6;color:var(--mut);margin:0 0 20px}
+.featpop button{background:var(--rust);border:none;color:#fff;font-family:'Oswald';font-weight:600;font-size:14px;letter-spacing:1px;padding:11px 32px;border-radius:12px;cursor:pointer}
 .attprev{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px;margin-bottom:8px;flex-wrap:wrap}
 .attprev-thumb img{height:52px;width:52px;object-fit:cover;border-radius:8px;display:block}
 .attprev .vthumb{position:relative;height:52px;width:52px;border-radius:8px;overflow:hidden;background:#000}
@@ -1133,7 +1140,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
   <input type="file" id="attFile" accept="image/*,video/*" style="display:none" onchange="attPicked(this)">
   <div class="chatbar" id="chatbar"></div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.09</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.10</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1459,7 +1466,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "3.09";
+const APP_VERSION = "3.10";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
@@ -1852,7 +1859,7 @@ function showTab(t) {
   });
   if (t !== "C") window.scrollTo(0, 0);   // every tab opens at the TOP — EXCEPT Chat, which opens at the bottom (latest messages)
   if (t === "C") {
-    renderChatComposer(); pollChat();
+    renderChatComposer(); renderCachedChat(); pollChat();
     const toBottom = () => { if (!$("paneC").classList.contains("hide")) window.scrollTo(0, document.body.scrollHeight); };
     toBottom(); [150, 450, 900].forEach(d => setTimeout(toBottom, d));   // re-assert to the latest message as the chat loads async
   }
@@ -4981,7 +4988,7 @@ async function pollChat() {
   try { msgs = await readRoom(); }
   catch (e) {
     if (!$("paneC").classList.contains("hide") && !$("chatlog").querySelector(".msg"))   // keep the last-good chat on a transient blip; only show the error when the log is empty
-      $("chatlog").innerHTML = '<div class="empty">Chat room unreachable.<br><span style="font-size:11px">' + esc(String(e.message || e)) + '</span></div>';
+      $("chatlog").innerHTML = '<div class="empty">' + ((typeof LANG !== "undefined" && LANG === "ar") ? "جارٍ تحميل الدردشة\u2026" : "Loading chat\u2026") + '</div>';
     return;
   }
   if (!Array.isArray(msgs) || msgs.length === 0) return;   // a live room always holds the seed message; an empty read is a transient blip → keep the last-good chat
@@ -5009,6 +5016,7 @@ function emojiFlags(s) {
     return '<img class="chatflag" src="https://flagcdn.com/20x15/' + cc + '.png" alt="' + cc + '">';
   });
 }
+function renderCachedChat() { try { if ($("chatlog") && $("chatlog").querySelector(".msg")) return; const c = JSON.parse(localStorage.getItem("cs_chat_cache") || "[]"); if (Array.isArray(c) && c.length) renderChat(c); } catch (_) {} }
 function renderChat(msgs) {
   _chatMsgs = msgs;
   const atBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 160;
@@ -5019,6 +5027,7 @@ function renderChat(msgs) {
       <div class="when">${fmt(new Date(m.ts || Date.now()), { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "short" })}</div>
       ${rxRow(m)}
     </div>`).join("") || `<div class="empty">No messages yet · say hello! 👋</div>`;
+  try { localStorage.setItem("cs_chat_cache", JSON.stringify(msgs.slice(-60))); } catch (_) {}
   if (atBottom) window.scrollTo(0, document.body.scrollHeight);
 }
 async function sendMsg() {
@@ -5399,6 +5408,23 @@ async function delMsg(id) {
   }
   lastChatJson = ""; pollChat();
 }
+/* ---- one-time feature announcement (photos/videos/voice notes + delete), localized by LANG ---- */
+function closeFeatPop() { const o = $("featPop"); if (o) o.remove(); try { localStorage.setItem("cs_feat_v309", "1"); } catch (_) {} }
+function showFeatPop() {
+  if ($("featPop")) return;
+  const ar = (typeof LANG !== "undefined" && LANG === "ar");
+  const trash = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>';
+  const o = document.createElement("div"); o.id = "featPop"; o.className = "featpop-wrap";
+  o.innerHTML = '<div class="featpop" role="dialog" aria-modal="true">'
+    + '<div class="featpop-ics">' + ICO.attach + ICO.mic + trash + '</div>'
+    + '<h3>' + (ar ? "جديد في الدردشة" : "New in the chat") + '</h3>'
+    + '<p>' + (ar ? "يمكنك الآن إرسال الصور والفيديو والرسائل الصوتية في الدردشة. أرسلت شيئاً بالخطأ؟ يمكنك حذفه بسهولة." : "You can now send photos, videos and voice notes in the chat. Sent something by mistake? You can delete it.") + '</p>'
+    + '<button onclick="closeFeatPop()">' + (ar ? "تمام" : "Got it") + '</button>'
+    + '</div>';
+  o.addEventListener("click", e => { if (e.target === o) closeFeatPop(); });
+  document.body.appendChild(o);
+}
+function maybeShowFeatPop() { try { if (localStorage.getItem("cs_feat_v309")) return; } catch (_) {} showFeatPop(); }
 /* ================= BOOT ================= */
 /* ================= STATS TAB ================= */
 let statsView = "P", statsTimer = null, deepRunning = false;
@@ -5669,6 +5695,7 @@ buildStrip();
 jumpToLiveDay();   // if a match is live (incl. one that crossed midnight), open on its day, not the empty new day
 renderChatComposer();
 pollChat(); chatTimer = setInterval(pollChat, 7000);   // always-on chat poll → unread badge + new-message toasts everywhere
+setTimeout(function () { try { maybeShowFeatPop(); } catch (_) {} }, 1100);   // one-time localized feature announcement
 // reopening the app during a live match → refresh the feed immediately instead of waiting for the next poll
 document.addEventListener("visibilitychange", () => { if (!document.hidden && events.some(e => e.status && e.status.type && e.status.type.state === "in")) { clearTimeout(matchTimer); loadMatches(); } });
 if (cs_user) {
