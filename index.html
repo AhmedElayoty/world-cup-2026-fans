@@ -384,6 +384,7 @@ html[dir="rtl"] .msg .att-save{right:auto;left:6px}
 .skpill.gold b{color:var(--gold)}
 .skpill.cyan{border-color:#1a4a63}
 .skpill.cyan b{color:var(--cyan)}
+html[data-theme="light"] .skpill.gold{background:rgba(255,192,46,.16)}
 footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px;letter-spacing:1.6px;color:#3d4a72}
 .hero{background:linear-gradient(150deg,#0a2e1d,#0c3a24);border:1px solid var(--green);border-radius:16px;
  padding:9px 13px;margin-bottom:12px;cursor:pointer}
@@ -1191,6 +1192,19 @@ html[data-theme="light"] .brk{background:linear-gradient(150deg,#fdf4da,#f6ead0)
 html[data-theme="light"] .tlmin{background:#eef2fb;color:var(--mut)}
 html[data-theme="light"] .h2hsc.draw{background:#e6ebf6;border-color:var(--line);color:var(--mut)}
 html[data-theme="light"] .brteam.lose{opacity:.62}
+
+/* ===== light-mode polish v3 — your own row (predictions) + your own chat bubble ===== */
+/* predictions leaderboard: your row = a GREEN "you" highlight (was a dark-brown block that didn't flip) */
+html[data-theme="light"] .lbrow.me{background:#e4f7ec;box-shadow:inset 3px 0 0 var(--green)}
+html[dir="rtl"][data-theme="light"] .lbrow.me{box-shadow:inset -3px 0 0 var(--green)}
+html[data-theme="light"] .lbrow.me .nm{color:#0a7a44}
+/* your own chat bubble: soft rust tint + readable dark text (was a harsh dark bar; in light its text inherited dark → dark-on-dark) */
+html[data-theme="light"] .msg.me{background:linear-gradient(150deg,#ffe9e1,#ffdccd);border-color:#f0bfab;color:#48200f}
+html[data-theme="light"] .msg.me .who{color:var(--rust)}
+html[data-theme="light"] .msg.me .when{color:#a26a54}
+html[data-theme="light"] .msg.me .msgmenu{color:var(--rust)}
+html[data-theme="light"] .msg.me .rxchip.mine{background:rgba(194,69,27,.16);border-color:rgba(194,69,27,.4)}
+html[data-theme="light"] .msg.me .rxchip.mine span{color:var(--rust)}
 </style>
 </head>
 <body>
@@ -1277,7 +1291,7 @@ html[data-theme="light"] .brteam.lose{opacity:.62}
   <input type="file" id="attFile" accept="image/*,video/*" style="display:none" onchange="attPicked(this)">
   <div class="chatbar" id="chatbar"></div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.14</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.15</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1611,7 +1625,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "3.14";
+const APP_VERSION = "3.15";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
