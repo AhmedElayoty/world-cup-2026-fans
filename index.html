@@ -281,11 +281,11 @@ html[dir="rtl"] .team.away img{box-shadow:-3px 0 0 0 var(--cyan)}
 .msg .txt{font-size:13.5px;line-height:1.45;word-wrap:break-word;white-space:pre-wrap}
 .msg .when{font-size:9.5px;color:var(--dim);text-align:right;margin-top:3px}
 .chatbar{position:sticky;bottom:0;display:flex;gap:8px;padding:10px 0 2px;background:linear-gradient(transparent,var(--navy) 30%)}
-.chatbar input{flex:1;background:var(--card);border:1px solid var(--line);border-radius:24px;color:var(--txt);
+.chatbar input{flex:1;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:24px;color:var(--txt);
  font-family:'Inter';font-size:14px;padding:11px 16px;outline:none}
 .chatbar input:focus{border-color:var(--rust)}
-.chatbar button{background:var(--rust);border:none;color:#fff;font-family:'Oswald';font-weight:600;
- letter-spacing:1px;font-size:13px;border-radius:24px;padding:0 20px;cursor:pointer}
+.chatbar button{flex:none;background:var(--rust);border:none;color:#fff;font-family:'Oswald';font-weight:600;
+ letter-spacing:1px;font-size:13px;border-radius:24px;padding:0 18px;cursor:pointer}
 .chatnote{font-size:10.5px;color:var(--dim);text-align:center;padding:4px 0 8px}
 .msg{cursor:pointer}
 .msg.fact{align-self:center;text-align:center;max-width:92%}
@@ -1114,7 +1114,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <button onclick="sendMsg()">SEND</button>
   </div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.05</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.06</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1440,7 +1440,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "3.05";
+const APP_VERSION = "3.06";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
