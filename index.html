@@ -1099,6 +1099,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
  <button id="tabP" onclick="showTab('P')">PREDICT</button>
  <button id="tabC" onclick="showTab('C')">CHAT<span class="navbadge" id="chatBadge"></span></button>
 </nav>
+<script>try{if(localStorage.getItem("cs_kophase")==="1")document.querySelector("nav").classList.add("kophase");}catch(_){}</script>
 <div class="connbar"><span class="condot" id="condot" aria-hidden="true"></span><span class="contxt" id="contxt">CONNECTING</span><span class="conr"><span class="cz" id="tzCode">UAE</span><span class="cz cz--off" id="tzOff">UTC+4</span><time class="clock" id="clock" aria-label="Local time">--:--</time></span></div>
 </div>
 <main>
@@ -1146,7 +1147,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
   <input type="file" id="attFile" accept="image/*,video/*" style="display:none" onchange="attPicked(this)">
   <div class="chatbar" id="chatbar"></div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.11</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.12</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1472,7 +1473,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "3.11";
+const APP_VERSION = "3.12";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
@@ -2682,7 +2683,7 @@ function currentKoRound() {                                   // earliest round 
   }
   return "FINAL";
 }
-function updateKoPhaseUI() { try { const nav = document.querySelector("nav"); if (nav) nav.classList.toggle("kophase", koPhaseStarted()); } catch (_) {} }
+function updateKoPhaseUI() { try { const nav = document.querySelector("nav"); const _ko = koPhaseStarted(); if (nav) nav.classList.toggle("kophase", _ko); try { localStorage.setItem("cs_kophase", _ko ? "1" : "0"); } catch (_) {} } catch (_) {} }
 // ---- Per-ROUND predictions + leaderboard (knockouts only; the group stage stays per-week). ----
 const KO_ROUND_LABEL = { R32: ["ROUND OF 32", "دور الـ32"], R16: ["ROUND OF 16", "دور الـ16"], QF: ["QUARTER-FINALS", "ربع النهائي"], SF: ["SEMI-FINALS", "نصف النهائي"], FINAL: ["FINAL", "النهائي"] };
 function koRoundLabel(code) { const m = KO_ROUND_LABEL[code]; return m ? ((typeof LANG !== "undefined" && LANG === "ar") ? m[1] : m[0]) : code; }
@@ -5023,9 +5024,10 @@ function emojiFlags(s) {
   });
 }
 function renderCachedChat() { try { if ($("chatlog") && $("chatlog").querySelector(".msg")) return; const c = JSON.parse(localStorage.getItem("cs_chat_cache") || "[]"); if (Array.isArray(c) && c.length) renderChat(c); } catch (_) {} }
-function renderChat(msgs) {
+function renderChat(msgs, keepScroll) {
   _chatMsgs = msgs;
   const atBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 160;
+  const prevY = window.scrollY;
   $("chatlog").innerHTML = msgs.slice(-100).filter(m => _safeMid(m.id)).map(m => `
     <div class="msg${m.uid === myId ? " me" : ""}${/^funbot/.test(m.uid || "") ? " fact" : ""}">
       ${msgMenuBtn(m)}${reactBtn(m)}<div class="who">${m.natf ? '<img class="natflag" src="' + esc(m.natf) + '" alt="" title="' + esc(m.nat || "") + '" onerror="this.style.display=&#39;none&#39;">' : ""}${esc(m.name || "?")}</div>
@@ -5034,7 +5036,7 @@ function renderChat(msgs) {
       ${rxRow(m)}
     </div>`).join("") || `<div class="empty">No messages yet · say hello! 👋</div>`;
   try { localStorage.setItem("cs_chat_cache", JSON.stringify(msgs.slice(-60))); } catch (_) {}
-  if (atBottom) window.scrollTo(0, document.body.scrollHeight);
+  if (keepScroll) window.scrollTo(0, prevY); else if (atBottom) window.scrollTo(0, document.body.scrollHeight);
 }
 async function sendMsg() {
   const inp = $("chatIn"), text = inp.value.trim();
@@ -5336,7 +5338,7 @@ async function toggleReaction(id, emoji) {
     if (i >= 0) a.splice(i, 1); else a.push(myId);
     if (!a.length) delete cm.rx[emoji];
     if (cm.rx && !Object.keys(cm.rx).length) delete cm.rx;
-    renderChat(_chatMsgs);
+    renderChat(_chatMsgs, true);
   }
   // persist: read-merge-write enforcing the target state, verify it landed, retry on a concurrent clobber
   for (let t = 0; t < 4; t++) {
@@ -5357,7 +5359,7 @@ async function toggleReaction(id, emoji) {
     let back = []; try { back = await readRoom(); } catch (_) { break; }
     const bm = back.find(x => x.id === id);
     const landed = !!(bm && bm.rx && bm.rx[emoji] && bm.rx[emoji].indexOf(myId) >= 0);
-    if (landed === add) { _chatMsgs = back.filter(x => !isBot(x)); lastChatJson = JSON.stringify(_chatMsgs); renderChat(_chatMsgs); return; }
+    if (landed === add) { _chatMsgs = back.filter(x => !isBot(x)); lastChatJson = JSON.stringify(_chatMsgs); renderChat(_chatMsgs, true); return; }
   }
   lastChatJson = ""; pollChat();
 }
@@ -5400,7 +5402,7 @@ async function delMsg(id) {
   const cm = _chatMsgs && _chatMsgs.find(x => x.id === id);
   if (!cm || cm.uid !== myId) return;                                   // only your own message
   if (!confirm(ar ? "حذف هذه الرسالة للجميع؟" : "Delete this message for everyone?")) return;
-  _chatMsgs = _chatMsgs.filter(x => x.id !== id); renderChat(_chatMsgs); // optimistic local remove
+  _chatMsgs = _chatMsgs.filter(x => x.id !== id); renderChat(_chatMsgs, true); // optimistic local remove
   for (let t = 0; t < 4; t++) {
     let msgs = []; try { msgs = await readRoom(); } catch (_) {}
     if (!Array.isArray(msgs) || msgs.length === 0) { await new Promise(r => setTimeout(r, 250 + Math.random() * 300)); continue; }   // wipe guard · never write on an empty/failed read
@@ -5411,7 +5413,7 @@ async function delMsg(id) {
     try { await writeKey(CHAT_KEY, last); } catch (_) {}
     await new Promise(r => setTimeout(r, 160 + Math.random() * 240));
     let back = []; try { back = await readRoom(); } catch (_) { break; }
-    if (!back.some(x => x.id === id)) { _chatMsgs = back.filter(x => !isBot(x)); lastChatJson = JSON.stringify(_chatMsgs); renderChat(_chatMsgs); return; }
+    if (!back.some(x => x.id === id)) { _chatMsgs = back.filter(x => !isBot(x)); lastChatJson = JSON.stringify(_chatMsgs); renderChat(_chatMsgs, true); return; }
   }
   lastChatJson = ""; pollChat();
 }
