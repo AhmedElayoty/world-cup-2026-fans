@@ -33,6 +33,7 @@
 <meta name="twitter:image" content="https://ahmedelayoty.github.io/world-cup-2026-fans/share-card.png?v=4">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;600;700&family=Cairo:wght@600;700;800&display=swap" rel="stylesheet">
+<script>try{var _lt=localStorage.getItem("cs_theme")==="light";if(_lt)document.documentElement.setAttribute("data-theme","light");var _m=document.querySelector('meta[name="theme-color"]');if(!_m){_m=document.createElement("meta");_m.setAttribute("name","theme-color");document.head.appendChild(_m);}_m.setAttribute("content",_lt?"#eef1f8":"#0a1230");}catch(_){}</script>
 <style>
 :root{
   --navy:#0a1230; --navy2:#0d1838; --card:#121d44; --card2:#0e1736;
@@ -1062,6 +1063,134 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
     animation:none!important;transition:none!important;transform:none!important;opacity:1!important;filter:none!important}
   #egyWin.go .stage{animation:fadeIn .35s both}
 }
+
+/* ===== theme toggle button ===== */
+.themebtn{flex:none;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;border-radius:9px;cursor:pointer;background:var(--card2);border:1px solid var(--line);color:var(--txt);transition:background .15s,border-color .15s}
+.themebtn:hover,.themebtn:active{border-color:var(--rust)}
+.themebtn svg{width:18px;height:18px;display:block}
+.themebtn .ico-moon{display:none}
+html[data-theme="light"] .themebtn .ico-sun{display:none}
+html[data-theme="light"] .themebtn .ico-moon{display:block}
+/* ===== LIGHT THEME — opt-in via html[data-theme="light"]; DARK is the default and stays untouched. High-contrast for 60+ readers. ===== */
+html[data-theme="light"]{
+  --navy:#eef1f8; --navy2:#e6ebf6; --card:#ffffff; --card2:#eef2fb;
+  --line:#b8c3db; --txt:#0d1533; --mut:#3f4d70; --dim:#51607e;
+  --rust:#c2451b; --rust2:#cf4f1d; --cyan:#0d7ba2; --gold:#946400;
+  --green:#0a8a4d; --red:#cc1c3f; --lime:#5d8700;
+}
+html[data-theme="light"] body{background:
+ radial-gradient(120vw 60vh at 80% -10%,#dde6fb 0%,transparent 60%),
+ radial-gradient(100vw 50vh at -10% 110%,#dcf0e5 0%,transparent 55%),var(--navy);}
+html[data-theme="light"] .topbar{background:rgba(244,247,253,.97)}
+html[data-theme="light"] .ctoast,
+html[data-theme="light"] .reactbar,
+html[data-theme="light"] .msgpop,
+html[data-theme="light"] .emojipanel{background:#ffffff;box-shadow:0 12px 30px rgba(20,30,70,.18)}
+html[data-theme="light"] .mcard.egy,
+html[data-theme="light"] .gcard.egy,
+html[data-theme="light"] .brcell.egy,
+html[data-theme="light"] .subok,
+html[data-theme="light"] .egystat,
+html[data-theme="light"] .brstatus.ok{background:#e6f7ee}
+html[data-theme="light"] .hero{background:linear-gradient(150deg,#e7f8ef,#d8f1e3)}
+html[data-theme="light"] .tname.egy,
+html[data-theme="light"] .frank.egy,
+html[data-theme="light"] .frmini.egy,
+html[data-theme="light"] .gt tr.egy .tm,
+html[data-theme="light"] .lbr.egy .nm .p,
+html[data-theme="light"] .brteam.egy .bn,
+html[data-theme="light"] .brstatus.ok,
+html[data-theme="light"] .tlrow.sub .si,
+html[data-theme="light"] .filterbanner.me .fn,
+html[data-theme="light"] .egystat,
+html[data-theme="light"] .hero .hl,
+html[data-theme="light"] .hero .cd,
+html[data-theme="light"] .hero .he{color:#0a7a44}
+html[data-theme="light"] .hero .hpick,
+html[data-theme="light"] .hero .r32name{color:#0c5f39}
+html[data-theme="light"] .frow.me{box-shadow:inset 3px 0 0 0 #0a8a4d}
+html[dir="rtl"][data-theme="light"] .frow.me{box-shadow:inset -3px 0 0 0 #0a8a4d}
+html[data-theme="light"] .fbadge{background:#eef1f8;box-shadow:0 2px 5px rgba(20,30,70,.10),inset 0 1px 0 rgba(255,255,255,.7)}
+html[data-theme="light"] .h2hsc{background:#eef2fb}
+html[data-theme="light"] .htile,
+html[data-theme="light"] .lbc,
+html[data-theme="light"] .fchip,
+html[data-theme="light"] .frow,
+html[data-theme="light"] .rxchip{background:#f2f5fc}
+html[data-theme="light"] .rxchip.mine{background:rgba(226,90,45,.14)}
+html[data-theme="light"] .sheet__x,
+html[data-theme="light"] .natpick__x,
+html[data-theme="light"] .fpopx,
+html[data-theme="light"] .natlx,
+html[data-theme="light"] .ctoast .x,
+html[data-theme="light"] #nameModal .modalx,
+html[data-theme="light"] .infomodal .modalx{background:#e7ecf6;color:var(--mut)}
+html[data-theme="light"] .natitem:hover,
+html[data-theme="light"] .natitem:active,
+html[data-theme="light"] .emojipanel button:hover,
+html[data-theme="light"] .sheet__x:hover,
+html[data-theme="light"] .sheet__x:active,
+html[data-theme="light"] .natlx:hover,
+html[data-theme="light"] .natlx:active,
+html[data-theme="light"] .filterbanner .fbx{background:#dbe3f4}
+html[data-theme="light"] .att-up{background:rgba(20,30,70,.12)}
+html[data-theme="light"] .msg .att-media{background:#e6ebf6}
+
+/* ===== light-mode text fixes v2 — hardcoded near-white / light-accent text that must darken on white (dark theme untouched) ===== */
+html[data-theme="light"] nav button.on,
+html[data-theme="light"] #tzSel option,
+html[data-theme="light"] .lsscore,
+html[data-theme="light"] .ctoast .nm,
+html[data-theme="light"] .gt .pts,
+html[data-theme="light"] .aggcol.mid .aggn,
+html[data-theme="light"] .htile .n,
+html[data-theme="light"] .fchip b,
+html[data-theme="light"] .lbc .h .t,
+html[data-theme="light"] .lbr .nm .p,
+html[data-theme="light"] .lbr .v,
+html[data-theme="light"] .cc,
+html[data-theme="light"] .brteam .bn,
+html[data-theme="light"] .brteam .bsc,
+html[data-theme="light"] .strow b,
+html[data-theme="light"] .tlside b,
+html[data-theme="light"] .tlmin small,
+html[data-theme="light"] .subln b,
+html[data-theme="light"] .infomodal .irow b,
+html[data-theme="light"] .tlmark.top,
+html[data-theme="light"] .statshead .shside span,
+html[data-theme="light"] .sbar .top,
+html[data-theme="light"] .flabel b,
+html[data-theme="light"] .starman .nm,
+html[data-theme="light"] .motm .nm,
+html[data-theme="light"] .sttoggle button.on{color:var(--txt)}
+html[data-theme="light"] .infomodal .irow div,
+html[data-theme="light"] .infomodal .otdrow div,
+html[data-theme="light"] .aggcol.mid .agglbl,
+html[data-theme="light"] .h2drawtag,
+html[data-theme="light"] .mgroup,
+html[data-theme="light"] .subln{color:var(--mut)}
+html[data-theme="light"] .score.islive{color:var(--red)}
+html[data-theme="light"] .gt tr.q1 td.pos{color:var(--cyan)}
+html[data-theme="light"] .rtn2 .ast{color:#4d7000}
+html[data-theme="light"] .frow.me .fname{color:#0a7a44}
+html[data-theme="light"] .hero .cd small,
+html[data-theme="light"] .hero .he .when,
+html[data-theme="light"] .heroChange{color:#0c5f39}
+html[data-theme="light"] .hero .r32sub,
+html[data-theme="light"] .hero .bdg.plain{color:#3f6b56}
+html[data-theme="light"] .hero .bdg.prov{color:#7a5a10}
+html[data-theme="light"] .hero .bdg.out{color:#6a5836}
+html[data-theme="light"] .heroChange.so{color:var(--red)}
+html[data-theme="light"] .starman .sub,
+html[data-theme="light"] .starman .tag,
+html[data-theme="light"] .motm .sub,
+html[data-theme="light"] .motm .tag,
+html[data-theme="light"] .brknote,
+html[data-theme="light"] .brk .myscore{color:#7a5a12}
+html[data-theme="light"] .brk{background:linear-gradient(150deg,#fdf4da,#f6ead0);color:#6a4e12}
+html[data-theme="light"] .tlmin{background:#eef2fb;color:var(--mut)}
+html[data-theme="light"] .h2hsc.draw{background:#e6ebf6;border-color:var(--line);color:var(--mut)}
+html[data-theme="light"] .brteam.lose{opacity:.62}
 </style>
 </head>
 <body>
@@ -1074,6 +1203,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
    <span class="brand__name">WORLD CUP <b>2026</b></span>
   </div>
   <div class="cluster">
+   <button class="themebtn" type="button" onclick="toggleTheme()" aria-label="Switch light or dark theme" title="Light / dark"><svg class="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg class="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
    <button class="tzchip" id="setBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="setSheet" aria-label="Settings" onclick="toggleSettings(event)">
     <svg class="tzchip__ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
     <span class="tzchip__lab">Settings</span>
@@ -1147,7 +1277,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
   <input type="file" id="attFile" accept="image/*,video/*" style="display:none" onchange="attPicked(this)">
   <div class="chatbar" id="chatbar"></div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.13</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.14</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1481,7 +1611,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "3.13";
+const APP_VERSION = "3.14";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
@@ -2438,6 +2568,8 @@ function updateAuthTog() {   // header auth button: Sign in (logged out → logi
   try { updateNatLock(); } catch (_) {}   // keep the nation-search placeholder language-correct
 }
 // settings sheet (timezone / format / language) opened from the TZ chip
+function applyTheme(t){ var light = t === "light"; try{ if(light) document.documentElement.setAttribute("data-theme","light"); else document.documentElement.removeAttribute("data-theme"); }catch(_){} var m = document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute("content", light ? "#eef1f8" : "#0a1230"); }
+function toggleTheme(){ var light = document.documentElement.getAttribute("data-theme") === "light"; var next = light ? "dark" : "light"; applyTheme(next); try{ localStorage.setItem("cs_theme", next); }catch(_){} }
 function toggleSettings(e){ if(e) e.stopPropagation(); const sh=$("setSheet"); if(!sh) return; if(sh.hasAttribute("hidden")){ sh.removeAttribute("hidden"); const b=$("setBtn"); if(b) b.setAttribute("aria-expanded","true"); try{ refreshPushUI(); }catch(_){} } else closeSettings(); }
 function closeSettings(){ const sh=$("setSheet"); if(sh && !sh.hasAttribute("hidden")){ sh.setAttribute("hidden",""); const b=$("setBtn"); if(b) b.setAttribute("aria-expanded","false"); } }
 addEventListener("click", e => { const sh=$("setSheet"); if(sh && !sh.hasAttribute("hidden") && e.target && e.target.closest && !e.target.closest("#setSheet") && !e.target.closest("#setBtn")) closeSettings(); });
