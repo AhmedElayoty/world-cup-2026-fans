@@ -1211,6 +1211,12 @@ html[data-theme="light"] .msg.me .when{color:#a26a54}
 html[data-theme="light"] .msg.me .msgmenu{color:var(--rust)}
 html[data-theme="light"] .msg.me .rxchip.mine{background:rgba(194,69,27,.16);border-color:rgba(194,69,27,.4)}
 html[data-theme="light"] .msg.me .rxchip.mine span{color:var(--rust)}
+
+/* ===== light-mode knockout fixes: selected round chip, PENS/AET badge, tree buttons ===== */
+html[data-theme="light"] .rchip.on{color:#fff}
+html[data-theme="light"] .brnote{background:#f0b400;color:#2a1e02}
+html[data-theme="light"] .brdl{color:#fff}
+html[data-theme="light"] .brdl.alt{background:rgba(255,192,46,.16);color:var(--gold)}
 </style>
 </head>
 <body>
@@ -1298,7 +1304,7 @@ html[data-theme="light"] .msg.me .rxchip.mine span{color:var(--rust)}
   <input type="file" id="attFile" accept="image/*,video/*" style="display:none" onchange="attPicked(this)">
   <div class="chatbar" id="chatbar"></div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.20</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.21</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1632,7 +1638,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "3.20";
+const APP_VERSION = "3.21";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
