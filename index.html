@@ -439,6 +439,7 @@ html[dir="rtl"] .hero .he{letter-spacing:0}
  color:#fff;font-family:'Oswald';font-weight:700;font-size:19px;text-align:center;outline:none}
 .pin:focus{border-color:var(--rust)}
 .pin:disabled{opacity:.55}
+html[data-theme="light"] .pin{color:var(--txt);background:#fff}
 .psl{display:inline-flex;gap:6px}
 .pkrow.penmode .psl{display:none}
 .penpick{display:none;margin-top:10px;text-align:center}
@@ -1297,7 +1298,7 @@ html[data-theme="light"] .msg.me .rxchip.mine span{color:var(--rust)}
   <input type="file" id="attFile" accept="image/*,video/*" style="display:none" onchange="attPicked(this)">
   <div class="chatbar" id="chatbar"></div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.19</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.20</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1631,7 +1632,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "3.19";
+const APP_VERSION = "3.20";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
