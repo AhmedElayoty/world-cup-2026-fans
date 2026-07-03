@@ -1015,6 +1015,7 @@ html[dir="rtl"] .tzsel{padding:0 10px 0 28px;background-position:left 10px cente
 .salah.bob{animation:salahBob 6s ease-in-out infinite}
 .salah::before{content:"";position:absolute;inset:-38%;z-index:-1;background:radial-gradient(circle,rgba(192,158,95,.42),transparent 62%);filter:blur(4px)}
 .salah img{width:100%;height:100%;object-fit:cover;object-position:50% 16%;display:block}
+.salah video{width:100%;height:100%;object-fit:cover;display:block}
 .sweep{position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 32%,rgba(255,255,255,.4) 48%,rgba(255,231,168,.5) 51%,transparent 66%);transform:translateX(-130%)}
 .flag .sweep{animation:sweep 1.1s 1500ms ease-out both}
 .salah .sweep{animation:sweep 1s 2700ms ease-out both}
@@ -1384,10 +1385,9 @@ function buildOverlay(){
         '<img class="flagimg" alt="Flag of Egypt">' +
         '<div class="sweep"></div><div class="glint gEagle"></div>' +
       '</div></div>' +
-      '<button class="sndbtn" aria-label="Play the celebration song from the start">' +
-        '<span class="sndic">🔊</span><span class="sndtx">اضغط للصوت · press here for sound</span></button>' +
+
       '<div class="salah">' +
-        '<img alt="Mohamed Salah celebrating Egypt\'s win">' +
+        '<video class="salahvid" playsinline loop preload="auto"></video>' +
         '<div class="sweep"></div><div class="glint gSalah"></div>' +
       '</div>' +
       '<div class="egyMsg">' +
@@ -1396,41 +1396,25 @@ function buildOverlay(){
       '</div>' +
     '</div>' +
     '<canvas class="cfx" aria-hidden="true"></canvas>' +
-    '<audio class="cheer" preload="auto"></audio>' +
+
     '<div class="chantRow">' +
-      '<button class="chant" dir="rtl" aria-label="Close celebration. Ya habibti ya Masr.">' +
+      '<button class="chant" dir="rtl" aria-label="Close celebration.">' +
         '<span class="chantTiny">اضغط للإغلاق · press here to close</span>' +
-        '<span class="chantMain" dir="ltr"><span class="hrt">♥</span><span dir="rtl">يا حبيبتي يا مصر يا مصر</span></span></button>' +
+        '<span class="chantMain" dir="ltr"><span class="hrt">♥</span><span dir="rtl">هتحب مين غيرها؟</span></span></button>' +
     '</div>';
   const flagImg = overlay.querySelector(".flagimg");
   flagImg.onerror = function(){ this.style.display = "none"; };   // CSS gradient bands remain as fallback
   if (FLAG_URI && FLAG_URI.indexOf("data:") === 0) flagImg.src = FLAG_URI;
-  const img = overlay.querySelector(".salah img");
-  img.onerror = function(){ const c = overlay.querySelector(".salah"); if (c) c.style.display = "none"; };
-  if (SALAH_URI && SALAH_URI.indexOf("data:") === 0) img.src = SALAH_URI;
+  const vid = overlay.querySelector(".salah video");
+  if (vid){
+    vid.onerror = function(){ const c = overlay.querySelector(".salah"); if (c) c.style.display = "none"; };
+    vid.src = "egy-celebration.mp4";
+    vid.muted = false;
+    var _pp = vid.play(); if (_pp && _pp.catch) _pp.catch(function(){ vid.muted = true; var _p2 = vid.play(); if (_p2 && _p2.catch) _p2.catch(function(){}); });
+    overlay.addEventListener("click", function(){ if (vid.muted){ vid.muted = false; var _p3 = vid.play(); if (_p3 && _p3.catch) _p3.catch(function(){}); } });   // autoplay-with-sound is blocked without a tap -> unmute on first touch
+  }
   overlay.querySelector(".chant").addEventListener("click", function(){ closeEgyptWin(false); });
-  // soundtrack: assign + preload the instant the celebration is built, so a later tap plays instantly
-  const aud = overlay.querySelector(".cheer");
-  if (aud && SONG_URI){ try{ aud.loop = true; aud.src = SONG_URI; aud.preload = "auto"; aud.load(); }catch(e){} }
-  const snd = overlay.querySelector(".sndbtn");
-  function sndLabel(on){
-    if (!snd) return;
-    snd.classList.toggle("playing", on);
-    const t = snd.querySelector(".sndtx"), ic = snd.querySelector(".sndic");
-    if (t) t.textContent = on ? "إيقاف الصوت · stop sound" : "اضغط للصوت · press here for sound";
-    if (ic) ic.textContent = on ? "🔈" : "🔊";
-  }
-  if (snd && aud){
-    snd.addEventListener("click", function(e){
-      e.stopPropagation();
-      snd.style.animation = "none";   // stop the attention pulse once they have noticed/used it
-      try{
-        if (snd.classList.contains("playing")){ aud.pause(); aud.currentTime = 0; sndLabel(false); }
-        else { aud.currentTime = 0; const p = aud.play(); if (p && p.catch) p.catch(function(){}); sndLabel(true); }   // always start from the beginning
-      }catch(err){}
-    });
-    aud.addEventListener("ended", function(){ sndLabel(false); });
-  }
+
 }
 
 function lockScroll(){ const y = window.scrollY; document.body.dataset.lockY = y;
@@ -1525,7 +1509,7 @@ function playEgyptWin(){
 function closeEgyptWin(instant){
   _timers.forEach(clearTimeout); _timers = [];
   if (_raf){ cancelAnimationFrame(_raf); _raf = 0; }
-  var _a = overlay.querySelector(".cheer"); if (_a){ try{ _a.pause(); _a.currentTime = 0; }catch(e){} }
+  var _a = overlay.querySelector(".salah video"); if (_a){ try{ _a.pause(); }catch(e){} }
   if (instant !== true && overlay.dataset.open === "1"){ try{ if(typeof markCelebSeen==="function" && _celebId) markCelebSeen(_celebId); }catch(e){} }   // a genuine dismiss (chant tap / Esc) marks SEEN; the playEgyptWin reset (true) does NOT   // stop the song on close
   if (overlay.dataset.open !== "1" && !instant){ return; }
   if (instant){ overlay.classList.remove("go","bye"); overlay.style.display = "none"; overlay.dataset.open = ""; unlockScroll(); return; }
@@ -1535,7 +1519,7 @@ function closeEgyptWin(instant){
   try{ if (_prevFocus && _prevFocus.focus) _prevFocus.focus({preventScroll:true}); }catch(e){}
 }
 
-// tap-anywhere-to-close removed by request: only the يا حبيبتي يا مصر pill closes the celebration
+// tap-anywhere-to-close removed by request: only the close pill closes the celebration
 window.addEventListener("keydown", function(e){
   if (overlay.dataset.open !== "1") return;
   if (e.key === "Tab"){ e.preventDefault(); const c = overlay.querySelector(".chant"); if (c) c.focus(); }   // trap focus on the chant; pressing Enter/Space on it is the only close
