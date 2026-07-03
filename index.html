@@ -1617,10 +1617,9 @@ async function pollCelebrateFlag(){
     }
   }catch(e){}
 }
-// the "Celebrate Egypt" bar that REPLACES the prediction strip on a triggering match, from 16h after full-time
+// the "Celebrate Egypt" bar REPLACES the prediction strip on any Egypt WIN as soon as the match is final (post)
 function celebBarReady(e){
-  try{ return e && e.status && e.status.type && e.status.type.state === "post" && new Date(e.date).getTime() >= CELEB_SINCE && egyCelebTrigger(e)
-    && (Date.now() - new Date(e.date).getTime() >= 18 * 3600 * 1000); }catch(_){ return false; }   // kickoff + 18h ~= full-time + 16h
+  try{ return e && e.status && e.status.type && e.status.type.state === "post" && new Date(e.date).getTime() >= CELEB_SINCE && egyCelebTrigger(e); }catch(_){ return false; }   // no delay: appears the moment the win is final (was gated to kickoff+18h, which hid it on a fresh win like Egypt-Australia)
 }
 function celebBarHTML(e){
   const txt = (typeof LANG !== "undefined" && LANG === "ar") ? "أحتفل بمصر" : "Celebrate Egypt";
