@@ -2263,6 +2263,15 @@ async function loadMatches() {
     });
     if (buzz && navigator.vibrate) navigator.vibrate([180, 90, 180]);
     if (flashIds.size) loadStandings(true).then(() => { try{ if(!$("paneM").classList.contains("hide")) renderMatches(); }catch(_){} }).catch(()=>{});  // goal → refresh the live table so group standings + match-card rank badges update on every goal, on any tab
+    // Keep the nation-filter view live-accurate. _natMatches is snapshotted at filter time (from the 10-min
+    // season cache) and the poll never rewrites it, so a filtered match that finishes (e.g. Egypt winning on
+    // penalties) stays STUCK showing LIVE. Patch its entries from THIS cycle's freshly-fetched feed (by id)
+    // so the finished match flips to FT/PENS on the next poll. Only touches matches re-fetched this cycle
+    // (today + prior UAE day); historical Egypt matches in the list are left untouched.
+    if (nationFilter && _natMatches.length) {
+      const _fresh = {}; res.forEach(r => ((r && r.events) || []).forEach(e => { if (e && e.id) _fresh[e.id] = e; }));
+      if (Object.keys(_fresh).length) _natMatches = _natMatches.map(e => (e && _fresh[e.id]) ? _fresh[e.id] : e);
+    }
     renderMatches();
     if (openId) {                                   // open match is live → its cached detail is stale, refresh it
       const oe = events.find(x => x.id === openId);
