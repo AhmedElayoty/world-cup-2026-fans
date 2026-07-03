@@ -1313,7 +1313,7 @@ html[data-theme="light"] .lrank.q1{background:#1aa5d6}
   <input type="file" id="attFile" accept="image/*,video/*" style="display:none" onchange="attPicked(this)">
   <div class="chatbar" id="chatbar"></div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.22</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.23</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1647,7 +1647,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "3.22";
+const APP_VERSION = "3.23";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
@@ -2640,6 +2640,11 @@ function nationRank(team) {
 }
 // compact "#N" rank pill for tight spots (standings rows, bracket cells); gold, green for the user's nation
 function rankMini(team) { const r = nationRank(team); if (!r) return ""; const nm = team.displayName || team.name; return `<span class="frmini${nm === myNation() ? " egy" : ""}" title="FIFA #${r}">#${r}</span>`; }
+function _evById(id){
+  var nf = (typeof nationFilter !== "undefined" && nationFilter && typeof _natMatches !== "undefined" && _natMatches) ? _natMatches : null;
+  var find = arr => (arr || []).find(x => x && x.id === id);
+  return find(nf) || find(typeof events !== "undefined" ? events : []) || find(typeof _natMatches !== "undefined" ? _natMatches : []) || find((typeof seasonCache !== "undefined" && seasonCache.events) ? seasonCache.events : []) || null;
+}
 async function fillDetail(id, force) {
   if (!$("det" + id)) return;
   try {
@@ -2650,7 +2655,7 @@ async function fillDetail(id, force) {
     if (!data) { data = await getJSON(API + "/summary?event=" + id); lineups[id] = data; lineupsTs[id] = Date.now(); }
     if (openId !== id) return;                      // user closed it / opened another while fetching
     const box = $("det" + id);
-    if (box) box.innerHTML = matchDetail(data, events.find(x => x.id === id));
+    if (box) box.innerHTML = matchDetail(data, _evById(id));
   } catch (e) {
     const box = $("det" + id);
     if (box) box.innerHTML = `<div class="dnote">Couldn't load line-ups (${esc(String(e.message || e))}).</div>`;
@@ -2661,7 +2666,7 @@ async function toggleM(id, noScroll) {
   openId = opening ? id : null;
   renderMatches();
   if (!openId) return;
-  const ev = (typeof events !== "undefined") ? events.find(x => x.id === id) : null;
+  const ev = _evById(id);
   const scrollTop = () => {
     if (openId !== id) return;
     const card = document.getElementById("mc" + id); if (!card) return;
