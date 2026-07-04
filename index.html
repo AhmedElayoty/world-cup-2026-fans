@@ -387,6 +387,19 @@ html[dir="rtl"] .msg .att-save{right:auto;left:6px}
 .skpill.cyan{border-color:#1a4a63}
 .skpill.cyan b{color:var(--cyan)}
 html[data-theme="light"] .skpill.gold{background:rgba(255,192,46,.16)}
+.pointskeybtn{display:inline-flex;align-items:center;gap:7px;cursor:pointer;background:linear-gradient(90deg,rgba(255,192,46,.18),rgba(255,192,46,.05));border:1.5px solid var(--gold);border-radius:999px;padding:6px 14px;font-family:'Oswald';font-weight:600}
+.pointskeybtn .sklbl{color:var(--gold);font-size:11px;letter-spacing:1px}
+.pointskeybtn .pkico{font-size:14px;line-height:1}
+.pointskeybtn:active{transform:scale(.97)}
+.ptstbl{width:100%;border-collapse:collapse;margin:12px 0 6px;font-size:14px}
+.ptstbl th{font-family:'Oswald';font-weight:600;font-size:10.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--mut);padding:7px 6px;border-bottom:1.5px solid var(--line);text-align:center}
+.ptstbl th:first-child{text-align:start}
+.ptstbl td{padding:9px 6px;border-bottom:1px solid var(--line);text-align:center;color:var(--txt)}
+.ptstbl td:first-child{text-align:start;font-weight:600;font-size:13px}
+.ptstbl tbody tr:last-child td{border-bottom:none}
+.ptstbl .pe{color:var(--gold);font-size:16px}
+.ptstbl .pr{color:var(--cyan);font-size:16px}
+.ptsnote{font-size:11.5px;color:var(--mut);line-height:1.45;margin:4px 0 2px}
 footer{padding:8px 0 14px;text-align:center;font-family:'Oswald';font-size:9.5px;letter-spacing:1.6px;color:#3d4a72}
 .hero{background:linear-gradient(150deg,#0a2e1d,#0c3a24);border:1px solid var(--green);border-radius:16px;
  padding:9px 13px;margin-bottom:12px;cursor:pointer}
@@ -1293,7 +1306,7 @@ html[data-theme="light"] .lrank.q1{background:#1aa5d6}
   <div class="lb"><h3 style="display:flex;align-items:center;gap:8px"><span id="lbTitle">&#127942; THIS WEEK</span><button class="otdkey" onclick="openOnThisDay()">&#128197; TODAY'S FUN FACTS &#8594;</button></h3>
   <div class="brknote" id="brkNote">&#127942; Weekly top predictor is crowned the <b>Prediction Champion</b></div><div id="lbBody"><div class="empty">Loading…</div></div></div>
   <div class="secrow"><span class="sect">YOUR PREDICTIONS</span></div>
-  <div class="scorekey"><span class="sklbl">HOW POINTS WORK</span><span class="skpill gold"><b>3 PTS</b> EXACT SCORE</span><span class="skpill cyan"><b>1 PT</b> RIGHT RESULT</span></div>
+  <div class="scorekey"><button class="pointskeybtn" type="button" onclick="showPointsInfo()"><span class="pkico">&#128202;</span><span class="sklbl">HOW POINTS WORK</span></button></div>
   <div id="predList"><div class="empty">Loading…</div></div>
  </section>
  <section id="paneG" class="hide">
@@ -2463,7 +2476,7 @@ function renderMatches() {
     if (typeof celebBarReady === "function" && celebBarReady(e)) { predStrip = celebBarHTML(e); } else if (hasPred(myp)) {
       let pb = "";
       if (state === "post") {
-        const s = scoreFinal(myp, H, A, e), top = isFinalEvent(e) ? 10 : 3;
+        const s = scoreFinal(myp, H, A, e), top = roundPoints(e).exact;
         pb = " · " + (s === 0 ? "0 PTS" : (s === top ? (myp.pens ? "PENS CALLED! " : "EXACT! ") : "RESULT ") + "+" + s + " PT" + (s > 1 ? "S" : ""));
       }
       const _ptxt = myp.pens ? esc((myp.w === "home" ? H : A).team.displayName) + " on pens" : scoreTag(myp.h, myp.a);
@@ -3616,13 +3629,16 @@ const FINAL_AFTER = "2026-07-19T10:00:00Z";   // the World Cup FINAL (kick-off ~
 function isKOEvent(e) { return !!(e && e.season && e.season.type && e.season.type !== 13802); }   // group stage = season.type 13802; anything else = knockout
 function isFinalEvent(e) { try { return isKOEvent(e) && !!e.date && new Date(e.date) >= new Date(FINAL_AFTER); } catch (_) { return false; } }
 function hasPred(p) { return !!(p && (p.h !== undefined || p.pens)); }   // a prediction exists (scoreline OR penalties pick)
-// Knockout-aware scorer. Group: exact 3 / result 1. Knockout: exact-or-pens-call 3 / right winner 1. FINAL only: 10 / 4.
+// Per-round knockout points [exact score, right winner]. Group stage + Round of 32 = 3/1; then it scales up each round (see showPointsInfo / the "How points work" popup).
+const KO_POINTS = { R32: [3, 1], R16: [6, 2], QF: [9, 3], SF: [12, 4], BRONZE: [12, 4], FINAL: [15, 5] };
+function roundPoints(e) { try { var r = (typeof koRound === "function") ? koRound(e) : null; var p = r && KO_POINTS[r]; return p ? { exact: p[0], result: p[1] } : { exact: 3, result: 1 }; } catch (_) { return { exact: 3, result: 1 }; } }
+// Knockout-aware scorer. Group: exact 3 / result 1. Knockout: exact-or-pens-call = the round's EXACT, right winner = the round's RESULT (per KO_POINTS).
 function scorePred(p, H, A, e) {
   if (!hasPred(p)) return 0;
   const hs = H && H.score, as = A && A.score;
   if (hs == null || as == null || hs === "" || as === "") return 0;   // not finished / no score
   const h = +hs, a = +as;
-  const EXACT = isFinalEvent(e) ? 10 : 3, RESULT = isFinalEvent(e) ? 4 : 1;
+  const _rp = roundPoints(e), EXACT = _rp.exact, RESULT = _rp.result;
   if (isKOEvent(e)) {
     const pens = (H.shootoutScore != null && A.shootoutScore != null && (+H.shootoutScore !== 0 || +A.shootoutScore !== 0));
     const winner = pens ? (+H.shootoutScore > +A.shootoutScore ? "home" : "away")
@@ -3749,14 +3765,14 @@ const KO_RULES_HTML = `<div style="font-size:38px;line-height:1;margin-bottom:4p
 <p>No more draws · every knockout match has a winner. Here's how predicting works now:</p>
 <div class="irow"><span class="ic">①</span><div><b>Predict a scoreline</b> like normal (e.g. 2-1) · it just can't be a draw.</div></div>
 <div class="irow"><span class="ic">②</span><div>Think it'll be level? Choose <b>"this match will go to penalties"</b> and pick who wins the shootout.</div></div>
-<div class="irow"><span class="ic">🎯</span><div><b>3 pts</b> · exact score, OR you called penalties + the right winner.<br><b>1 pt</b> · right winner either way.</div></div>
+<div class="irow"><span class="ic">🎯</span><div><b>Exact score</b> (or penalties called + the right winner) earns full points; a <b>right winner</b> earns less. Points climb each round: R32 3/1, R16 6/2, QF 9/3, semis &amp; 3rd 12/4, final 15/5. Tap <b>How points work</b> in Predict for the full table.</div></div>
 <button class="igo" onclick="closeInfo()">GOT IT ⚽</button>`;
 const FINALE_HTML = `<div style="font-size:38px;line-height:1;margin-bottom:4px">🏆</div>
 <h2>GRAND FINALE</h2>
 <p>This is it · the final days of the World Cup, and the prediction championship is decided <b style="color:#fff">now</b>.</p>
 <div class="irow"><span class="ic">📊</span><div><b>Overall table is live</b> · the leaderboard now shows your total points across <b style="color:var(--gold)">every week</b> combined.</div></div>
 <div class="irow"><span class="ic">⚽</span><div><b>Last chance to score</b> · the 3rd-place play-off and the FINAL are open to predict.</div></div>
-<div class="irow"><span class="ic">⭐</span><div><b>The final is worth the most</b> · the exact score = <b style="color:var(--gold)">10 pts</b>, the correct winner = <b style="color:var(--gold)">4 pts</b>.</div></div>
+<div class="irow"><span class="ic">⭐</span><div><b>The final is worth the most</b> · the exact score = <b style="color:var(--gold)">15 pts</b>, the correct winner = <b style="color:var(--gold)">5 pts</b>.</div></div>
 <div class="irow"><span class="ic">🥇</span><div><b>Winner takes all</b> · top the overall table at the final whistle to be crowned <b style="color:var(--gold)">Prediction Champion</b>.</div></div>
 <p style="margin-top:2px">Good luck · may the best predictor win! 🍀</p>
 <button class="igo" onclick="closeInfo()">LET'S GO ⚽</button>`;
@@ -3769,14 +3785,14 @@ const KO_RULES_AR = `<div style="font-size:38px;line-height:1;margin-bottom:4px"
 <p>لا تعادل بعد الآن، كل مباراة إقصائية لها فائز. إليك كيف تتوقّع الآن:</p>
 <div class="irow"><span class="ic">①</span><div><b>توقّع نتيجة عادية</b> مثل 2-1، لكن دون تعادل.</div></div>
 <div class="irow"><span class="ic">②</span><div>تظن أنها ستنتهي بالتعادل؟ اختر <b>"ستُحسم بركلات الترجيح"</b> ثم اختر الفائز.</div></div>
-<div class="irow"><span class="ic">🎯</span><div><b>3 نقاط</b> للنتيجة الصحيحة، أو إذا توقّعت ركلات الترجيح + الفائز الصحيح.<br><b>نقطة واحدة</b> للفائز الصحيح في الحالتين.</div></div>
+<div class="irow"><span class="ic">🎯</span><div><b>النتيجة الصحيحة</b> (أو توقّع ركلات الترجيح + الفائز الصحيح) تمنحك النقاط الكاملة، و<b>الفائز الصحيح</b> وحده نقاطاً أقل. تزداد النقاط كل دور: الـ32 ‏3/1، الـ16 ‏6/2، الربع ‏9/3، النصف والثالث ‏12/4، النهائي ‏15/5. اضغط <b>كيف تُحتسب النقاط</b> في تبويب التوقّعات.</div></div>
 <button class="igo" onclick="closeInfo()">حسناً ⚽</button>`;
 const FINALE_AR = `<div style="font-size:38px;line-height:1;margin-bottom:4px">🏆</div>
 <h2>الختام الكبير</h2>
 <p>ها قد وصلنا، الأيام الأخيرة من كأس العالم، وبطولة التوقّعات تُحسم <b style="color:#fff">الآن</b>.</p>
 <div class="irow"><span class="ic">📊</span><div><b>الترتيب الإجمالي ظاهر الآن</b>، يعرض مجموع نقاطك عبر <b style="color:var(--gold)">كل الأسابيع</b> مجتمعةً.</div></div>
 <div class="irow"><span class="ic">⚽</span><div><b>آخر فرصة للنقاط</b>، مباراة المركز الثالث والنهائي مفتوحتان للتوقّع.</div></div>
-<div class="irow"><span class="ic">⭐</span><div><b>النهائي هو الأعلى قيمةً</b>، النتيجة الصحيحة = <b style="color:var(--gold)">10 نقاط</b>، والفائز الصحيح = <b style="color:var(--gold)">4 نقاط</b>.</div></div>
+<div class="irow"><span class="ic">⭐</span><div><b>النهائي هو الأعلى قيمةً</b>، النتيجة الصحيحة = <b style="color:var(--gold)">15 نقطة</b>، والفائز الصحيح = <b style="color:var(--gold)">5 نقاط</b>.</div></div>
 <div class="irow"><span class="ic">🥇</span><div><b>الفائز يأخذ كل شيء</b>، تصدّر الترتيب الإجمالي عند صافرة النهاية لتُتوَّج <b style="color:var(--gold)">برنس التوقّعات</b>.</div></div>
 <p style="margin-top:2px">حظاً موفقاً، وليفُز أفضل متوقّع! 🍀</p>
 <button class="igo" onclick="closeInfo()">يلا بينا ⚽</button>`;
@@ -3792,6 +3808,27 @@ function showInfo(html) {
   document.body.appendChild(ov);
 }
 function closeInfo() { const m = document.getElementById("infoModal"); if (m) m.remove(); }
+function showPointsInfo() {   // full per-stage scoring table (replaces the old "3 pts / 1 pt" strip)
+  var ar = (typeof LANG !== "undefined" && LANG === "ar");
+  var rows = [
+    [ar ? "دور المجموعات" : "Group stage", "3", "1"],
+    [ar ? "دور الـ32" : "Round of 32", "3", "1"],
+    [ar ? "دور الـ16" : "Round of 16", "6", "2"],
+    [ar ? "ربع النهائي" : "Quarter-finals", "9", "3"],
+    [ar ? "نصف النهائي + الثالث" : "Semis + 3rd place", "12", "4"],
+    [ar ? "النهائي" : "Final", "15", "5"]
+  ];
+  var hd = ar ? ["الدور", "نتيجة مضبوطة", "فائز صحيح"] : ["Stage", "Exact score", "Right result"];
+  var body = '<div style="font-size:38px;line-height:1;margin-bottom:4px">&#128202;</div>'
+    + '<h2>' + (ar ? "كيف تُحتسب النقاط" : "HOW POINTS WORK") + '</h2>'
+    + '<p>' + (ar ? "كل توقّع يمنحك نقاطاً حسب الدور، وكلما تعمّقت البطولة زادت قيمة كل توقّع." : "Every prediction scores points based on the stage. The deeper the tournament, the more each pick is worth.") + '</p>'
+    + '<table class="ptstbl"><thead><tr><th>' + hd[0] + '</th><th>' + hd[1] + '</th><th>' + hd[2] + '</th></tr></thead><tbody>'
+    + rows.map(function (r) { return '<tr><td>' + r[0] + '</td><td><b class="pe">' + r[1] + '</b></td><td><b class="pr">' + r[2] + '</b></td></tr>'; }).join("")
+    + '</tbody></table>'
+    + '<p class="ptsnote">' + (ar ? "في الأدوار الإقصائية: النتيجة المضبوطة أو (توقّع ركلات الترجيح + الفائز الصحيح) تمنحك النقاط الكاملة، والفائز الصحيح وحده يمنحك النقاط الأقل." : "In the knockouts: an exact score, or calling penalties + the right winner, earns the full points; a right winner alone earns the lower points.") + '</p>'
+    + '<button class="igo" onclick="closeInfo()">' + (ar ? "تمام &#9917;" : "GOT IT &#9917;") + '</button>';
+  showInfo(body);
+}
 const OTD_MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const OTD_MONTHS_AR = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
 function calIcon(){ const dd = +(uaeYMD(new Date()).slice(6)) || ""; return '<span class="cal" aria-hidden="true"><i></i><b>' + dd + '</b></span>'; }   // live calendar showing TODAY's date (the 📅 emoji is a fixed glyph)
@@ -4133,7 +4170,7 @@ async function loadLeaderboard(evs, preAll) {
       const donePost = evs.filter(e => e.status.type.state === "post");
       const allRows = Object.entries(all).map(([uid, u]) => {
         let pts = 0, exact = 0, played = 0;
-        donePost.forEach(e => { const c = e.competitions[0]; const H = c.competitors.find(x => x.homeAway === "home"), A = c.competitors.find(x => x.homeAway === "away"); const p = (u.preds || {})[e.id]; if (!hasPred(p)) return; played++; const s = scoreFinal(p, H, A, e); pts += s; if (s === 3 || s === 10) exact++; });
+        donePost.forEach(e => { const c = e.competitions[0]; const H = c.competitors.find(x => x.homeAway === "home"), A = c.competitors.find(x => x.homeAway === "away"); const p = (u.preds || {})[e.id]; if (!hasPred(p)) return; played++; const s = scoreFinal(p, H, A, e); pts += s; if (s === roundPoints(e).exact) exact++; });
         return { uid, name: u.name || "?", pts, exact, played };
       }).filter(r => r.played > 0).sort((a, b) => b.pts - a.pts || b.exact - a.exact);
       const champ = allRows[0];
@@ -4169,7 +4206,7 @@ async function loadLeaderboard(evs, preAll) {
     }
     const rows = Object.entries(all).map(([uid, u]) => {
       let pts = 0, exact = 0, played = 0;
-      done.forEach(e => { const c = e.competitions[0]; const H = c.competitors.find(x => x.homeAway === "home"), A = c.competitors.find(x => x.homeAway === "away"); const p = (u.preds || {})[e.id]; if (!hasPred(p)) return; played++; const s = scoreFinal(p, H, A, e); pts += s; if (s === 3 || s === 10) exact++; });
+      done.forEach(e => { const c = e.competitions[0]; const H = c.competitors.find(x => x.homeAway === "home"), A = c.competitors.find(x => x.homeAway === "away"); const p = (u.preds || {})[e.id]; if (!hasPred(p)) return; played++; const s = scoreFinal(p, H, A, e); pts += s; if (s === roundPoints(e).exact) exact++; });
       return { uid, name: u.name || "?", pts, exact, played };
     }).sort((a, b) => b.pts - a.pts || b.exact - a.exact);
     { const _lt = document.getElementById("lbTitle"); if (_lt) _lt.innerHTML = "🏆 " + (koPhaseStarted() ? (LANG === "ar" ? "هذا الدور" : "THIS ROUND") : (LANG === "ar" ? "هذا الأسبوع" : "THIS WEEK")); }
@@ -4734,7 +4771,7 @@ function weekScores(evsWeek, all) {
       const p = (u.preds || {})[e.id];
       if (!hasPred(p)) return;
       const s = scoreFinal(p, H, A, e);
-      pts += s; if (s === 3 || s === 10) exact++;
+      pts += s; if (s === roundPoints(e).exact) exact++;
     });
     return { uid, name: u.name || "?", pts, exact };
   }).filter(x => x.pts > 0).sort((a, b) => b.pts - a.pts || b.exact - a.exact);
