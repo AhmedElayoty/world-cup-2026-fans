@@ -387,8 +387,8 @@ html[dir="rtl"] .msg .att-save{right:auto;left:6px}
 .skpill.cyan{border-color:#1a4a63}
 .skpill.cyan b{color:var(--cyan)}
 html[data-theme="light"] .skpill.gold{background:rgba(255,192,46,.16)}
-.pointskeybtn{display:inline-flex;align-items:center;gap:7px;cursor:pointer;background:linear-gradient(90deg,rgba(255,192,46,.18),rgba(255,192,46,.05));border:1.5px solid var(--gold);border-radius:999px;padding:6px 14px;font-family:'Oswald';font-weight:600}
-.pointskeybtn .sklbl{color:var(--gold);font-size:11px;letter-spacing:1px}
+.pointskeybtn{display:flex;width:100%;box-sizing:border-box;align-items:center;justify-content:center;gap:8px;cursor:pointer;background:linear-gradient(90deg,rgba(255,192,46,.18),rgba(255,192,46,.05));border:1.5px solid var(--gold);border-radius:14px;padding:11px 16px;font-family:'Oswald';font-weight:600;line-height:1.25}
+.pointskeybtn .sklbl{color:var(--gold);font-size:clamp(10px,2.9vw,12px);letter-spacing:.4px;text-align:center}
 .pointskeybtn .pkico{font-size:14px;line-height:1}
 .pointskeybtn:active{transform:scale(.97)}
 .ptstbl{width:100%;border-collapse:collapse;margin:12px 0 6px;font-size:14px}
@@ -1306,7 +1306,7 @@ html[data-theme="light"] .lrank.q1{background:#1aa5d6}
   <div class="lb"><h3 style="display:flex;align-items:center;gap:8px"><span id="lbTitle">&#127942; THIS WEEK</span><button class="otdkey" onclick="openOnThisDay()">&#128197; TODAY'S FUN FACTS &#8594;</button></h3>
   <div class="brknote" id="brkNote">&#127942; Weekly top predictor is crowned the <b>Prediction Champion</b></div><div id="lbBody"><div class="empty">Loading…</div></div></div>
   <div class="secrow"><span class="sect">YOUR PREDICTIONS</span></div>
-  <div class="scorekey"><button class="pointskeybtn" type="button" onclick="showPointsInfo()"><span class="pkico">&#128202;</span><span class="sklbl">HOW POINTS WORK</span></button></div>
+  <div class="scorekey"><button class="pointskeybtn" type="button" onclick="showPointsInfo()"><span class="pkico">&#128202;</span><span class="sklbl">PRESS HERE TO SEE HOW POINTS ARE CALCULATED</span></button></div>
   <div id="predList"><div class="empty">Loading…</div></div>
  </section>
  <section id="paneG" class="hide">
@@ -1797,7 +1797,7 @@ const AR = {
   "OVERALL · ALL WEEKS":"الإجمالي · كل الأسابيع","Total points across the whole tournament · highest wins on finals day":"مجموع النقاط طوال البطولة، الأعلى يفوز يوم النهائي",
   "THIS WEEK":"هذا الأسبوع","📅 TODAY'S FUN FACTS →":"📅 طرائف اليوم ←","TODAY'S FUN FACTS":"طرائف اليوم","ON THIS DAY":"في مثل هذا اليوم",
   "Prediction Champion":"برنس التوقّعات","Prediction Champions":"برانسة التوقّعات",
-  "YOUR PREDICTIONS":"توقّعاتك","HOW POINTS WORK":"كيف تُحتسب النقاط","EXACT SCORE":"النتيجة الصحيحة","RIGHT RESULT":"الفائز الصحيح",
+  "YOUR PREDICTIONS":"توقّعاتك","PRESS HERE TO SEE HOW POINTS ARE CALCULATED":"اضغط هنا لمعرفة كيفية احتساب النقاط","EXACT SCORE":"النتيجة الصحيحة","RIGHT RESULT":"الفائز الصحيح",
   "ONE SUBMISSION · CLOSES 30 MIN BEFORE KICK-OFF":"إرسال واحد · يُغلق قبل 30 دقيقة من الانطلاق",
   "NEXT WEEK · PREDICT EARLY":"الأسبوع القادم · توقّع مبكراً","POINTS RESET EVERY MONDAY":"تُصفَّر النقاط كل اثنين","PREDICT THIS MATCH →":"توقّع هذه المباراة ←",
   "SUBMIT · ONE TIME ONLY":"تأكيد · مرة واحدة فقط","CLOSED":"مغلق","SUBMITTED":"تم الإرسال","OPEN":"مفتوح","NO PREDICTION":"لا يوجد توقّع",
