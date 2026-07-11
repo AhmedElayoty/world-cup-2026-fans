@@ -1327,7 +1327,7 @@ html[data-theme="light"] .lrank.q1{background:#1aa5d6}
   <input type="file" id="attFile" accept="image/*,video/*" style="display:none" onchange="attPicked(this)">
   <div class="chatbar" id="chatbar"></div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.23</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.30</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1643,7 +1643,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "3.23";
+const APP_VERSION = "3.30";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
@@ -3433,6 +3433,42 @@ function _heroR32Sec(nation){
     + '<img class="heroFlag sm" src="'+esc(r.oppLogo||"")+'" alt="" onerror="this.style.visibility=&#39;hidden&#39;">'
     + '<span class="r32name">'+esc(TN(r.oppName))+'</span></div>'+badge+'</div></div>';
 }
+/* Bracket fallback for the hero: between knockout rounds ESPN publishes the next round's fixtures only after the
+   previous round finishes, so a qualified nation briefly has NO upcoming ESPN event (e.g. Spain the day after
+   winning the QF: the semi-final is OFFICIAL — date/venue fixed in the calendar, place earned on the pitch — but
+   the fixture row doesn't exist yet). Our own BRACKET already knows that slot, so derive the next match from it.
+   Only DECIDED feeders count (winner/loser of a PLAYED match) — never provisional group-standings projections. */
+const _BRACKET_RND = { R32:["ROUND OF 32","دور الـ32"], R16:["ROUND OF 16","دور الـ16"], QF:["QUARTER-FINAL","ربع النهائي"], SF:["SEMI-FINAL","نصف النهائي"], BRONZE:["3RD-PLACE PLAY-OFF","مباراة المركز الثالث"], FINAL:["FINAL","النهائي"] };
+let _heroBracketNode = null;
+function _decSlotTeam(s){ try{ if(!s) return null; if(s.t==="WM") return bpWinTeam(s.m); if(s.t==="LM"){ const r=_nodeResult[s.m]; if(r && r.win) return r.win==="h" ? (r.at||null) : (r.ht||null); } }catch(_){} return null; }
+function bracketNextFor(nation){
+  try{
+    if(!nation || !koPhaseStarted()) return null;
+    if(seasonCache.events.length) syncKnockout(seasonCache.events);
+    const cands = BRACKET.map(n => ({ n, dt: uaeStrToDate(n.uae) }))
+      .filter(x => x.dt && +x.dt > Date.now() - 7200000 && !_nodeResult[x.n.n])
+      .sort((a,b) => a.dt - b.dt);
+    for (const {n, dt} of cands){
+      const ht = _decSlotTeam(n.h), at = _decSlotTeam(n.a);
+      const meH = !!(ht && ht.name === nation), meA = !!(at && at.name === nation);
+      if(!meH && !meA) continue;
+      return { node: n, dt, ht, at, meHome: meH };
+    }
+  }catch(_){}
+  return null;
+}
+function _bracketNextSec(nation){
+  const b = bracketNextFor(nation); if(!b){ _heroBracketNode = null; return null; }
+  _heroBracketNode = b.node;
+  const rl = _BRACKET_RND[b.node.r]; const rname = rl ? (LANG==="ar" ? rl[1] : rl[0]) : b.node.r;
+  const when = esc(fmt(b.dt,{weekday:"short",day:"2-digit",month:"short"}).toUpperCase()+" · "+fmt(b.dt,{hour:"2-digit",minute:"2-digit"})+" "+tzAbbr());
+  const nm = t => t ? TN(t.name) : HT("To be decided","يُحدَّد لاحقاً");
+  const lg = t => '<img class="heroFlag" src="'+esc((t && t.logo)||"")+'" alt="" onerror="this.style.visibility=&#39;hidden&#39;">';
+  const cd = '<div class="cd">'+countdown(b.dt)+'<small>'+HT("TO KICK-OFF","حتى البداية")+'</small></div>';
+  return '<div class="heroSec"><div class="he"><span>'+HT("NEXT MATCH","المباراة القادمة")+' · '+esc(rname)+'</span><span class="when">'+when+'</span></div>'
+    + '<div class="row"><div class="matchup">'+lg(b.ht)+'<span class="ht1">'+esc(nm(b.ht))+' <span class="vs">'+HT("v","ضد")+'</span> '+esc(nm(b.at))+'</span>'+lg(b.at)+'</div>'+cd+'</div>'
+    + '<div class="r32sub">🏟️ '+esc(venueAr(b.node.st))+(b.node.city ? ' · '+esc(cityAr(b.node.city)) : '')+'</div></div>';
+}
 function drawHero() {
   const box=$("heroBox"); if(!box) return;
   const nation=myNation();
@@ -3450,8 +3486,9 @@ function drawHero() {
   const _hH=_hc&&_hc.find(x=>x.homeAway==="home"), _hA=_hc&&_hc.find(x=>x.homeAway==="away");
   const _eOK=!!(e && _hH && _hA && _hH.team && _hA.team && e.status && e.status.type && !isNaN(new Date(e.date).getTime()));   // defensive: a malformed heroEvent falls back to "no upcoming match" instead of throwing on the home screen
   if(!_eOK){
-    nextSec='<div class="heroSec"><div class="he"><span>'+HT("NEXT MATCH","المباراة القادمة")+'</span></div>'
-      + '<div class="row"><div class="r32sub">'+HT("No upcoming match","لا مباراة قادمة")+'</div></div></div>';
+    let _bsec = null; try { _bsec = _bracketNextSec(nation); } catch(_) { _bsec = null; }   // ESPN hasn't published the next round's fixture yet → derive it from our own bracket (official slot + decided feeders)
+    nextSec = _bsec || ('<div class="heroSec"><div class="he"><span>'+HT("NEXT MATCH","المباراة القادمة")+'</span></div>'
+      + '<div class="row"><div class="r32sub">'+HT("No upcoming match","لا مباراة قادمة")+'</div></div></div>');
   } else {
     const c=e.competitions[0];
     const H=c.competitors.find(x=>x.homeAway==="home"), A=c.competitors.find(x=>x.homeAway==="away");
