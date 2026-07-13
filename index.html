@@ -1327,7 +1327,7 @@ html[data-theme="light"] .lrank.q1{background:#1aa5d6}
   <input type="file" id="attFile" accept="image/*,video/*" style="display:none" onchange="attPicked(this)">
   <div class="chatbar" id="chatbar"></div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.30</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.31</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1643,7 +1643,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "3.30";
+const APP_VERSION = "3.31";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
@@ -2868,6 +2868,7 @@ function currentKoRound() {                                   // earliest round 
   for (const rc of KO_ROUND_ORDER) {
     const inR = evs.filter(e => { const r = koRound(e); return r === rc || (rc === "FINAL" && r === "BRONZE"); });
     if (inR.length && inR.some(e => !(e.status && e.status.type && e.status.type.state === "post"))) return rc;
+    if (!inR.length && BRACKET.some(n => (n.r === rc || (rc === "FINAL" && n.r === "BRONZE")) && !_nodeResult[n.n])) return rc;   // ESPN hasn't published this round's fixtures (or a feed cap hid them) but its bracket slots are still unplayed → it IS the current round; without this the loop fell through to FINAL
   }
   return "FINAL";
 }
@@ -5210,7 +5211,7 @@ async function postRoom(newMsgs) {
 }
 async function seasonEvents(force) {
   if (!force && Date.now() - seasonCache.t < 600000 && seasonCache.events.length) return seasonCache.events;
-  const d = await getJSON(API + "/scoreboard?dates=" + SEASON_RANGE);
+  const d = await getJSON(API + "/scoreboard?dates=" + SEASON_RANGE + "&limit=300");   // ESPN silently CAPS scoreboard responses at 100 events without a limit param — a 104-match World Cup overflows it, which made the last 4 fixtures (SFs, 3rd place, final) invisible to the whole app (predict cards missing, knockout tab jumped to FINAL). The push Worker always had &limit=200; the app was the only caller missing it.
   seasonCache = { t: Date.now(), events: (d.events || []).sort((a, b) => new Date(a.date) - new Date(b.date)) };
   try { updateKoPhaseUI(); } catch (_) {}   // knockouts may now be within 1h → reorder the tabs + hide the groups-confirmed banner
   return seasonCache.events;
