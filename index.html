@@ -1327,7 +1327,7 @@ html[data-theme="light"] .lrank.q1{background:#1aa5d6}
   <input type="file" id="attFile" accept="image/*,video/*" style="display:none" onchange="attPicked(this)">
   <div class="chatbar" id="chatbar"></div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.31</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.32</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1643,7 +1643,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "3.31";
+const APP_VERSION = "3.32";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
@@ -1844,7 +1844,7 @@ Object.assign(AR, {
   "Goals":"الأهداف","Matches played":"المباريات المُقامة","Yellow":"بطاقات صفراء","Red":"بطاقات حمراء",
   "Assists":"صناعة الأهداف","Shots (OT)":"التسديدات (على المرمى)","Big chances":"الفرص الخطيرة","Touches":"اللمسات","Passes (acc)":"التمريرات (الدقيقة)","Final-3rd passes":"تمريرات الثلث الأخير","Tackles":"التدخّلات","Interceptions":"الاعتراضات","Clearances":"التشتيتات","Saves":"التصدّيات","Save %":"نسبة التصدّي","Clean sheet":"شِباك نظيفة","Yes":"نعم","No":"لا","Pen. saved":"ركلات مُصدّاة","Fouls":"الأخطاء","Cards":"البطاقات",
   "POSSESSION %":"الاستحواذ %","SHOTS":"التسديدات","ON TARGET":"على المرمى","CORNERS":"الركنيات","FOULS":"الأخطاء","RECENT FORM":"آخر المباريات","LAST 5":"آخر 5","FORMATION":"التشكيل","PLAYER RATINGS":"تقييمات اللاعبين","STARTING XI":"التشكيلة الأساسية","HEAD-TO-HEAD":"المواجهات المباشرة","clean sheet":"شِباك نظيفة",
-  "🔒 SIGN IN TO PREDICT":"🔒 سجّل الدخول للتوقّع","YOUR FINAL ANSWER · LOCKED IN":"إجابتك النهائية · مؤكَّدة","FINAL:":"النهائي:","10 pts for the exact score · 4 pts for the winner":"10 نقاط للنتيجة الصحيحة · 4 نقاط للفائز","SIGN IN TO PREDICT":"سجّل الدخول للتوقّع",
+  "🔒 SIGN IN TO PREDICT":"🔒 سجّل الدخول للتوقّع","YOUR FINAL ANSWER · LOCKED IN":"إجابتك النهائية · مؤكَّدة","FINAL:":"النهائي:","15 pts for the exact score · 5 pts for the winner":"15 نقطة للنتيجة الصحيحة · 5 نقاط للفائز","SIGN IN TO PREDICT":"سجّل الدخول للتوقّع",
   "ALL WEEKS · TOTAL POINTS":"كل الأسابيع · مجموع النقاط","👀 You’re browsing as a guest ·":"👀 أنت تتصفّح كضيف ·","to make predictions & climb the leaderboard.":"لإجراء التوقّعات وتصدّر الترتيب.",
   "Curaçao":"كوراساو","Congo DR":"الكونغو الديمقراطية","Bosnia-Herzegovina":"البوسنة والهرسك","Cabo Verde":"الرأس الأخضر","Côte d'Ivoire":"ساحل العاج",
   "LOCKED / FINISHED":"مغلقة / منتهية","✓ CONFIRMED":"✓ مؤكَّد","BEST 3RD-PLACED RACE":"سباق أفضل ثالث","IN":"متأهّل","8 of the 12 third-placed teams also reach the Round of 32":"يتأهّل 8 من المنتخبات الـ12 صاحبة المركز الثالث إلى دور الـ32",
@@ -3656,7 +3656,7 @@ function predCard(e, started) {
         ptH + '<span class="psl">' + scoreInputs + '</span>' + ptA + '</div>' +
       '<div class="penpick" id="pp-' + e.id + '"' + (penMode ? ' style="display:block"' : '') + '><div class="pplbl">👇 WHO WINS ON PENALTIES?</div><div class="ppb">' + wbtn("home", H) + wbtn("away", A) + '</div></div>' +
       (started || done ? '' : '<button type="button" class="pentog" id="ptg-' + e.id + '" onclick="togglePens(\'' + e.id + '\',event)">' + (penMode ? "↩ Predict a scoreline instead" : "⚽ This match will go to penalties") + '</button>') +
-      (isFin ? '<div class="finnote">⭐ <b>FINAL:</b> 10 pts for the exact score · 4 pts for the winner</div>' : '');
+      (isFin ? '<div class="finnote">⭐ <b>FINAL:</b> 15 pts for the exact score · 5 pts for the winner</div>' : '');   // keep in sync with KO_POINTS.FINAL (the scorer already pays 15/5)
   } else {
     body = '<div class="prow">' + ptH + scoreInputs + ptA + '</div>';
   }
