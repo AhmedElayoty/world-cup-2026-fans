@@ -1280,6 +1280,18 @@ html[data-theme="light"] .lrank.q1{background:#1aa5d6}
  <button id="tabC" onclick="showTab('C')">CHAT<span class="navbadge" id="chatBadge"></span></button>
 </nav>
 <script>try{if(localStorage.getItem("cs_kophase")==="1")document.querySelector("nav").classList.add("kophase");}catch(_){}</script>
+<a id="gkGo" class="notr" href="https://ahmedelayoty.github.io/goalak/" target="_blank" rel="noopener" aria-label="Open Goalak, our new leagues app">
+ <span class="gkGo__ico">⚽</span>
+ <span class="gkGo__tx"><b>GOALAK</b> · الجول جولك — تطبيقنا الجديد للدوريات · our new leagues app</span>
+ <span class="gkGo__go">↗</span>
+</a>
+<style>
+#gkGo{display:flex;align-items:center;gap:8px;background:linear-gradient(90deg,#211235,#2c1a40);border:1px solid #f24b40;border-radius:10px;margin:6px 10px 4px;padding:7px 12px;text-decoration:none;color:#fff8f2;font-size:12px;font-weight:700;font-family:'Cairo','Segoe UI',sans-serif}
+#gkGo b{color:#ff8a7a;letter-spacing:.6px}
+#gkGo .gkGo__tx{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#gkGo .gkGo__ico{flex:0 0 auto}
+#gkGo .gkGo__go{margin-inline-start:auto;flex:0 0 auto;font-size:14px;color:#ffc02e}
+</style>
 <div class="connbar"><span class="condot" id="condot" aria-hidden="true"></span><span class="contxt" id="contxt">CONNECTING</span><span class="conr"><span class="cz" id="tzCode">UAE</span><span class="cz cz--off" id="tzOff">UTC+4</span><time class="clock" id="clock" aria-label="Local time">--:--</time></span></div>
 </div>
 <main>
@@ -1327,7 +1339,7 @@ html[data-theme="light"] .lrank.q1{background:#1aa5d6}
   <input type="file" id="attFile" accept="image/*,video/*" style="display:none" onchange="attPicked(this)">
   <div class="chatbar" id="chatbar"></div>
  </section>
- <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.32</span></footer>
+ <footer>WORLD CUP 2026 · UNOFFICIAL FAN APP · DATA: ESPN PUBLIC API · <span id="appVer">v3.33</span></footer>
 </main>
 <div id="installBar" style="display:none"><span class="ibtxt"></span><button type="button" class="ibgo" onclick="installApp()">Install</button><button type="button" class="ibx" onclick="dismissInstall()" aria-label="Dismiss">&#215;</button></div>
 <div id="pushBar" style="display:none"><span class="pbtxt"></span><button type="button" class="pbgo" onclick="allowPushFromBar()">Allow</button><button type="button" class="pbx" onclick="dismissPushBar()" aria-label="Dismiss">&#215;</button></div>
@@ -1643,7 +1655,7 @@ function celebBarHTML(e){
 
 const CHAT_READ = "https://textdb.online/" + CHAT_KEY;
 const CHAT_WRITE = "https://api.textdb.online/update/";
-const APP_VERSION = "3.32";
+const APP_VERSION = "3.33";
 // One-time forced refresh · bump this token ONLY when you want every open client to hard-reload once.
 // Normal deploys leave it unchanged → no forced reload (clients still get new code on their next open via the network-first shell).
 const FORCE_RELOAD = "2026-06-26-v288";
